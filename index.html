@@ -109,41 +109,7 @@
 </head>
 <body>
 
-<script>
-  // JavaScript to change the background color
-  function changeBackgroundColor() {
-    const body = document.body;
-    const colors = ['#FFFF00', '#fff']; // Add more colors if needed
 
-    // Randomly shuffle the colors array
-    colors.sort(() => Math.random() - 0.5);
-
-    // Set a new background color
-    body.style.backgroundColor = colors[0];
-  }
-
-  // Change background color every 2 seconds (2000 milliseconds)
-  setInterval(changeBackgroundColor, 50);
-
-  // JavaScript to count visitors
-  function countVisitor() {
-    // Check if visitorCount is stored in localStorage
-    if (!localStorage.getItem('visitorCount')) {
-      localStorage.setItem('visitorCount', '0'); // Initialize with 0 if not present
-    }
-
-    // Increment the visitorCount
-    let currentCount = parseInt(localStorage.getItem('visitorCount'), 10);
-    currentCount += 1;
-    localStorage.setItem('visitorCount', currentCount.toString());
-
-    // Display the visitorCount
-    document.getElementById('visitorCount').innerText = currentCount;
-  }
-
-  // Call the countVisitor function on page load
-  countVisitor();
-</script>
 
 <h1 class="centered">Myung Chul Kim</h1>
 <p class="centered">Welcome to my website!</p>
