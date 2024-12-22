@@ -1,1 +1,184 @@
-Hello World
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Myung Chul Kim</title>
+  <!-- Other meta tags and styles go here -->
+  <title>Page Title</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    /* Your existing styles remain unchanged */
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      text-align: center; /* Center text within the body */
+      margin: 0;
+      /* transition: background-color 1s ease; */
+    }
+
+    h1 {
+      font-size: 2em; /* Adjust the font size for <h1> */
+      margin: 0; /* Remove default margin for <h1> */
+    }
+
+    h1.centered {
+      font-size: 5em;
+      text-align: center; /* Center the text within paragraphs with the class "centered" */
+      margin: 0; /* Remove default margin for paragraphs */
+    }
+
+    p {
+      font-size: 1.2em; /* Adjust the font size for <p> */
+      text-align: left;
+      margin: 0; /* Remove default margin for <p> */
+    }
+
+    p.centered {
+      font-size: 1.2em;
+      text-align: center; /* Center the text within paragraphs with the class "centered" */
+      /* margin: 0; Remove default margin for paragraphs */
+      margin-bottom: 20px;
+    }
+
+    /* Style the top navigation bar */
+    .navbar {
+      overflow: hidden; /* Hide overflow */
+      background-color: #8C1515; /* Dark background color */
+    }
+
+    /* Style the navigation bar links */
+    .navbar a {
+      float: left; /* Make sure that the links stay side-by-side */
+      display: block; /* Change the display to block, for responsive reasons (see below) */
+      color: #fff; /* White text color */
+      text-align: center; /* Center the text */
+      padding: 14px 0; /* Add some padding (top and bottom) and remove left and right padding */
+      text-decoration: none; /* Remove underline */
+      width: 20%; /* Set the width to 19% for five equally spaced links */
+      box-sizing: border-box; /* Include padding and border in the element's total width and height */
+      font-size: 1.2em;
+    }
+
+    /* Clearfix to ensure proper layout */
+    .navbar::after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+
+    /* Responsive layout adjustments */
+    @media (max-width: 768px) {
+      .navbar a {
+        width: 100%; /* Set the width to 100% for single column layout on smaller screens */
+      }
+    }
+
+    /* Add a section for the picture and description */
+    .picture-section {
+      overflow: hidden;
+      padding: 20px; /* Adjust the padding as needed */
+    }
+
+    .picture-section img {
+      float: left;
+      margin-right: 100px; /* Add some margin between the image and the text */
+      /* margin-left: 100px; */
+      width: 420px; /* Set the width of the image */
+      height: 560px; /* Set the height of the image */
+    }
+
+    .picture-section p {
+      max-width: 1300px; /* Set the max-width for the paragraph */
+      margin: 20px 0; /* Remove default margin for the paragraph */
+    }
+
+    /* Change color on hover/mouse-over */
+    .navbar a:hover {
+      background-color: #fff; /* Grey background color */
+      color: #8C1515; /* Black text color */
+    }
+
+    /* Style for the visitor count */
+    .visitor-count {
+      font-size: 1.2em;
+      margin-top: 20px;
+      text-align: left;
+      color: #8C1515;
+    }
+  </style>
+</head>
+<body>
+
+<script>
+  // JavaScript to change the background color
+  function changeBackgroundColor() {
+    const body = document.body;
+    const colors = ['#FFFF00', '#fff']; // Add more colors if needed
+
+    // Randomly shuffle the colors array
+    colors.sort(() => Math.random() - 0.5);
+
+    // Set a new background color
+    body.style.backgroundColor = colors[0];
+  }
+
+  // Change background color every 2 seconds (2000 milliseconds)
+  setInterval(changeBackgroundColor, 50);
+
+  // JavaScript to count visitors
+  function countVisitor() {
+    // Check if visitorCount is stored in localStorage
+    if (!localStorage.getItem('visitorCount')) {
+      localStorage.setItem('visitorCount', '0'); // Initialize with 0 if not present
+    }
+
+    // Increment the visitorCount
+    let currentCount = parseInt(localStorage.getItem('visitorCount'), 10);
+    currentCount += 1;
+    localStorage.setItem('visitorCount', currentCount.toString());
+
+    // Display the visitorCount
+    document.getElementById('visitorCount').innerText = currentCount;
+  }
+
+  // Call the countVisitor function on page load
+  countVisitor();
+</script>
+
+<h1 class="centered">Myung Chul Kim</h1>
+<p class="centered">Welcome to my website!</p>
+
+<!-- Visitor count section -->
+<div class="visitor-count" id="visitorCount"></div>
+
+<!-- Navigation bar -->
+<div class="navbar">
+  <a href="research.html">Research</a>
+  <a href="publications.html">Publications</a>
+  <a href="awards.html">Awards</a>
+  <a href="courses.html">Courses</a>
+  <a href="archive.html">Archive</a>
+</div>
+
+<!-- Picture and description section -->
+<div class="picture-section">
+  <img src="mckim.jpg" alt="Description of the picture">
+  <p>Hi, I'm Myung Chul. <a href="CV_Myung_Chul_Kim.pdf">[CV]</a> </p>
+
+  <p>I am a first year Ph.D. student in mechanical engineering at Stanford University.
+    I am in <a href="https://micronano.stanford.edu" target="_blank">Micro and Nano Mechanics Group</a> (Professor Wei Cai), studying mechanics of materials and developing computer simulations.</p>
+
+  <p>My research interest lies in accelerated simulation and modeling of materials. 
+    I personally enjoy learning about stochastic dynamics, quantum mechanics, wave physics, control theory, and machine learning. </p>
+
+  <p> I also like to play violin, tennis in my free time.</p>
+
+  <p>Please feel free to reach out to me via email.</p>
+
+  <p>Email: <a href="mailto:mckim@stanford.edu">mckim@stanford.edu</a></p>
+
+  <p>LinkedIn: <a href="mailto:mckim@stanford.edu">mckim@stanford.edu</a></p>
+</div>
+
+</body>
+</html>
