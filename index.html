@@ -155,5 +155,36 @@
   <p>LinkedIn: <a href="https://www.linkedin.com/in/mckim2000/">@mckim2000</a></p>
 </div>
 
+
+    <div class="visitor-info" id="visitor-info">
+    <h2>Your Personal Information</h2>
+    <p><strong>Loading…</strong></p>
+  </div>
+
+  <script>
+    async function fetchVisitorInfo() {
+      try {
+        const res = await fetch('https://api.ipregistry.co/?key=tryout&pretty=true');
+        const info = await res.json();
+
+        document.getElementById('visitor-info').innerHTML = `
+          <h2>Your Personal Information</h2>
+          <p><strong>IP Address:</strong> ${info.ip}</p>
+          <p><strong>Location:</strong> ${info.location.city}, ${info.location.region.name}, ${info.location.country.name}</p>
+          <p><strong>ISP / Org:</strong> ${info.connection.organization || info.connection.domain || 'N/A'}</p>
+          <p><strong>Timezone:</strong> ${info.time_zone.id}</p>
+        `;
+      } catch (err) {
+        console.error(err);
+        document.getElementById('visitor-info').innerHTML =
+          '<p><strong>Error fetching your info via ipregistry.</strong></p>';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', fetchVisitorInfo);
+  </script>
+
+
+  
 </body>
 </html>
