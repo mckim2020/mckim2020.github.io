@@ -1,110 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <title>Notes</title>
-  <!-- Other meta tags and styles go here -->
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page Title - Myung Chul Kim</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
   <style>
-    /* Your existing styles remain unchanged */
-
     body {
-      font-family: Arial, Helvetica, sans-serif;
-      text-align: center; /* Center text within the body */
       margin: 0;
-      /* transition: background-color 1s ease; */
-    }
-    
-    h1 {
-      font-size: 3em; /* Adjust the font size for <h1> */
-      margin: 0; /* Remove default margin for <h1> */
-      margin-bottom: 50px;
-    }
-    
-    p {
-      font-size: 1.2em; /* Adjust the font size for <p> */
-      text-align: left;
-      margin: 0 0 20px 0; /* Add margin-bottom to create space between lines */
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+      color: #333333;
     }
 
-    h1.centered {
-      font-size: 5em;
-      text-align: center; /* Center the text within paragraphs with the class "centered" */
-      margin: 0; /* Remove default margin for paragraphs */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
     }
 
-    p {
-      font-size: 1.2em; /* Adjust the font size for <p> */
-      text-align: left;
-      margin-left: 20px;
+    header {
+      background: #8C1515;
+      padding: 20px 0;
     }
 
-    p.centered {
-      font-size: 1.2em;
-      text-align: center; /* Center the text within paragraphs with the class "centered" */
-      /* margin: 0; Remove default margin for paragraphs */
+    nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 50px;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 20px;
+    }
+
+    main {
+      padding-top: 40px;
+    }
+
+    .page-title {
+      font-size: 2.5rem;
+      font-weight: bold;
       margin-bottom: 20px;
     }
 
-    /* Style the top navigation bar */
-    .navbar {
-      overflow: hidden; /* Hide overflow */
-      background-color: #8C1515; /* Dark background color */
+    .page-description {
+      font-size: 1rem;
+      color: #666;
+      margin-bottom: 40px;
     }
-
-    /* Style the navigation bar links */
-    .navbar a {
-      float: left; /* Make sure that the links stay side-by-side */
-      display: block; /* Change the display to block, for responsive reasons */
-      color: #fff; /* White text color */
-      text-align: center; /* Center the text */
-      padding: 14px 0; /* Add some padding (top and bottom) */
-      text-decoration: none; /* Remove underline */
-      width: 20%; /* Set the width to 20% for equally spaced links */
-      box-sizing: border-box; /* Include padding and border in the element's total width and height */
-      font-size: 1.2em;
-      font-weight: bold; /* Make the text bold */
-    }
-  
-    /* Clearfix to ensure proper layout */
-    .navbar::after {
-      content: "";
-      display: table;
-      clear: both;
-    }
-
-    /* Responsive layout adjustments */
-    @media (max-width: 768px) {
-      .navbar a {
-        width: 100%; /* Set the width to 100% for single column layout on smaller screens */
-      }
-    }
-
-    /* Change color on hover/mouse-over */
-    .navbar a:hover {
-      background-color: #fff; /* Grey background color */
-      color: #8C1515; /* Black text color */
-    }
-
   </style>
 </head>
-
-
-
 <body>
+  <header>
+    <div class="container">
+      <nav>
+        <div class="nav-links">
+          <a href="./">Home</a>
+          <a href="publications.html">Publications</a>
+          <a href="research.html">Research</a>
+          <a href="notes.html">Notes</a>
+          <a href="gallery.html">Gallery</a>
+        </div>
+      </nav>
+    </div>
+  </header>
 
-<!-- <h1>Notes</h1> -->
-<h1 class="centered">RESEARCH</h1>
+  <main class="container">
+    <h1 class="page-title">Page Title</h1>
+    <p class="page-description">A brief description of the page content goes here.</p>
+    <!-- Content goes here -->
+  </main>
 
-<!-- Navigation bar -->
-<div class="navbar">
-  <a href="./">HOME</a>
-  <a href="research.html">RESEARCH</a>
-  <a href="publications.html">PUBLICATIONS</a>
-  <a href="notes.html">NOTES</a>
-  <a href="gallery.html">GALLERY</a>
-</div>
-
+  <script>
+    // You can add any necessary JavaScript here
+  </script>
 </body>
 </html>
