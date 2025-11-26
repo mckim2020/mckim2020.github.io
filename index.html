@@ -60,6 +60,7 @@
 
     .profile-left {
       text-align: center;
+      width: 300px;
     }
 
     .profile-image {
@@ -74,6 +75,12 @@
       font-size: 1.8rem;
       font-weight: bold;
       margin-bottom: 10px;
+    }
+
+    .profile-subtitle {
+      font-size: 1rem;
+      color: #666;
+      margin-bottom: 20px;
     }
 
     .social-icons {
@@ -102,33 +109,6 @@
       width: 1px;
       background-color: #cccccc;
     }
-
-    .subtitle {
-      font-size: 1.2rem;
-      color: #666;
-      margin-bottom: 20px;
-    }
-
-    .buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      margin-top: 20px;
-    }
-
-    .btn {
-      background: #8C1515;
-      color: white;
-      padding: 10px 20px;
-      text-decoration: none;
-      border-radius: 5px;
-      font-weight: bold;
-      transition: background 0.3s;
-    }
-
-    .btn:hover {
-      background: #6e1010;
-    }
   </style>
 </head>
 <body>
@@ -155,6 +135,10 @@
       <div class="profile-left">
         <img src="figs/mckim.png" alt="Profile Photo" class="profile-image">
         <div class="profile-name">Myung Chul Kim</div>
+        <div class="profile-subtitle">
+          PhD Candidate @ Stanford ME<br>
+          Monte Carlo & Molecular Dynamics
+        </div>
         <div class="social-icons">
           <a href="https://scholar.google.com/citations?user=lzw1uB4AAAAJ&hl=en" title="Google Scholar"><i class="fas fa-graduation-cap"></i></a>
           <a href="https://github.com/mckim2020" title="GitHub"><i class="fab fa-github"></i></a>
@@ -164,7 +148,6 @@
       </div>
       <div class="profile-content">
         <div class="central-divider"></div>
-        <p class="subtitle">PhD Candidate @ Stanford ME<br>Monte Carlo & Molecular Dynamics</p> 
         <p>
           [Your bio or introduction goes here. You can add multiple paragraphs as needed.]
         </p>
