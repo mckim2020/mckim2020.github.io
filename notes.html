@@ -58,38 +58,36 @@
       margin-bottom: 40px;
     }
 
-    .notes-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 20px;
+    .notes-list {
+      list-style-type: none;
+      padding: 0;
     }
 
     .note-item {
-      background-color: #f0f0f0;
-      border: 1px solid #ddd;
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f8f8f8;
       border-radius: 5px;
-      padding: 20px;
-      transition: background-color 0.3s ease;
-    }
-
-    .note-item:hover {
-      background-color: #e0e0e0;
-    }
-
-    .note-item a {
-      text-decoration: none;
-      color: #333;
     }
 
     .note-item h3 {
       margin-top: 0;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
     }
 
     .note-item p {
       margin: 0;
-      font-size: 0.9rem;
       color: #666;
+    }
+
+    .pdf-link {
+      color: #8C1515;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .pdf-link:hover {
+      text-decoration: underline;
     }
 
     .sub-item {
@@ -117,102 +115,78 @@
     <h1 class="page-title">Notes</h1>
     <p class="page-description">These are notes from courses I took at Stanford (and KAIST).</p>
 
-    <div class="notes-grid">
-      <div class="note-item">
-        <a href="docs/adv_phys_chem_winter_2025.pdf">
-          <h3>Advanced Physical Chemistry</h3>
-          <p>Stanford, Winter 2025</p>
-        </a>
-      </div>
+    <ul class="notes-list">
+      <li class="note-item">
+        <h3>Advanced Physical Chemistry <a href="docs/adv_phys_chem_winter_2025.pdf" class="pdf-link">[PDF]</a></h3>
+        <p>Stanford, Winter 2025</p>
+      </li>
 
-      <div class="note-item">
-        <a href="docs/fin_elem_anal_winter_2025.pdf">
-          <h3>Finite Element Analysis</h3>
-          <p>Stanford, Winter 2025</p>
-        </a>
-      </div>
+      <li class="note-item">
+        <h3>Finite Element Analysis <a href="docs/fin_elem_anal_winter_2025.pdf" class="pdf-link">[PDF]</a></h3>
+        <p>Stanford, Winter 2025</p>
+      </li>
 
-      <div class="note-item">
+      <li class="note-item">
         <h3>Introduction to Statistical Mechanics</h3>
         <p>Stanford, Winter 2025</p>
         <div class="sub-item">
-          <a href="docs/intro_stat_mech_ps_winter_2025.pdf">Problem Session Notes</a>
+          <a href="docs/intro_stat_mech_ps_winter_2025.pdf" class="pdf-link">Problem Session Notes [PDF]</a>
         </div>
-      </div>
+      </li>
 
-      <div class="note-item">
-        <a href="docs/intro_noneq_stat_mech_spring_2024.pdf">
-          <h3>Introduction to Non-Equilibrium Statistical Mechanics</h3>
-          <p>Stanford, Fall 2024</p>
-        </a>
+      <li class="note-item">
+        <h3>Introduction to Non-Equilibrium Statistical Mechanics <a href="docs/intro_noneq_stat_mech_spring_2024.pdf" class="pdf-link">[PDF]</a></h3>
+        <p>Stanford, Fall 2024</p>
         <div class="sub-item">
-          <a href="docs/therm_act_disl.pdf">Thermal Activation of Dislocation Glide</a>
+          <a href="docs/therm_act_disl.pdf" class="pdf-link">Thermal Activation of Dislocation Glide [PDF]</a>
         </div>
-      </div>
+      </li>
 
-      <div class="note-item">
-        <a href="docs/num_lin_alg_spring_2024.pdf">
-          <h3>Numerical Linear Algebra</h3>
-          <p>Stanford, Fall 2024</p>
-        </a>
-      </div>
+      <li class="note-item">
+        <h3>Numerical Linear Algebra <a href="docs/num_lin_alg_spring_2024.pdf" class="pdf-link">[PDF]</a></h3>
+        <p>Stanford, Fall 2024</p>
+      </li>
 
-      <div class="note-item">
-        <a href="docs/def_dis_mat_spring_2024.pdf">
-          <h3>Defects and Disorder in Materials</h3>
-          <p>Stanford, Spring 2024</p>
-        </a>
-      </div>
+      <li class="note-item">
+        <h3>Defects and Disorder in Materials <a href="docs/def_dis_mat_spring_2024.pdf" class="pdf-link">[PDF]</a></h3>
+        <p>Stanford, Spring 2024</p>
+      </li>
 
-      <div class="note-item">
-        <a href="docs/elast_inelast_spring_2024.pdf">
-          <h3>Elasticity and Inelasticity</h3>
-          <p>Stanford, Spring 2024</p>
-        </a>
-      </div>
+      <li class="note-item">
+        <h3>Elasticity and Inelasticity <a href="docs/elast_inelast_spring_2024.pdf" class="pdf-link">[PDF]</a></h3>
+        <p>Stanford, Spring 2024</p>
+      </li>
 
-      <div class="note-item">
-        <a href="docs/stochastic_de_winter_2024.pdf">
-          <h3>Stochastic Differential Equations</h3>
-          <p>Stanford, Winter 2024</p>
-        </a>
-      </div>
+      <li class="note-item">
+        <h3>Stochastic Differential Equations <a href="docs/stochastic_de_winter_2024.pdf" class="pdf-link">[PDF]</a></h3>
+        <p>Stanford, Winter 2024</p>
+      </li>
 
-      <div class="note-item">
-        <a href="docs/partial_de_winter_2024.pdf">
-          <h3>Partial Differential Equations</h3>
-          <p>Stanford, Winter 2024</p>
-        </a>
-      </div>
+      <li class="note-item">
+        <h3>Partial Differential Equations <a href="docs/partial_de_winter_2024.pdf" class="pdf-link">[PDF]</a></h3>
+        <p>Stanford, Winter 2024</p>
+      </li>
 
-      <div class="note-item">
-        <a href="docs/linear_algebra_fall_2023.pdf">
-          <h3>Linear Algebra</h3>
-          <p>Stanford, Fall 2023</p>
-        </a>
-      </div>
+      <li class="note-item">
+        <h3>Linear Algebra <a href="docs/linear_algebra_fall_2023.pdf" class="pdf-link">[PDF]</a></h3>
+        <p>Stanford, Fall 2023</p>
+      </li>
 
-      <div class="note-item">
-        <a href="docs/applied_quantum_mechanics_fall_2023.pdf">
-          <h3>Applied Quantum Mechanics</h3>
-          <p>Stanford, Fall 2023</p>
-        </a>
-      </div>
+      <li class="note-item">
+        <h3>Applied Quantum Mechanics <a href="docs/applied_quantum_mechanics_fall_2023.pdf" class="pdf-link">[PDF]</a></h3>
+        <p>Stanford, Fall 2023</p>
+      </li>
 
-      <div class="note-item">
-        <a href="docs/wave_solid_fluid_fall_2021_red.pdf">
-          <h3>Waves in Solids and Fluids</h3>
-          <p>KAIST, Fall 2021</p>
-        </a>
-      </div>
+      <li class="note-item">
+        <h3>Waves in Solids and Fluids <a href="docs/wave_solid_fluid_fall_2021_red.pdf" class="pdf-link">[PDF]</a></h3>
+        <p>KAIST, Fall 2021</p>
+      </li>
 
-      <div class="note-item">
-        <a href="docs/machine_design_fall_2021.pdf">
-          <h3>Mechanism Design</h3>
-          <p>KAIST, Fall 2021</p>
-        </a>
-      </div>
-    </div>
+      <li class="note-item">
+        <h3>Mechanism Design <a href="docs/machine_design_fall_2021.pdf" class="pdf-link">[PDF]</a></h3>
+        <p>KAIST, Fall 2021</p>
+      </li>
+    </ul>
   </main>
 
   <script>
