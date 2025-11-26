@@ -1,186 +1,190 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Myung Chul Kim</title>
-  <!-- Other meta tags and styles go here -->
-  <title>Page Title</title>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
   <style>
-    /* Your existing styles remain unchanged */
-
     body {
-      font-family: Arial, Helvetica, sans-serif;
-      text-align: center; /* Center text within the body */
       margin: 0;
-      /* transition: background-color 1s ease; */
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+      color: #333333;
     }
 
-    h1 {
-      font-size: 2em; /* Adjust the font size for <h1> */
-      margin: 0; /* Remove default margin for <h1> */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
     }
 
-    h1.centered {
-      font-size: 5em;
-      text-align: center; /* Center the text within paragraphs with the class "centered" */
-      margin: 0; /* Remove default margin for paragraphs */
+    header {
+      background: #8C1515;
+      padding: 20px 0;
     }
 
-    p {
-      font-size: 1.2em; /* Adjust the font size for <p> */
-      text-align: left;
-      margin: 0; /* Remove default margin for <p> */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    p.centered {
-      font-size: 1.2em;
-      text-align: center; /* Center the text within paragraphs with the class "centered" */
-      /* margin: 0; Remove default margin for paragraphs */
+    .nav-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .nav-icons {
+      display: flex;
+      gap: 15px;
+    }
+
+    .nav-icons a {
+      color: white;
+      text-decoration: none;
+      font-size: 20px;
+    }
+
+    .profile {
+      display: flex;
+      gap: 40px;
+      margin-top: 40px;
+    }
+
+    .profile-left {
+      text-align: center;
+    }
+
+    .profile-image {
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      object-fit: cover;
       margin-bottom: 20px;
     }
 
-    /* Style the top navigation bar */
-    .navbar {
-      overflow: hidden; /* Hide overflow */
-      background-color: #8C1515; /* Dark background color */
+    .profile-name {
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin-bottom: 10px;
     }
 
-    /* Style the navigation bar links */
-    .navbar a {
-      float: left; /* Make sure that the links stay side-by-side */
-      display: block; /* Change the display to block, for responsive reasons */
-      color: #fff; /* White text color */
-      text-align: center; /* Center the text */
-      padding: 14px 0; /* Add some padding (top and bottom) */
-      text-decoration: none; /* Remove underline */
-      width: 20%; /* Set the width to 20% for equally spaced links */
-      box-sizing: border-box; /* Include padding and border in the element's total width and height */
-      font-size: 1.2em;
-      font-weight: bold; /* Make the text bold */
-    }
-  
-    /* Clearfix to ensure proper layout */
-    .navbar::after {
-      content: "";
-      display: table;
-      clear: both;
+    .social-icons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
     }
 
-    /* Responsive layout adjustments */
-    @media (max-width: 768px) {
-      .navbar a {
-        width: 100%; /* Set the width to 100% for single column layout on smaller screens */
-      }
-    }
-
-    /* Add a section for the picture and description */
-    .picture-section {
-      overflow: hidden;
-      padding: 20px; /* Adjust the padding as needed */
-    }
-
-    .picture-section img {
-      float: left;
-      margin-right: 100px; /* Add some margin between the image and the text */
-      /* margin-left: 100px; */
-      width: 420px; /* Set the width of the image */
-      height: 560px; /* Set the height of the image */
-    }
-
-    .picture-section p {
-      max-width: 1300px; /* Set the max-width for the paragraph */
-      margin: 20px 0; /* Remove default margin for the paragraph */
-    }
-
-    /* Change color on hover/mouse-over */
-    .navbar a:hover {
-      background-color: #fff; /* Grey background color */
-      color: #8C1515; /* Black text color */
-    }
-
-    /* Style for the visitor count */
-    .visitor-count {
-      font-size: 1.2em;
-      margin-top: 20px;
-      text-align: left;
+    .social-icons a {
       color: #8C1515;
+      text-decoration: none;
+      font-size: 24px;
+    }
+
+    .profile-content {
+      flex: 1;
+      position: relative;
+    }
+
+    .central-divider {
+      position: absolute;
+      left: -20px;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background-color: #cccccc;
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      background: #8C1515;
+      color: white;
+      padding: 10px 20px;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+
+    .btn:hover {
+      background: #6e1010;
     }
   </style>
 </head>
 <body>
+  <header>
+    <div class="container">
+      <nav>
+        <div class="nav-links">
+          <a href="./">Home</a>
+          <a href="publications.html">Publications</a>
+          <a href="research.html">Research</a>
+          <a href="notes.html">Notes</a>
+          <a href="gallery.html">Gallery</a>
+        </div>
+        <div class="nav-icons">
+          <a href="#" id="darkModeToggle"><i class="fas fa-moon"></i></a>
+          <a href="#" id="searchToggle"><i class="fas fa-search"></i></a>
+        </div>
+      </nav>
+    </div>
+  </header>
 
-
-
-<h1 class="centered">MYUNG CHUL KIM</h1>
-
-<!-- <!-- Visitor count section -->
-<!-- <div class="visitor-count" id="visitorCount"></div> -->
-<!--  -->
-
-<!-- Navigation bar -->
-<div class="navbar">
-  <a href="./">HOME</a>
-  <a href="research.html">RESEARCH</a>
-  <a href="publications.html">PUBLICATIONS</a>
-  <a href="notes.html">NOTES</a>
-  <a href="gallery.html">GALLERY</a>
-</div>
-
-<!-- Picture and description section -->
-<div class="picture-section">
-  <img src="figs/mckim.jpg" alt="Description of the picture">
-  <p>Hi, I'm Myung Chul. Here is my <a href="docs/CV_Myung_Chul_Kim.pdf">CV</a>.</p>
-
-  <p>I am a second year Ph.D. student in mechanical engineering at <a href="https://www.stanford.edu/" target="_blank">Stanford University</a>.
-    I am in <a href="https://micronano.stanford.edu" target="_blank">Micro and Nano Mechanics Group</a> (Professor Wei Cai), studying mechanics of materials and developing computer simulations.
-  I did my undergraduate in mechanical engineering and electrical engineering at <a href="https://www.kaist.ac.kr/en/" target="_blank">Korea Advanced Institute of Science and Technology (KAIST)</a>. 
-  </p>
-
-  <p> My primary research lies in accelerated simulation and modeling of rare events in materials, by utilizing statistical mechanics, atomistic simulations, and machine learning.
-    I also work on dislocation dynamics, regarding its representation and evolution.
-  </p>
-
-  <p> Besides research, I enjoy playing violin in my free time (since I was 5 years old).
-    I played as a first violinist in the <a href="https://music.illinois.edu/engagement/isym/" target="_blank">Illinois Summer Youth Music (ISYM)</a> orchestra in 2013 (<a href="https://www.youtube.com/watch?v=0sGUte42AVY" target="_blank">link</a>). 
-    I was a member of the <a href="https://www.youtube.com/c/KAISTOrchestra" target="_blank">KAIST orchestra</a> as a first violinist during my undergraduate (<a href="https://www.youtube.com/watch?v=FpDLnvjs_TI&list=PLzWHhmXgt74Ac_X5wG2zIN_xW8H0AqzHv" target="_blank">link</a>).
-  </p>
-  
-  <p>Please feel free to reach out to me by,</p>
-
-  <p>Email: <a href="mailto:mckim@stanford.edu">mckim@stanford.edu</a></p>
-
-  <p>Twitter (X): <a href="https://x.com/mckimmmmm">@mckimmmm</a></p>
-
-  <p>LinkedIn: <a href="https://www.linkedin.com/in/mckim2000/">@mckim2000</a></p>
-</div>
-
-  
+  <main class="container">
+    <section class="profile">
+      <div class="profile-left">
+        <img src="figs/mckim.png" alt="Profile Photo" class="profile-image">
+        <div class="profile-name">Myung Chul Kim</div>
+        <div class="social-icons">
+          <a href="https://scholar.google.com/citations?user=lzw1uB4AAAAJ&hl=en" title="Google Scholar"><i class="fas fa-graduation-cap"></i></a>
+          <a href="https://github.com/mckim2020" title="GitHub"><i class="fab fa-github"></i></a>
+          <a href="https://linkedin.com/in/mckim2000" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+          <a href="docs/CV_Myung_Chul_Kim.pdf" title="CV"><i class="far fa-file-alt"></i></a>
+        </div>
+      </div>
+      <div class="profile-content">
+        <div class="central-divider"></div>
+        <p class="subtitle">PhD Candidate @ Stanford ME<br>Monte Carlo & Molecular Dynamics</p> 
+        <p>
+          [Your bio or introduction goes here. You can add multiple paragraphs as needed.]
+        </p>
+      </div>
+    </section>
+  </main>
 
   <script>
-    async function fetchVisitorInfo() {
-      try {
-        const res = await fetch('https://api.ipregistry.co/?key=tryout&pretty=true');
-        const info = await res.json();
+    // Dark mode toggle functionality
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    darkModeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+    });
 
-        document.getElementById('visitor-info').innerHTML = `
-          <h2>Your Personal Information</h2>
-          <p><strong>IP Address:</strong> ${info.ip}</p>
-          <p><strong>Location:</strong> ${info.location.city}, ${info.location.region.name}, ${info.location.country.name}</p>
-          <p><strong>ISP / Org:</strong> ${info.connection.organization || info.connection.domain || 'N/A'}</p>
-          <p><strong>Timezone:</strong> ${info.time_zone.id}</p>
-        `;
-      } catch (err) {
-        console.error(err);
-        document.getElementById('visitor-info').innerHTML =
-          '<p><strong>Error fetching your info via ipregistry.</strong></p>';
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', fetchVisitorInfo);
+    // Search functionality (you'll need to implement this)
+    const searchToggle = document.getElementById('searchToggle');
+    searchToggle.addEventListener('click', () => {
+      // Implement search functionality
+      console.log('Search clicked');
+    });
   </script>
-
-
-  
 </body>
 </html>
