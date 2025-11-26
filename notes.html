@@ -1,140 +1,222 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <title>Notes</title>
-  <!-- Other meta tags and styles go here -->
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notes - Myung Chul Kim</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
   <style>
-    /* Your existing styles remain unchanged */
-
     body {
-      font-family: Arial, Helvetica, sans-serif;
-      text-align: center; /* Center text within the body */
       margin: 0;
-      /* transition: background-color 1s ease; */
-    }
-    
-    h1 {
-      font-size: 3em; /* Adjust the font size for <h1> */
-      margin: 0; /* Remove default margin for <h1> */
-      margin-bottom: 50px;
-    }
-    
-    p {
-      font-size: 1.2em; /* Adjust the font size for <p> */
-      text-align: left;
-      margin: 0 0 20px 0; /* Add margin-bottom to create space between lines */
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+      color: #333333;
     }
 
-    h1.centered {
-      font-size: 5em;
-      text-align: center; /* Center the text within paragraphs with the class "centered" */
-      margin: 0; /* Remove default margin for paragraphs */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
     }
 
-    p {
-      font-size: 1.2em; /* Adjust the font size for <p> */
-      text-align: left;
-      margin-left: 20px;
+    header {
+      background: #8C1515;
+      padding: 20px 0;
     }
 
-    p.centered {
-      font-size: 1.2em;
-      text-align: center; /* Center the text within paragraphs with the class "centered" */
-      /* margin: 0; Remove default margin for paragraphs */
+    nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 50px;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 20px;
+    }
+
+    main {
+      padding-top: 40px;
+    }
+
+    .page-title {
+      font-size: 2.5rem;
+      font-weight: bold;
       margin-bottom: 20px;
     }
 
-    /* Style the top navigation bar */
-    .navbar {
-      overflow: hidden; /* Hide overflow */
-      background-color: #8C1515; /* Dark background color */
+    .page-description {
+      font-size: 1rem;
+      color: #666;
+      margin-bottom: 40px;
     }
 
-    /* Style the navigation bar links */
-    .navbar a {
-      float: left; /* Make sure that the links stay side-by-side */
-      display: block; /* Change the display to block, for responsive reasons */
-      color: #fff; /* White text color */
-      text-align: center; /* Center the text */
-      padding: 14px 0; /* Add some padding (top and bottom) */
-      text-decoration: none; /* Remove underline */
-      width: 20%; /* Set the width to 20% for equally spaced links */
-      box-sizing: border-box; /* Include padding and border in the element's total width and height */
-      font-size: 1.2em;
-      font-weight: bold; /* Make the text bold */
-    }
-  
-    /* Clearfix to ensure proper layout */
-    .navbar::after {
-      content: "";
-      display: table;
-      clear: both;
+    .notes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
     }
 
-    /* Responsive layout adjustments */
-    @media (max-width: 768px) {
-      .navbar a {
-        width: 100%; /* Set the width to 100% for single column layout on smaller screens */
-      }
+    .note-item {
+      background-color: #f0f0f0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 20px;
+      transition: background-color 0.3s ease;
     }
 
-    /* Change color on hover/mouse-over */
-    .navbar a:hover {
-      background-color: #fff; /* Grey background color */
-      color: #8C1515; /* Black text color */
+    .note-item:hover {
+      background-color: #e0e0e0;
     }
 
+    .note-item a {
+      text-decoration: none;
+      color: #333;
+    }
+
+    .note-item h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    .note-item p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .sub-item {
+      margin-top: 10px;
+      padding-left: 20px;
+    }
   </style>
 </head>
-
-
-
 <body>
+  <header>
+    <div class="container">
+      <nav>
+        <div class="nav-links">
+          <a href="./">Home</a>
+          <a href="publications.html">Publications</a>
+          <a href="research.html">Research</a>
+          <a href="notes.html">Notes</a>
+          <a href="gallery.html">Gallery</a>
+        </div>
+      </nav>
+    </div>
+  </header>
 
-<!-- <h1>Notes</h1> -->
-<h1 class="centered">NOTES</h1>
+  <main class="container">
+    <h1 class="page-title">Notes</h1>
+    <p class="page-description">These are notes from courses I took at Stanford (and KAIST).</p>
 
-<!-- Navigation bar -->
-<div class="navbar">
-  <a href="./">HOME</a>
-  <a href="research.html">RESEARCH</a>
-  <a href="publications.html">PUBLICATIONS</a>
-  <a href="notes.html">NOTES</a>
-  <a href="gallery.html">GALLERY</a>
-</div>
+    <div class="notes-grid">
+      <div class="note-item">
+        <a href="docs/adv_phys_chem_winter_2025.pdf">
+          <h3>Advanced Physical Chemistry</h3>
+          <p>Stanford, Winter 2025</p>
+        </a>
+      </div>
 
-<br>
-<p> These are notes from courses I took at Stanford (and KAIST). </p>
-<br>
-<p>13. Advanced Physical Chemistry (Stanford, Winter 2025) <a href="docs/adv_phys_chem_winter_2025.pdf">[PDF]</a></p>
-<br>
-<p>12. Finite Element Analysis (Stanford, Winter 2025) <a href="docs/fin_elem_anal_winter_2025.pdf">[PDF]</a></p>
-<br>
-<p>11. Introduction to Statistical Mechanics (Stanford, Winter 2025)
-<p style="text-indent: 2em;">&#9679; <a href="docs/intro_stat_mech_ps_winter_2025.pdf">Problem Session Notes</a></p>
-<br>
-<p>10. Introduction to Non-Equilibrium Statistical Mechanics (Stanford, Fall 2024) <a href="docs/intro_noneq_stat_mech_spring_2024.pdf">[PDF]</a></p>
-<p style="text-indent: 2em;">&#9679; <a href="docs/therm_act_disl.pdf">Thermal Activation of Dislocation Glide</a></p>
-<br>
-<p>9. Numerical Linear Algebra (Stanford, Fall 2024) <a href="docs/num_lin_alg_spring_2024.pdf">[PDF]</a></p>
-<br>
-<p>8. Defects and Disorder in Materials (Stanford, Spring 2024) <a href="docs/def_dis_mat_spring_2024.pdf">[PDF]</a></p>
-<br>
-<p>7. Elasticity and Inelasticity (Stanford, Spring 2024) <a href="docs/elast_inelast_spring_2024.pdf">[PDF]</a></p>
-<br>
-<p>6. Stochastic Differential Equations (Stanford, Winter 2024) <a href="docs/stochastic_de_winter_2024.pdf">[PDF]</a></p>
-<br>
-<p>5. Partial Differential Equations (Stanford, Winter 2024) <a href="docs/partial_de_winter_2024.pdf">[PDF]</a></p>
-<br>
-<p>4. Linear Algebra (Stanford, Fall 2023) <a href="docs/linear_algebra_fall_2023.pdf">[PDF]</a></p>
-<br>
-<p>3. Applied Qunatum Mechanics (Stanford, Fall 2023) <a href="docs/applied_quantum_mechanics_fall_2023.pdf">[PDF]</a></p>
-<br>
-<p>2. Waves in Solids and Fluids (KAIST, Fall 2021) <a href="docs/wave_solid_fluid_fall_2021_red.pdf">[PDF]</a></p>
-<br>
-<p>1. Mechanism Design (KAIST, Fall 2021) <a href="docs/machine_design_fall_2021.pdf">[PDF]</a></p>
+      <div class="note-item">
+        <a href="docs/fin_elem_anal_winter_2025.pdf">
+          <h3>Finite Element Analysis</h3>
+          <p>Stanford, Winter 2025</p>
+        </a>
+      </div>
+
+      <div class="note-item">
+        <h3>Introduction to Statistical Mechanics</h3>
+        <p>Stanford, Winter 2025</p>
+        <div class="sub-item">
+          <a href="docs/intro_stat_mech_ps_winter_2025.pdf">Problem Session Notes</a>
+        </div>
+      </div>
+
+      <div class="note-item">
+        <a href="docs/intro_noneq_stat_mech_spring_2024.pdf">
+          <h3>Introduction to Non-Equilibrium Statistical Mechanics</h3>
+          <p>Stanford, Fall 2024</p>
+        </a>
+        <div class="sub-item">
+          <a href="docs/therm_act_disl.pdf">Thermal Activation of Dislocation Glide</a>
+        </div>
+      </div>
+
+      <div class="note-item">
+        <a href="docs/num_lin_alg_spring_2024.pdf">
+          <h3>Numerical Linear Algebra</h3>
+          <p>Stanford, Fall 2024</p>
+        </a>
+      </div>
+
+      <div class="note-item">
+        <a href="docs/def_dis_mat_spring_2024.pdf">
+          <h3>Defects and Disorder in Materials</h3>
+          <p>Stanford, Spring 2024</p>
+        </a>
+      </div>
+
+      <div class="note-item">
+        <a href="docs/elast_inelast_spring_2024.pdf">
+          <h3>Elasticity and Inelasticity</h3>
+          <p>Stanford, Spring 2024</p>
+        </a>
+      </div>
+
+      <div class="note-item">
+        <a href="docs/stochastic_de_winter_2024.pdf">
+          <h3>Stochastic Differential Equations</h3>
+          <p>Stanford, Winter 2024</p>
+        </a>
+      </div>
+
+      <div class="note-item">
+        <a href="docs/partial_de_winter_2024.pdf">
+          <h3>Partial Differential Equations</h3>
+          <p>Stanford, Winter 2024</p>
+        </a>
+      </div>
+
+      <div class="note-item">
+        <a href="docs/linear_algebra_fall_2023.pdf">
+          <h3>Linear Algebra</h3>
+          <p>Stanford, Fall 2023</p>
+        </a>
+      </div>
+
+      <div class="note-item">
+        <a href="docs/applied_quantum_mechanics_fall_2023.pdf">
+          <h3>Applied Quantum Mechanics</h3>
+          <p>Stanford, Fall 2023</p>
+        </a>
+      </div>
+
+      <div class="note-item">
+        <a href="docs/wave_solid_fluid_fall_2021_red.pdf">
+          <h3>Waves in Solids and Fluids</h3>
+          <p>KAIST, Fall 2021</p>
+        </a>
+      </div>
+
+      <div class="note-item">
+        <a href="docs/machine_design_fall_2021.pdf">
+          <h3>Mechanism Design</h3>
+          <p>KAIST, Fall 2021</p>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // You can add any necessary JavaScript here
+  </script>
 </body>
 </html>
