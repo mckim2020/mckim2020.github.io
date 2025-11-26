@@ -52,10 +52,17 @@
       font-size: 20px;
     }
 
+    .profile-wrapper {
+      display: flex;
+      justify-content: center;
+      margin-top: 40px;
+    }
+
     .profile {
       display: flex;
       gap: 40px;
-      margin-top: 40px;
+      max-width: 900px;
+      width: 100%;
     }
 
     .profile-left {
@@ -131,28 +138,30 @@
   </header>
 
   <main class="container">
-    <section class="profile">
-      <div class="profile-left">
-        <img src="figs/mckim.png" alt="Profile Photo" class="profile-image">
-        <div class="profile-name">Myung Chul Kim</div>
-        <div class="profile-subtitle">
-          PhD Candidate @ Stanford ME<br>
-          Monte Carlo & Molecular Dynamics
+    <div class="profile-wrapper">
+      <section class="profile">
+        <div class="profile-left">
+          <img src="figs/mckim.png" alt="Profile Photo" class="profile-image">
+          <div class="profile-name">Myung Chul Kim</div>
+          <div class="profile-subtitle">
+            PhD Candidate @ Stanford ME<br>
+            Monte Carlo & Molecular Dynamics
+          </div>
+          <div class="social-icons">
+            <a href="https://scholar.google.com/citations?user=lzw1uB4AAAAJ&hl=en" title="Google Scholar"><i class="fas fa-graduation-cap"></i></a>
+            <a href="https://github.com/mckim2020" title="GitHub"><i class="fab fa-github"></i></a>
+            <a href="https://linkedin.com/in/mckim2000" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+            <a href="docs/CV_Myung_Chul_Kim.pdf" title="CV"><i class="far fa-file-alt"></i></a>
+          </div>
         </div>
-        <div class="social-icons">
-          <a href="https://scholar.google.com/citations?user=lzw1uB4AAAAJ&hl=en" title="Google Scholar"><i class="fas fa-graduation-cap"></i></a>
-          <a href="https://github.com/mckim2020" title="GitHub"><i class="fab fa-github"></i></a>
-          <a href="https://linkedin.com/in/mckim2000" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
-          <a href="docs/CV_Myung_Chul_Kim.pdf" title="CV"><i class="far fa-file-alt"></i></a>
+        <div class="profile-content">
+          <div class="central-divider"></div>
+          <p>
+            [Your bio or introduction goes here. You can add multiple paragraphs as needed.]
+          </p>
         </div>
-      </div>
-      <div class="profile-content">
-        <div class="central-divider"></div>
-        <p>
-          [Your bio or introduction goes here. You can add multiple paragraphs as needed.]
-        </p>
-      </div>
-    </section>
+      </section>
+    </div>
   </main>
 
   <script>
