@@ -1,63 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <title>Gallery</title>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page Title - Myung Chul Kim</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
   <style>
-    /* Your existing CSS here... */
-
     body {
-      font-family: Arial, Helvetica, sans-serif;
-      text-align: center;
       margin: 0;
-    }
-    
-    /* ...all other existing rules remain unchanged */
-
-    /* Add this snippet */
-    .gallery {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      max-width: 1000px;
-      margin: 0 auto 40px;
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+      color: #333333;
     }
 
-    .gallery a img {
-      width: 100%;
-      height: auto;
-      display: block;
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      background: #8C1515;
+      padding: 20px 0;
+    }
+
+    nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 50px;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 20px;
+    }
+
+    main {
+      padding-top: 40px;
+    }
+
+    .page-title {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .page-description {
+      font-size: 1rem;
+      color: #666;
+      margin-bottom: 40px;
     }
   </style>
 </head>
-
 <body>
-  <h1 class="centered">GALLERY</h1>
-  <div class="navbar">
-    <!-- nav items -->
-  </div>
-  <br>
-  <p>Collection of photos and videos of my life.</p>
+  <header>
+    <div class="container">
+      <nav>
+        <div class="nav-links">
+          <a href="./">Home</a>
+          <a href="publications.html">Publications</a>
+          <a href="research.html">Research</a>
+          <a href="notes.html">Notes</a>
+          <a href="gallery.html">Gallery</a>
+        </div>
+      </nav>
+    </div>
+  </header>
 
-  <div class="gallery">
-    <a href="link-to-image1.html">
-      <img src="image1.jpg" alt="Image 1">
-    </a>
-    <a href="link-to-image2.html">
-      <img src="image2.jpg" alt="Image 2">
-    </a>
-    <a href="link-to-image3.html">
-      <img src="image3.jpg" alt="Image 3">
-    </a>
-    <a href="link-to-image4.html">
-      <img src="image4.jpg" alt="Image 4">
-    </a>
-    <a href="link-to-image5.html">
-      <img src="image5.jpg" alt="Image 5">
-    </a>
-    <!-- Add more images as needed -->
-  </div>
+  <main class="container">
+    <h1 class="page-title">Page Title</h1>
+    <p class="page-description">A brief description of the page content goes here.</p>
+    <!-- Content goes here -->
+  </main>
+
+  <script>
+    // You can add any necessary JavaScript here
+  </script>
 </body>
 </html>
