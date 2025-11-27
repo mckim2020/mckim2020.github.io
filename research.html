@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Page Title - Myung Chul Kim</title>
+  <title>Research - Myung Chul Kim</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
   <style>
     body {
@@ -14,7 +14,7 @@
     }
 
     .container {
-      max-width: 900px;
+      max-width: 1000px;
       margin: 0 auto;
       padding: 20px;
     }
@@ -49,13 +49,54 @@
     .page-title {
       font-size: 2.5rem;
       font-weight: bold;
-      margin-bottom: 20px;
+      margin-bottom: 40px;
     }
 
-    .page-description {
+    .research-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+    }
+
+    .research-item {
+      background-color: #f8f8f8;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .research-item:hover {
+      transform: translateY(-5px);
+    }
+
+    .research-item img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .research-content {
+      padding: 20px;
+    }
+
+    .research-title {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+
+    .research-title a {
+      color: #8C1515;
+      text-decoration: none;
+    }
+
+    .research-title a:hover {
+      text-decoration: underline;
+    }
+
+    .research-description {
       font-size: 1rem;
       color: #666;
-      margin-bottom: 40px;
     }
   </style>
 </head>
@@ -77,8 +118,28 @@
 
   <main class="container">
     <h1 class="page-title">Research</h1>
-    <!-- <p class="page-description">A brief description of the page content goes here.</p> -->
-    <!-- Content goes here -->
+    <div class="research-grid">
+      <div class="research-item">
+        <img src="path/to/rare_events_image.jpg" alt="Rare Events">
+        <div class="research-content">
+          <h2 class="research-title">
+            <a href="research/rare_events.html">Rare Events</a>
+          </h2>
+          <p class="research-description">Brief description of your research on rare events.</p>
+        </div>
+      </div>
+      
+      <!-- Add more research items here -->
+      <div class="research-item">
+        <img src="path/to/another_topic_image.jpg" alt="Another Research Topic">
+        <div class="research-content">
+          <h2 class="research-title">
+            <a href="research/another_topic.html">Another Research Topic</a>
+          </h2>
+          <p class="research-description">Brief description of another research area.</p>
+        </div>
+      </div>
+    </div>
   </main>
 
   <script>
