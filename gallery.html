@@ -14,7 +14,7 @@
     }
 
     .container {
-      max-width: 900px;
+      max-width: 1000px;
       margin: 0 auto;
       padding: 20px;
     }
@@ -83,13 +83,61 @@
     .page-title {
       font-size: 2.5rem;
       font-weight: bold;
-      margin-bottom: 20px;
+      margin-bottom: 40px;
     }
 
-    .page-description {
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 30px;
+    }
+
+    .gallery-item {
+      background-color: #f8f8f8;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .gallery-item:hover {
+      transform: translateY(-5px);
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .gallery-content {
+      padding: 20px;
+    }
+
+    .gallery-title {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+
+    .gallery-title a {
+      color: #8C1515;
+      text-decoration: none;
+    }
+
+    .gallery-title a:hover {
+      text-decoration: underline;
+    }
+
+    .gallery-description {
       font-size: 1rem;
       color: #666;
-      margin-bottom: 40px;
+    }
+
+    /* Responsive design for smaller screens */
+    @media (max-width: 768px) {
+      .gallery-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -111,8 +159,59 @@
 
   <main class="container">
     <h1 class="page-title">Gallery</h1>
-    <!-- <p class="page-description">A brief description of the page content goes here.</p> -->
-    <!-- Content goes here -->
+    <div class="gallery-grid">
+      <div class="gallery-item">
+        <img src="./figs/placeholder1.jpg" alt="Gallery Item 1">
+        <div class="gallery-content">
+          <h2 class="gallery-title">
+            <a href="gallery/item1.html">Gallery Item 1</a>
+          </h2>
+          <p class="gallery-description">Brief description of gallery item 1.</p>
+        </div>
+      </div>
+
+      <div class="gallery-item">
+        <img src="./figs/placeholder2.jpg" alt="Gallery Item 2">
+        <div class="gallery-content">
+          <h2 class="gallery-title">
+            <a href="gallery/item2.html">Gallery Item 2</a>
+          </h2>
+          <p class="gallery-description">Brief description of gallery item 2.</p>
+        </div>
+      </div>
+
+      <div class="gallery-item">
+        <img src="./figs/placeholder3.jpg" alt="Gallery Item 3">
+        <div class="gallery-content">
+          <h2 class="gallery-title">
+            <a href="gallery/item3.html">Gallery Item 3</a>
+          </h2>
+          <p class="gallery-description">Brief description of gallery item 3.</p>
+        </div>
+      </div>
+
+      <div class="gallery-item">
+        <img src="./figs/placeholder4.jpg" alt="Gallery Item 4">
+        <div class="gallery-content">
+          <h2 class="gallery-title">
+            <a href="gallery/item4.html">Gallery Item 4</a>
+          </h2>
+          <p class="gallery-description">Brief description of gallery item 4.</p>
+        </div>
+      </div>
+
+      <div class="gallery-item">
+        <img src="./figs/placeholder5.jpg" alt="Gallery Item 5">
+        <div class="gallery-content">
+          <h2 class="gallery-title">
+            <a href="gallery/item5.html">Gallery Item 5</a>
+          </h2>
+          <p class="gallery-description">Brief description of gallery item 5.</p>
+        </div>
+      </div>
+
+      <!-- Add more gallery items as needed -->
+    </div>
   </main>
 
   <script>
