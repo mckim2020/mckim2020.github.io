@@ -202,20 +202,18 @@
     .link-btn {
       display: inline-block;
       margin-left: 8px;
-      padding: 1px 8px;
       font-size: 0.85rem;
       font-family: 'Source Sans 3', sans-serif;
       color: #8C1515;
-      border: 1px solid #8C1515;
-      border-radius: 3px;
       text-decoration: none;
+      border-bottom: 1px solid #8C1515;
       vertical-align: middle;
-      transition: background 0.2s, color 0.2s;
+      transition: color 0.2s, border-color 0.2s;
     }
 
     .link-btn:hover {
-      background: #8C1515;
-      color: white;
+      color: #5a0d0d;
+      border-color: #5a0d0d;
     }
 
   </style>
@@ -224,7 +222,7 @@
   <header>
     <div class="container">
       <nav>
-        <div class="nav-links" id="navLinks">
+        <div class="nav-links" id="navPapers">
           <a href="./">Home</a>
           <a href="education.html">Education</a>
           <a href="publications.html" class="active">Publications</a>
@@ -252,19 +250,19 @@
       <li class="publication-item">
         <h3>Smart Filtering Facepiece Respirator with Self-Adaptive Fit and Wireless Humidity Monitoring</h3>
         <p>Kangkyu Kwon, Yoon Jae Lee, Yeongju Jung, Ira Soltis, Yewon Na, Lissette Romero, <span class="author-highlight">Myung Chul Kim</span>, Nathan Rodeheaver, Hodam Kim, Chaewon Lee, Seung-Hwan Ko, Jinwoo Lee, Woon-Hong Yeo</p>
-        <p>Biomaterials (2025) <a class="link-btn" href="https://doi.org/10.1016/j.biomaterials.2024.122866" target="_blank" rel="noopener noreferrer">[Link]</a></p>
+        <p>Biomaterials (2025) <a class="link-btn" href="https://doi.org/10.1016/j.biomaterials.2024.122866" target="_blank" rel="noopener noreferrer">Paper</a></p>
       </li>
 
       <li class="publication-item">
         <h3>Stretchable Wearable Wireless Bioelectronics Using All Printed Pressure Sensors and Strain Gauges</h3>
         <p>Nathan Zavanelli, Yoon Jae Lee, <span class="author-highlight">Myung Chul Kim</span>, Allison Bateman, Matthew Guess, Hyeonseok Kim, Dinesh K Patel, Woon‐Hong Yeo</p>
-        <p>Advanced Materials Technologies (2024) <a class="link-btn" href="https://doi.org/10.1002/admt.202400998" target="_blank" rel="noopener noreferrer">[Link]</a></p>
+        <p>Advanced Materials Technologies (2024) <a class="link-btn" href="https://doi.org/10.1002/admt.202400998" target="_blank" rel="noopener noreferrer">Paper</a></p>
       </li>
 
       <li class="publication-item">
         <h3>Advances in Electrochemical Sensors for Detecting Analytes in Biofluids</h3>
         <p>Jimin Lee, <span class="author-highlight">Myung Chul Kim</span>, Ira Soltis, Sung Hoon Lee, Woon-Hong Yeo</p>
-        <p>Advanced Sensor Research (2023) <a class="link-btn" href="https://doi.org/10.1002/adsr.202200088" target="_blank" rel="noopener noreferrer">[Link]</a></p>
+        <p>Advanced Sensor Research (2023) <a class="link-btn" href="https://doi.org/10.1002/adsr.202200088" target="_blank" rel="noopener noreferrer">Paper</a></p>
       </li>
     </ul>
   </main>
@@ -276,13 +274,13 @@
       <li class="publication-item">
         <h3>Accelerating Monte Carlo Simulation of Rare Events by Importance Sampling using Neural Network</h3>
         <p>DAMOP 2025, The 56th Annual Meeting of the APS Division of Atomic, Molecular and Optical Physics</p>
-        <p>Portland, OR (2025) <a class="link-btn" href="https://meetings.aps.org/Meeting/DAMOP25/Session/C07.3" target="_blank" rel="noopener noreferrer">[Link]</a></p>
+        <p>Portland, OR (2025) <a class="link-btn" href="https://meetings.aps.org/Meeting/DAMOP25/Session/C07.3" target="_blank" rel="noopener noreferrer">Paper</a></p>
       </li>
 
       <li class="publication-item">
         <h3>Stretchable Wearable Wireless Bioelectronics Using All Printed Pressure Sensors and Strain Gauges</h3>
         <p>Gordon Research Conference, Multifunctional Materials and Structures</p>
-        <p>Ventura, CA (2022) <a class="link-btn" href="https://www.grc.org/multifunctional-materials-and-structures-conference/2022/" target="_blank" rel="noopener noreferrer">[Link]</a></p>
+        <p>Ventura, CA (2022) <a class="link-btn" href="https://www.grc.org/multifunctional-materials-and-structures-conference/2022/" target="_blank" rel="noopener noreferrer">Paper</a></p>
       </li>
     </ul>
   </main>
@@ -294,15 +292,15 @@
       <li class="publication-item">
         <h3>A method and apparatus for classification of subtypes of cells with morphological and motility features using hybrid learning</h3>
         <p>Hyunjong Shin, Chanhong Min, Minwoo Kang, Hyuntae Jeong, Taeyoon Kwon, <span class="author-highlight">Myung Chul Kim</span></p>
-        <p>KR Patent 10-2762542 (2025) <a class="link-btn" href="https://doi.org/10.8080/1020220085594" target="_blank" rel="noopener noreferrer">[Link]</a></p>
+        <p>KR Patent 10-2762542 (2025) <a class="link-btn" href="https://doi.org/10.8080/1020220085594" target="_blank" rel="noopener noreferrer">Paper</a></p>
       </li>
     </ul>
   </main>
 
   <script>
     const hamburger = document.getElementById('hamburger');
-    const navLinks = document.getElementById('navLinks');
-    hamburger.addEventListener('click', () => navLinks.classList.toggle('open'));
+    const navPapers = document.getElementById('navPapers');
+    hamburger.addEventListener('click', () => navPapers.classList.toggle('open'));
   </script>
 </body>
 </html>
