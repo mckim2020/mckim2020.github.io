@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=EB+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
@@ -43,9 +43,9 @@
     .nav-links a {
       color: white;
       text-decoration: none;
-      font-family: 'Source Sans 3', Arial, sans-serif;
-      font-weight: bold;
-      font-size: 20px;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-weight: 600;
+      font-size: 24px;
       position: relative;
       padding: 8px 0;
       transition: all 0.3s ease;
@@ -98,7 +98,7 @@
 
       .nav-links a {
         padding: 14px 20px;
-        font-size: 18px;
+        font-size: 20px;
         text-align: center;
         border-top: 1px solid rgba(255,255,255,0.1);
       }
@@ -267,6 +267,25 @@
         font-size: 1rem;
       }
     }
+  
+    footer {
+      background: #7a7a7a;
+      color: #f0f0f0;
+      text-align: center;
+      padding: 14px 20px;
+      font-family: 'Source Sans 3', Arial, sans-serif;
+      font-size: 0.85rem;
+      margin-top: 60px;
+    }
+    footer p {
+      margin: 0;
+    }
+    footer a {
+      color: #f0f0f0;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -328,5 +347,8 @@
     const navLinks = document.getElementById('navLinks');
     hamburger.addEventListener('click', () => navLinks.classList.toggle('open'));
   </script>
+  <footer>
+    <p>&copy; 2026 Micro &amp; Nano Mechanics Group &mdash; Stanford University &nbsp;&middot;&nbsp; <a href="https://web.stanford.edu/~caiwei" target="_blank">web.stanford.edu/~caiwei</a></p>
+  </footer>
 </body>
 </html>
