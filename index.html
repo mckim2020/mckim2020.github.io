@@ -26,19 +26,20 @@
       background: #8C1515;
       padding: 20px 0;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      position: relative;
     }
-  
+
     nav {
       display: flex;
       justify-content: center;
       align-items: center;
     }
-  
+
     .nav-links {
       display: flex;
       gap: 50px;
     }
-  
+
     .nav-links a {
       color: white;
       text-decoration: none;
@@ -48,6 +49,69 @@
       position: relative;
       padding: 8px 0;
       transition: all 0.3s ease;
+    }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 5px;
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .hamburger span {
+      display: block;
+      width: 25px;
+      height: 3px;
+      background: white;
+      border-radius: 3px;
+      transition: 0.3s;
+    }
+
+    @media (max-width: 768px) {
+      .hamburger {
+        display: flex;
+      }
+
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #8C1515;
+        flex-direction: column;
+        gap: 0;
+        z-index: 1000;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      }
+
+      .nav-links.open {
+        display: flex;
+      }
+
+      .nav-links a {
+        padding: 14px 20px;
+        font-size: 18px;
+        text-align: center;
+        border-top: 1px solid rgba(255,255,255,0.1);
+      }
+
+      .nav-links a.active {
+        border-radius: 0;
+        padding: 14px 20px;
+        background: rgba(255,255,255,0.15);
+      }
+
+      .nav-links a::after {
+        display: none;
+      }
     }
   
     /* Underline animation effect */
@@ -177,13 +241,39 @@
       text-decoration: underline;
       font-weight: bold;
     }
+
+    @media (max-width: 768px) {
+      .profile {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .profile-left {
+        width: 100%;
+        max-width: 300px;
+      }
+
+      .profile-image {
+        width: 200px;
+        height: 200px;
+      }
+
+      .central-divider {
+        display: none;
+      }
+
+      .bio-text {
+        font-size: 1rem;
+      }
+    }
   </style>
 </head>
 <body>
   <header>
     <div class="container">
       <nav>
-        <div class="nav-links">
+        <div class="nav-links" id="navLinks">
           <a href="./">Home</a>
           <a href="education.html">Education</a>
           <a href="publications.html">Publications</a>
@@ -191,10 +281,9 @@
           <a href="notes.html">Notes</a>
           <a href="gallery.html">Gallery</a>
         </div>
-        <!--<div class="nav-icons">-->
-        <!--  <a href="#" id="darkModeToggle"><i class="fas fa-moon"></i></a>-->
-        <!--  <a href="#" id="searchToggle"><i class="fas fa-search"></i></a>-->
-        <!--</div>-->
+        <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+          <span></span><span></span><span></span>
+        </button>
       </nav>
     </div>
   </header>
@@ -235,18 +324,9 @@
   </main>
 
   <script>
-    // Dark mode toggle functionality
-    const darkModeToggle = document.getElementById('darkModeToggle');
-    darkModeToggle.addEventListener('click', () => {
-      document.body.classList.toggle('dark-mode');
-    });
-
-    // Search functionality (you'll need to implement this)
-    const searchToggle = document.getElementById('searchToggle');
-    searchToggle.addEventListener('click', () => {
-      // Implement search functionality
-      console.log('Search clicked');
-    });
+    const hamburger = document.getElementById('hamburger');
+    const navLinks = document.getElementById('navLinks');
+    hamburger.addEventListener('click', () => navLinks.classList.toggle('open'));
   </script>
 </body>
 </html>
