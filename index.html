@@ -910,6 +910,12 @@
     navLinks.querySelectorAll('a').forEach(link => {
       link.addEventListener('click', () => navLinks.classList.remove('open'));
     });
+
+    // Home link scrolls to the very top
+    document.querySelector('a[href="#home"]').addEventListener('click', e => {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   </script>
 </body>
 </html>
