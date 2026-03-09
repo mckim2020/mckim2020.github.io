@@ -9,24 +9,30 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=EB+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
       margin: 0;
       font-family: 'Source Serif 4', Georgia, serif;
       background: #ffffff;
       color: #333333;
     }
-  
+
     .container {
       max-width: 1200px;
       margin: 0 auto;
       padding: 20px;
     }
-  
+
     header {
       background: #8C1515;
       padding: 20px 0;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      position: relative;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
     nav {
@@ -113,7 +119,7 @@
         display: none;
       }
     }
-  
+
     /* Underline animation effect */
     .nav-links a::after {
       content: '';
@@ -126,53 +132,52 @@
       transition: all 0.3s ease;
       transform: translateX(-50%);
     }
-  
+
     .nav-links a:hover::after {
       width: 100%;
     }
-  
+
     /* Hover scale and glow effect */
     .nav-links a:hover {
       transform: translateY(-2px);
       text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
     }
-  
-    /* Active page indicator */
-    .nav-links a.active {
-      background: rgba(255, 255, 255, 0.2);
-      padding: 8px 16px;
-      border-radius: 20px;
-    }
-  
+
     .nav-icons {
       display: flex;
       gap: 15px;
     }
-  
+
     .nav-icons a {
       color: white;
       text-decoration: none;
       font-size: 20px;
     }
-  
+
+    /* ── Sections ── */
+    section {
+      scroll-margin-top: 80px;
+    }
+
+    /* ── Home / Profile ── */
     .profile-wrapper {
       display: flex;
       justify-content: center;
       margin-top: 40px;
     }
-  
+
     .profile {
       display: flex;
       gap: 40px;
       max-width: 900px;
       width: 100%;
     }
-  
+
     .profile-left {
       text-align: center;
       width: 300px;
     }
-  
+
     .profile-image {
       width: 300px;
       height: 300px;
@@ -180,43 +185,43 @@
       object-fit: cover;
       margin-bottom: 20px;
     }
-  
+
     .profile-name {
       font-size: 1.8rem;
       font-weight: bold;
       margin-bottom: 10px;
     }
-  
+
     .profile-subtitle {
       font-size: 1rem;
       color: #666;
       margin-bottom: 20px;
     }
-  
+
     .social-icons {
       display: flex;
       justify-content: center;
       gap: 15px;
       margin-bottom: 20px;
     }
-  
+
     .social-icons a {
       color: #8C1515;
       text-decoration: none;
       font-size: 24px;
       transition: all 0.3s ease;
     }
-  
+
     .social-icons a:hover {
       transform: scale(1.2) translateY(-3px);
       filter: brightness(1.2);
     }
-  
+
     .profile-content {
       flex: 1;
       position: relative;
     }
-  
+
     .central-divider {
       position: absolute;
       left: -20px;
@@ -225,19 +230,16 @@
       width: 1px;
       background-color: #cccccc;
     }
-  
+
     .bio-text {
       font-size: 1.1rem;
       line-height: 1.6;
     }
-  
+
     .bio-text a {
       color: #8C1515;
       text-decoration: none;
       transition: all 0.2s ease;
-    }
-  
-    .bio-text a:hover {
     }
 
     @media (max-width: 768px) {
@@ -265,7 +267,277 @@
         font-size: 1rem;
       }
     }
-  
+
+    /* ── Section wrapper ── */
+    .section-wrapper {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 20px 0;
+    }
+
+    .section-divider {
+      border: none;
+      border-top: 1px solid #e0e0e0;
+      margin: 60px auto 0;
+      max-width: 900px;
+    }
+
+    .page-title {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 30px;
+      margin-top: 0;
+    }
+
+    /* ── Education / Awards / Service ── */
+    .education-list {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .education-item {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f8f8f8;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .education-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .education-item h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    .education-item p {
+      margin: 5px 0;
+      color: #666;
+    }
+
+    /* ── Publications ── */
+    .publications-list {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .publication-item {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f8f8f8;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .publication-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .publication-item h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    .publication-item p {
+      margin: 5px 0;
+      color: #666;
+    }
+
+    .author-highlight {
+      font-weight: bold;
+      text-decoration: underline;
+    }
+
+    .link-btn {
+      display: inline-block;
+      margin-left: 10px;
+      padding: 3px 11px;
+      font-size: 0.9rem;
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: #8C1515;
+      text-decoration: none;
+      border: 1.5px solid #8C1515;
+      border-radius: 3px;
+      vertical-align: middle;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .link-btn:hover {
+      background: #8C1515;
+      color: #fff;
+    }
+
+    .cover-badge {
+      display: inline-block;
+      margin-left: 10px;
+      padding: 3px 11px;
+      font-size: 0.9rem;
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: #b8860b;
+      text-decoration: none;
+      border: 1.5px solid #b8860b;
+      border-radius: 3px;
+      vertical-align: middle;
+    }
+
+    /* ── Research ── */
+    .research-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+    }
+
+    .research-item {
+      background-color: #f8f8f8;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .research-item:hover {
+      transform: translateY(-5px);
+    }
+
+    .research-item img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .research-content {
+      padding: 20px;
+    }
+
+    .research-title {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+
+    .research-title a {
+      color: #8C1515;
+      text-decoration: none;
+    }
+
+    .research-title a:hover {
+      text-decoration: underline;
+    }
+
+    .research-description {
+      font-size: 1rem;
+      color: #666;
+    }
+
+    /* ── Notes ── */
+    .notes-list {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .note-item {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f8f8f8;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .note-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .note-item h3 {
+      margin-top: 0;
+      margin-bottom: 5px;
+    }
+
+    .note-item p {
+      margin: 0;
+      color: #666;
+    }
+
+    .pdf-link {
+      color: #8C1515;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .pdf-link:hover {
+      text-decoration: underline;
+    }
+
+    .sub-item {
+      margin-top: 10px;
+      padding-left: 0px;
+    }
+
+    /* ── Gallery ── */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 30px;
+    }
+
+    .gallery-item {
+      background-color: #f8f8f8;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .gallery-item:hover {
+      transform: translateY(-5px);
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .gallery-content {
+      padding: 20px;
+    }
+
+    .gallery-title {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+
+    .gallery-title a {
+      color: #8C1515;
+      text-decoration: none;
+    }
+
+    .gallery-title a:hover {
+      text-decoration: underline;
+    }
+
+    .gallery-description {
+      font-size: 1rem;
+      color: #666;
+    }
+
+    @media (max-width: 768px) {
+      .gallery-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── Footer ── */
     footer {
       color: #999;
       text-align: center;
@@ -290,12 +562,12 @@
     <div class="container">
       <nav>
         <div class="nav-links" id="navLinks">
-          <a href="./">Home</a>
-          <a href="education.html">Education</a>
-          <a href="publications.html">Publications</a>
-          <a href="research.html">Research</a>
-          <a href="notes.html">Notes</a>
-          <a href="gallery.html">Gallery</a>
+          <a href="#home">Home</a>
+          <a href="#education">Education</a>
+          <a href="#publications">Publications</a>
+          <a href="#research">Research</a>
+          <a href="#notes">Notes</a>
+          <a href="#gallery">Gallery</a>
         </div>
         <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
           <span></span><span></span><span></span>
@@ -304,45 +576,340 @@
     </div>
   </header>
 
-  <main class="container">
-    <div class="profile-wrapper">
-      <section class="profile">
-        <div class="profile-left">
-          <img src="figs/mckim.jpg" alt="Profile Photo" class="profile-image">
-          <div class="profile-name">Michael Kim</div>
-          <div class="profile-subtitle">
-            PhD Candidate @ Stanford ME<br>
-            Monte Carlo & Molecular Dynamics
+  <main>
+    <!-- Home -->
+    <section id="home">
+      <div class="profile-wrapper">
+        <div class="profile">
+          <div class="profile-left">
+            <img src="figs/mckim.jpg" alt="Profile Photo" class="profile-image">
+            <div class="profile-name">Michael Kim</div>
+            <div class="profile-subtitle">
+              PhD Candidate @ Stanford ME<br>
+              Monte Carlo &amp; Molecular Dynamics
+            </div>
+            <div class="social-icons">
+              <a href="https://scholar.google.com/citations?user=lzw1uB4AAAAJ&hl=en" title="Google Scholar"><i class="fa-brands fa-google-scholar"></i></a>
+              <a href="https://github.com/mckim2020" title="GitHub"><i class="fab fa-github"></i></a>
+              <a href="https://linkedin.com/in/mckim2000" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+              <a href="https://x.com/mckimmmmm" title="Twitter/X"><i class="fa-brands fa-x-twitter"></i></a>
+              <a href="docs/CV_Myung_Chul_Kim.pdf" title="CV"><i class="far fa-file-alt"></i></a>
+              <a href="mailto:mckim@stanford.edu" title="Email"><i class="fas fa-envelope"></i></a>
+            </div>
           </div>
-          <div class="social-icons">
-            <a href="https://scholar.google.com/citations?user=lzw1uB4AAAAJ&hl=en" title="Google Scholar"><i class="fa-brands fa-google-scholar"></i></a>
-            <a href="https://github.com/mckim2020" title="GitHub"><i class="fab fa-github"></i></a>
-            <a href="https://linkedin.com/in/mckim2000" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
-            <a href="https://x.com/mckimmmmm" title="Twitter/X"><i class="fa-brands fa-x-twitter"></i></a>
-            <a href="docs/CV_Myung_Chul_Kim.pdf" title="CV"><i class="far fa-file-alt"></i></a>
-            <a href="mailto:mckim@stanford.edu" title="Email"><i class="fas fa-envelope"></i></a>
+          <div class="profile-content">
+            <div class="central-divider"></div>
+            <p class="bio-text">
+              I am a third year Ph.D. candidate in <a href="https://micronano.stanford.edu/" target="_blank">Micronano Mechanics Group</a> at <a href="https://www.stanford.edu/" target="_blank">Stanford University</a>. I am privileged to be advised by <a href="https://web.stanford.edu/~caiwei/" target="_blank">Prof. Wei Cai</a>.
+              <br><br>
+              My primary research interest lies in rare events, particularly in developing theories and algorithms to (1) accelerate rare events and (2) estimate their dynamic properties.
+              <br><br>
+              I am also interested in prediction of mechanical behaviors of massive polymer networks through molecular dynamics (MD) simulations and statistical analysis.
+              <br><br>
+              Recently, I have been working on accelerated kinetic monte carlo simulation in discretized phase space; utilizing branching random walk algorithm and neural network bias potentials.
+            </p>
           </div>
         </div>
-        <div class="profile-content">
-          <div class="central-divider"></div>
-          <p class="bio-text">
-            I am a third year Ph.D. candidate in <a href="https://micronano.stanford.edu/" target="_blank">Micronano Mechanics Group</a> at <a href="https://www.stanford.edu/" target="_blank">Stanford University</a>. I am privileged to be advised by <a href="https://web.stanford.edu/~caiwei/" target="_blank">Prof. Wei Cai</a>.
-            <br><br>
-            My primary research interest lies in rare events, particularly in developing theories and algorithms to (1) accelerate rare events and (2) estimate their transition rates. 
-            <br><br>
-            I am also interested in prediction of mechanical behaviors of massive polymer networks through molecular dynamics (MD) simulations and statistical analysis.
-            <br><br>
-            Recently, I have been working on accelerated kinetic monte carlo simulation in discretized phase space; utilizing branching random walk algorithm and neural network bias potentials.
-          </p>
+      </div>
+    </section>
+
+    <!-- Education -->
+    <hr class="section-divider">
+    <section id="education">
+      <div class="section-wrapper">
+        <h1 class="page-title">Education</h1>
+        <ul class="education-list">
+          <li class="education-item">
+            <h3>Stanford University</h3>
+            <p>Ph.D. in Mechanical Engineering</p>
+            <p>2023 - Present</p>
+            <p>Advisor: Prof. Wei Cai</p>
+          </li>
+          <li class="education-item">
+            <h3>Korea Advanced Institute of Science and Technology (KAIST)</h3>
+            <p>B.S. in Mechanical Engineering and Electrical Engineering</p>
+            <p>2019 - 2023</p>
+          </li>
+        </ul>
+
+        <h2 class="page-title" style="margin-top:50px;">Awards and Honors</h2>
+        <ul class="education-list">
+          <li class="education-item">
+            <h3>James D. Plummer Graduate Fellowship</h3>
+            <p>Stanford University (2023 - 2024)</p>
+          </li>
+          <li class="education-item">
+            <h3>National Science &amp; Technology Scholarship</h3>
+            <p>Korea Ministry of Science and ICT (2019 - 2023)</p>
+          </li>
+          <li class="education-item">
+            <h3>Global Leadership Award</h3>
+            <p>KAIST (2023)</p>
+          </li>
+          <li class="education-item">
+            <h3>President's Undergraduate Research Award</h3>
+            <p>Georgia Institute of Technology (2022)</p>
+          </li>
+          <li class="education-item">
+            <h3>Young Engineers Honors Society</h3>
+            <p>National Academy of Engineering of Korea (2020)</p>
+          </li>
+          <li class="education-item">
+            <h3>Guwon Academic Excellence Scholarship</h3>
+            <p>Guwon Scholarship Foundation (2020)</p>
+          </li>
+          <li class="education-item">
+            <h3>KAIST Academic Excellence Scholarship</h3>
+            <p>KAIST (2020)</p>
+          </li>
+        </ul>
+
+        <h2 class="page-title" style="margin-top:50px;">Service and Teaching Activities</h2>
+        <ul class="education-list">
+          <li class="education-item">
+            <h3>Summer Undergraduate Research Fellow Mentor</h3>
+            <p>Machine Learning Interatomic Potentials for Large Scale Molecular Dynamics (Summer 2025)</p>
+          </li>
+          <li class="education-item">
+            <h3>Teaching Assistant</h3>
+            <p>ME 346A: Introduction to Statistical Mechanics (Winter 2025)</p>
+          </li>
+          <li class="education-item">
+            <h3>Undergraduates Mentored</h3>
+            <p>Saul Eduardo Perez Herrera (Summer 2025) &rarr; National Autonomous University of Mexico</p>
+            <p>Eitan Cohen Arazi (Winter 2024) &rarr; University of Buenos Aires</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Publications -->
+    <hr class="section-divider">
+    <section id="publications">
+      <div class="section-wrapper">
+        <h1 class="page-title">Publications</h1>
+        <ul class="publications-list">
+          <li class="publication-item">
+            <h3>Accelerated Markov Chain Monte Carlo Simulation via Neural Network&ndash;Driven Importance Sampling</h3>
+            <p><span class="author-highlight">Michael Kim</span>, Wei Cai</p>
+            <p>ArXiv Preprint (2026) <a class="link-btn" href="https://arxiv.org/abs/2602.12294" target="_blank" rel="noopener noreferrer">Link</a> <a class="link-btn" href="docs/importance_sampling_mcmc.pdf" target="_blank" rel="noopener noreferrer">PDF</a></p>
+          </li>
+          <li class="publication-item">
+            <h3>Smart Filtering Facepiece Respirator with Self-Adaptive Fit and Wireless Humidity Monitoring</h3>
+            <p>Kangkyu Kwon, Yoon Jae Lee, Yeongju Jung, Ira Soltis, Yewon Na, Lissette Romero, <span class="author-highlight">Myung Chul Kim</span>, Nathan Rodeheaver, Hodam Kim, Chaewon Lee, Seung-Hwan Ko, Jinwoo Lee, Woon-Hong Yeo</p>
+            <p>Biomaterials (2025) <a class="link-btn" href="https://doi.org/10.1016/j.biomaterials.2024.122866" target="_blank" rel="noopener noreferrer">Link</a></p>
+          </li>
+          <li class="publication-item">
+            <h3>Stretchable Wearable Wireless Bioelectronics Using All Printed Pressure Sensors and Strain Gauges</h3>
+            <p>Nathan Zavanelli, Yoon Jae Lee, <span class="author-highlight">Myung Chul Kim</span>, Allison Bateman, Matthew Guess, Hyeonseok Kim, Dinesh K Patel, Woon&ndash;Hong Yeo</p>
+            <p>Advanced Materials Technologies (2024) <a class="link-btn" href="https://doi.org/10.1002/admt.202400998" target="_blank" rel="noopener noreferrer">Link</a> <span class="cover-badge">Journal Cover</span></p>
+          </li>
+          <li class="publication-item">
+            <h3>Advances in Electrochemical Sensors for Detecting Analytes in Biofluids</h3>
+            <p>Jimin Lee, <span class="author-highlight">Myung Chul Kim</span>, Ira Soltis, Sung Hoon Lee, Woon-Hong Yeo</p>
+            <p>Advanced Sensor Research (2023) <a class="link-btn" href="https://doi.org/10.1002/adsr.202200088" target="_blank" rel="noopener noreferrer">Link</a> <span class="cover-badge">Journal Cover</span></p>
+          </li>
+        </ul>
+
+        <h2 class="page-title" style="margin-top:50px;">Conferences</h2>
+        <ul class="publications-list">
+          <li class="publication-item">
+            <h3>Accelerated Markov Chain Monte Carlo Simulation via Neural Network&ndash;Driven Importance Sampling</h3>
+            <p>DAMOP 2025, The 56th Annual Meeting of the APS Division of Atomic, Molecular and Optical Physics</p>
+            <p>Portland, OR (2025) <a class="link-btn" href="https://meetings.aps.org/Meeting/DAMOP25/Session/C07.3" target="_blank" rel="noopener noreferrer">Link</a></p>
+          </li>
+          <li class="publication-item">
+            <h3>Stretchable Wearable Wireless Bioelectronics Using All Printed Pressure Sensors and Strain Gauges</h3>
+            <p>Gordon Research Conference, Multifunctional Materials and Structures</p>
+            <p>Ventura, CA (2022) <a class="link-btn" href="https://www.grc.org/multifunctional-materials-and-structures-conference/2022/" target="_blank" rel="noopener noreferrer">Link</a></p>
+          </li>
+        </ul>
+
+        <h2 class="page-title" style="margin-top:50px;">Patents</h2>
+        <ul class="publications-list">
+          <li class="publication-item">
+            <h3>A method and apparatus for classification of subtypes of cells with morphological and motility features using hybrid learning</h3>
+            <p>Hyunjong Shin, Chanhong Min, Minwoo Kang, Hyuntae Jeong, Taeyoon Kwon, <span class="author-highlight">Myung Chul Kim</span></p>
+            <p>KR Patent 10-2762542 (2025) <a class="link-btn" href="https://doi.org/10.8080/1020220085594" target="_blank" rel="noopener noreferrer">Link</a></p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Research -->
+    <hr class="section-divider">
+    <section id="research">
+      <div class="section-wrapper">
+        <h1 class="page-title">Research</h1>
+        <div class="research-grid">
+          <div class="research-item">
+            <img src="./figs/tsunami.png" alt="Accelerated Langevin Dynamics Simulation">
+            <div class="research-content">
+              <h2 class="research-title">
+                <a href="research/rare_events.html">Accelerated Langevin Dynamics Simulation</a>
+              </h2>
+              <p class="research-description">Brief description of research on rare events.</p>
+            </div>
+          </div>
+          <div class="research-item">
+            <img src="./figs/tsunami.png" alt="Accelerated MCMC">
+            <div class="research-content">
+              <h2 class="research-title">
+                <a href="research/rare_events.html">Accelerated Markov Chain Monte Carlo Simulation</a>
+              </h2>
+              <p class="research-description">Brief description of research on rare events.</p>
+            </div>
+          </div>
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
+
+    <!-- Notes -->
+    <hr class="section-divider">
+    <section id="notes">
+      <div class="section-wrapper">
+        <h1 class="page-title">Notes</h1>
+        <ul class="notes-list">
+          <li class="note-item">
+            <h3>Advanced Physical Chemistry <a href="docs/adv_phys_chem_winter_2025.pdf" class="pdf-link">[PDF]</a></h3>
+            <p>Stanford, Winter 2025</p>
+          </li>
+          <li class="note-item">
+            <h3>Finite Element Analysis <a href="docs/fin_elem_anal_winter_2025.pdf" class="pdf-link">[PDF]</a></h3>
+            <p>Stanford, Winter 2025</p>
+          </li>
+          <li class="note-item">
+            <h3>Introduction to Statistical Mechanics</h3>
+            <div class="sub-item">
+              Problem Session Notes <a href="docs/intro_stat_mech_ps_winter_2025.pdf" class="pdf-link">[PDF]</a>
+            </div>
+            <p>Stanford, Winter 2025</p>
+          </li>
+          <li class="note-item">
+            <h3>Introduction to Non-Equilibrium Statistical Mechanics <a href="docs/intro_noneq_stat_mech_spring_2024.pdf" class="pdf-link">[PDF]</a></h3>
+            <div class="sub-item">
+              Thermal Activation of Dislocation Glide <a href="docs/therm_act_disl.pdf" class="pdf-link">[PDF]</a>
+            </div>
+            <p>Stanford, Fall 2024</p>
+          </li>
+          <li class="note-item">
+            <h3>Numerical Linear Algebra <a href="docs/num_lin_alg_spring_2024.pdf" class="pdf-link">[PDF]</a></h3>
+            <p>Stanford, Fall 2024</p>
+          </li>
+          <li class="note-item">
+            <h3>Defects and Disorder in Materials <a href="docs/def_dis_mat_spring_2024.pdf" class="pdf-link">[PDF]</a></h3>
+            <p>Stanford, Spring 2024</p>
+          </li>
+          <li class="note-item">
+            <h3>Elasticity and Inelasticity <a href="docs/elast_inelast_spring_2024.pdf" class="pdf-link">[PDF]</a></h3>
+            <p>Stanford, Spring 2024</p>
+          </li>
+          <li class="note-item">
+            <h3>Stochastic Differential Equations <a href="docs/stochastic_de_winter_2024.pdf" class="pdf-link">[PDF]</a></h3>
+            <p>Stanford, Winter 2024</p>
+          </li>
+          <li class="note-item">
+            <h3>Partial Differential Equations <a href="docs/partial_de_winter_2024.pdf" class="pdf-link">[PDF]</a></h3>
+            <p>Stanford, Winter 2024</p>
+          </li>
+          <li class="note-item">
+            <h3>Linear Algebra <a href="docs/linear_algebra_fall_2023.pdf" class="pdf-link">[PDF]</a></h3>
+            <p>Stanford, Fall 2023</p>
+          </li>
+          <li class="note-item">
+            <h3>Applied Quantum Mechanics <a href="docs/applied_quantum_mechanics_fall_2023.pdf" class="pdf-link">[PDF]</a></h3>
+            <p>Stanford, Fall 2023</p>
+          </li>
+          <li class="note-item">
+            <h3>Waves in Solids and Fluids <a href="docs/wave_solid_fluid_fall_2021_red.pdf" class="pdf-link">[PDF]</a></h3>
+            <p>KAIST, Fall 2021</p>
+          </li>
+          <li class="note-item">
+            <h3>Mechanism Design <a href="docs/machine_design_fall_2021.pdf" class="pdf-link">[PDF]</a></h3>
+            <p>KAIST, Fall 2021</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Gallery -->
+    <hr class="section-divider">
+    <section id="gallery">
+      <div class="section-wrapper">
+        <h1 class="page-title">Gallery</h1>
+        <div class="gallery-grid">
+          <div class="gallery-item">
+            <img src="./figs/web/surf_2025.jpg" alt="SURF 2025">
+            <div class="gallery-content">
+              <h2 class="gallery-title">
+                <a href="gallery/surf.html">SURF 2025</a>
+              </h2>
+              <p class="gallery-description">Summer Undergraduate Research Fellowship Program</p>
+            </div>
+          </div>
+          <div class="gallery-item">
+            <img src="./figs/web/compfest_2025_1.jpg" alt="Compfest 2025">
+            <div class="gallery-content">
+              <h2 class="gallery-title">
+                <a href="gallery/compfest.html">Compfest 2025</a>
+              </h2>
+              <p class="gallery-description">Computational Mechanics Festival</p>
+            </div>
+          </div>
+          <div class="gallery-item">
+            <img src="./figs/web/graduation_2023_1.jpg" alt="Graduation 2023">
+            <div class="gallery-content">
+              <h2 class="gallery-title">
+                <a href="gallery/graduation.html">Graduation 2023</a>
+              </h2>
+              <p class="gallery-description">Graduation Ceremony</p>
+            </div>
+          </div>
+          <div class="gallery-item">
+            <img src="./figs/web/boston_2022_1.jpg" alt="Boston 2022">
+            <div class="gallery-content">
+              <h2 class="gallery-title">
+                <a href="gallery/boston.html">Boston 2022</a>
+              </h2>
+              <p class="gallery-description">Traveling Boston</p>
+            </div>
+          </div>
+          <div class="gallery-item">
+            <img src="./figs/web/grc_2022_1.jpg" alt="GRC 2022">
+            <div class="gallery-content">
+              <h2 class="gallery-title">
+                <a href="gallery/grc.html">GRC 2022</a>
+              </h2>
+              <p class="gallery-description">Gordon Research Conference</p>
+            </div>
+          </div>
+          <div class="gallery-item">
+            <img src="./figs/web/bmes_2022_1.jpg" alt="BMES 2022">
+            <div class="gallery-content">
+              <h2 class="gallery-title">
+                <a href="gallery/bmes.html">BMES 2022</a>
+              </h2>
+              <p class="gallery-description">Biomedical Engineering Society Annual Meeting</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <footer>
+    <p>&copy; 2026 Myung Chul Kim</p>
+  </footer>
 
   <script>
     const hamburger = document.getElementById('hamburger');
     const navLinks = document.getElementById('navLinks');
     hamburger.addEventListener('click', () => navLinks.classList.toggle('open'));
+
+    // Close mobile menu when a nav link is clicked
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => navLinks.classList.remove('open'));
+    });
   </script>
 </body>
 </html>
