@@ -290,11 +290,16 @@
         <div>Michael M. Kim, Wei Cai</div>
         <div class="venue">ChemRxiv Preprint (2026)</div>
         <div class="links">
-          <a href="#"><i class="fa-solid fa-file-pdf"></i>Paper (PDF)</a>
-          <a href="#"><i class="fa-solid fa-book"></i>arXiv</a>
-          <a href="#"><i class="fa-brands fa-github"></i>Code</a>
-          <a href="#"><i class="fa-solid fa-quote-right"></i>BibTeX</a>
+          <a href="../docs/importance_sampling_langevin.pdf" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-file-pdf"></i>Paper (PDF)</a>
+          <a href="https://chemrxiv.org/doi/full/10.26434/chemrxiv.15000772" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-book"></i>ChemRxiv</a>
+          <a href="#" onclick="toggleBibtex(event, 'bibtex-langevin')"><i class="fa-solid fa-quote-right"></i>BibTeX</a>
         </div>
+        <pre id="bibtex-langevin" style="display:none; margin-top:12px; background:#f3f0ec; padding:12px; border-radius:4px; font-size:0.85rem; overflow-x:auto;">@article{kimaccelerated,
+  title={Accelerated Langevin Dynamics Simulation via Neural Network-Driven Importance Sampling},
+  author={Kim, Michael and Cai, Wei},
+  journal={chemRxiv preprint},
+  year={2026}
+}</pre>
       </div>
 
       <!-- ============ OVERVIEW ============ -->
@@ -536,7 +541,11 @@
   </main>
 
   <script>
-    // Reserved for future interactivity.
+    function toggleBibtex(e, id) {
+      e.preventDefault();
+      const el = document.getElementById(id);
+      el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
   </script>
 </body>
 </html>
