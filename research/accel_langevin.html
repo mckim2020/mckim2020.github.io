@@ -279,7 +279,7 @@
   </header>
 
   <main class="container">
-    <h1 class="page-title">Accelerating Langevin Dynamics Simulation</h1>
+    <h1 class="page-title">Accelerated Langevin Dynamics</h1>
     <p class="page-subtitle">Neural network-driven importance sampling for accelerated Langevin dynamics</p>
 
     <div class="content">
@@ -288,7 +288,7 @@
       <div class="paper-card">
         <div class="authors"><b>Accelerated Langevin Dynamics Simulation via Neural Network-Driven Importance Sampling</b></div>
         <div>Michael M. Kim, Wei Cai</div>
-        <div class="venue">Department of Mechanical Engineering, Stanford University · 2026</div>
+        <div class="venue">ChemRxiv Preprint (2026)</div>
         <div class="links">
           <a href="#"><i class="fa-solid fa-file-pdf"></i>Paper (PDF)</a>
           <a href="#"><i class="fa-solid fa-book"></i>arXiv</a>
@@ -303,14 +303,14 @@
         Atomistic simulations are powerful tools for understanding mechanisms at the molecular scale,
         but they are fundamentally limited by the timescales accessible to brute-force integration.
         Most of the simulated time is spent inside metastable basins, while the rare transitions
-        <em>between</em> basins—protein conformational changes, defect rearrangements, nucleation events—are
+        between basins (e.g., protein conformational changes, defect rearrangements, nucleation events) are
         precisely what governs long-term evolution.
       </p>
       <p>
         My research develops an importance-sampling framework that accelerates Langevin dynamics
         simulations of these rare transitions, while still recovering the <em>unbiased</em> transition rates
-        and the correct relative probabilities of competing reaction channels. The biasing is driven by a
-        neural-network–parameterized importance function (a learned approximation of the committor),
+        and the <em>correct</em> relative probabilities of competing reaction channels. The biasing is driven by a
+        neural network-parameterized importance function (a learned approximation of the committor),
         and statistical reliability is maintained by a branching random walk (BRW) algorithm that
         controls the variance of path weights.
       </p>
