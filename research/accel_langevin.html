@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<!--
+  Image paths used: ../images/rare_events/<figure>.png
+  Adjust the IMG_BASE constant in <style> (or each <img src>) if your figures
+  live somewhere else (e.g. /research/figures/, ../assets/, etc.).
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rare Events Research - Myung Chul Kim</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=EB+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- MathJax for inline equations -->
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Source Serif 4', Georgia, serif;
+      background: #ffffff;
+      color: #333333;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      background: #8C1515;
+      padding: 20px 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 50px;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-weight: 600;
+      font-size: 24px;
+      position: relative;
+      padding: 8px 0;
+      transition: all 0.3s ease;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 3px;
+      background: white;
+      transition: all 0.3s ease;
+      transform: translateX(-50%);
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .nav-links a:hover {
+      transform: translateY(-2px);
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+
+    .nav-links a.active {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 8px 16px;
+      border-radius: 20px;
+    }
+
+    main {
+      padding-top: 40px;
+      padding-bottom: 60px;
+    }
+
+    .page-title {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #8C1515;
+    }
+
+    .page-subtitle {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.35rem;
+      font-style: italic;
+      color: #555;
+      margin-top: 0;
+      margin-bottom: 30px;
+    }
+
+    .content {
+      font-size: 1.1rem;
+      line-height: 1.7;
+    }
+
+    .content h2 {
+      font-family: 'EB Garamond', Georgia, serif;
+      color: #8C1515;
+      font-size: 1.75rem;
+      margin-top: 2.2em;
+      margin-bottom: 0.5em;
+      border-bottom: 2px solid #8C1515;
+      padding-bottom: 4px;
+    }
+
+    .content h3 {
+      font-family: 'EB Garamond', Georgia, serif;
+      color: #444;
+      font-size: 1.3rem;
+      margin-top: 1.6em;
+      margin-bottom: 0.4em;
+    }
+
+    .content p {
+      text-align: justify;
+      hyphens: auto;
+    }
+
+    .content a {
+      color: #8C1515;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(140, 21, 21, 0.4);
+      transition: border-color 0.2s ease;
+    }
+    .content a:hover {
+      border-bottom-color: #8C1515;
+    }
+
+    /* Paper info card */
+    .paper-card {
+      background: #faf6f6;
+      border-left: 4px solid #8C1515;
+      padding: 16px 22px;
+      margin: 0 0 30px 0;
+      font-size: 1.0rem;
+    }
+    .paper-card .authors {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.15rem;
+      margin-bottom: 4px;
+    }
+    .paper-card .venue {
+      color: #666;
+      font-style: italic;
+      font-size: 0.95rem;
+    }
+    .paper-card .links {
+      margin-top: 10px;
+    }
+    .paper-card .links a {
+      display: inline-block;
+      margin-right: 14px;
+      color: #8C1515;
+      font-weight: 600;
+      border: none;
+    }
+    .paper-card .links a i {
+      margin-right: 4px;
+    }
+
+    /* Figures */
+    figure {
+      margin: 28px auto;
+      text-align: center;
+    }
+    figure img {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #e6e6e6;
+      border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    figure.fig-narrow img { max-width: 60%; }
+    figure.fig-medium img { max-width: 80%; }
+    figure.fig-pair {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    figure.fig-pair img { max-width: 48%; }
+    figcaption {
+      font-size: 0.92rem;
+      color: #555;
+      margin-top: 10px;
+      line-height: 1.45;
+      text-align: justify;
+      padding: 0 6px;
+    }
+    figcaption b { color: #333; }
+
+    /* Equations / display math wrapper */
+    .eq-block {
+      margin: 18px 0;
+      overflow-x: auto;
+    }
+
+    /* Highlight box for key takeaway */
+    .takeaway {
+      background: #fff8e6;
+      border-left: 4px solid #d4a017;
+      padding: 14px 20px;
+      margin: 24px 0;
+      font-size: 1.0rem;
+    }
+
+    /* Key contributions list */
+    .contributions {
+      padding-left: 0;
+      list-style: none;
+    }
+    .contributions li {
+      position: relative;
+      padding: 8px 0 8px 32px;
+      border-bottom: 1px dashed #e0e0e0;
+    }
+    .contributions li:last-child { border-bottom: none; }
+    .contributions li::before {
+      content: '\f192'; /* fontawesome dot-circle */
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      color: #8C1515;
+      position: absolute;
+      left: 4px;
+      top: 11px;
+      font-size: 0.9em;
+    }
+
+    code {
+      background: #f3f0ec;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 0.92em;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <nav>
+        <div class="nav-links">
+          <a href="../">Home</a>
+          <a href="../education.html">Education</a>
+          <a href="../publications.html">Publications</a>
+          <a href="../research.html" class="active">Research</a>
+          <a href="../notes.html">Notes</a>
+          <a href="../gallery.html">Adventures</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <h1 class="page-title">Rare Events</h1>
+    <p class="page-subtitle">Neural-network–driven importance sampling for accelerated Langevin dynamics</p>
+
+    <div class="content">
+
+      <!-- ============ PAPER CARD ============ -->
+      <div class="paper-card">
+        <div class="authors"><b>Accelerated Langevin Dynamics Simulation via Neural Network–Driven Importance Sampling</b></div>
+        <div>Michael M. Kim, Wei Cai</div>
+        <div class="venue">Department of Mechanical Engineering, Stanford University · 2026</div>
+        <div class="links">
+          <a href="#"><i class="fa-solid fa-file-pdf"></i>Paper (PDF)</a>
+          <a href="#"><i class="fa-solid fa-book"></i>arXiv</a>
+          <a href="#"><i class="fa-brands fa-github"></i>Code</a>
+          <a href="#"><i class="fa-solid fa-quote-right"></i>BibTeX</a>
+        </div>
+      </div>
+
+      <!-- ============ OVERVIEW ============ -->
+      <h2>Overview</h2>
+      <p>
+        Atomistic simulations are powerful tools for understanding mechanisms at the molecular scale,
+        but they are fundamentally limited by the timescales accessible to brute-force integration.
+        Most of the simulated time is spent inside metastable basins, while the rare transitions
+        <em>between</em> basins—protein conformational changes, defect rearrangements, nucleation events—are
+        precisely what governs long-term evolution.
+      </p>
+      <p>
+        My research develops an importance-sampling framework that accelerates Langevin dynamics
+        simulations of these rare transitions, while still recovering the <em>unbiased</em> transition rates
+        and the correct relative probabilities of competing reaction channels. The biasing is driven by a
+        neural-network–parameterized importance function (a learned approximation of the committor),
+        and statistical reliability is maintained by a branching random walk (BRW) algorithm that
+        controls the variance of path weights.
+      </p>
+
+      <!-- ============ THE RARE EVENT PROBLEM ============ -->
+      <h2>The Rare Event Problem</h2>
+      <p>
+        Consider a system with position $\mathbf{x} \in \Omega$ evolving under overdamped Langevin dynamics
+        at temperature $T$:
+      </p>
+      <div class="eq-block">
+        $$ d\mathbf{x}(t) = -\gamma^{-1}\,\nabla U(\mathbf{x}(t))\,dt + \sqrt{2\gamma^{-1}\beta^{-1}}\, d\mathbf{W}(t), \qquad \beta = 1/(k_B T). $$
+      </div>
+      <p>
+        The energy landscape $U(\mathbf{x})$ partitions $\Omega$ into deep basins corresponding to
+        metastable states $\Omega_{\rm A}$ and $\Omega_{\rm B}$, separated by saddle points.
+        Because the equilibrium distribution $\rho_{\rm eq}(\mathbf{x}) \propto e^{-\beta U(\mathbf{x})}$
+        is concentrated near the minima, a trajectory initialized in $\Omega_{\rm A}$ tends to remain
+        there for very long times before making the rare jump into $\Omega_{\rm B}$.
+      </p>
+
+      <figure class="fig-narrow">
+        <img src="../images/rare_events/system.png" alt="Energy landscape with two metastable basins">
+        <figcaption>
+          <b>Figure 1.</b> Schematic of the configuration space partitioned into two metastable basins.
+          Small regions A and B sit near the local minima; the dividing surface between basins passes through
+          the saddle points $S_1$ and $S_2$. A failure path leaves region A and returns; a success path
+          reaches region B before returning.
+        </figcaption>
+      </figure>
+
+      <p>
+        Defining small regions A and B around the energy minima lets us decompose any long trajectory into
+        short <em>paths</em>—either <em>failure</em> paths (leave A, return to A before reaching B) or
+        <em>success</em> paths (leave A, reach B before returning). The transition rate is then
+      </p>
+      <div class="eq-block">
+        $$ r_{\rm AB} = \langle t_{\rm FPT}\rangle^{-1} \approx J_{\rm A}\, P_{\rm AB}, $$
+      </div>
+      <p>
+        where $J_{\rm A} = \langle t_{\rm AA}\rangle^{-1}$ is the flux out of region A
+        (the <a href="#" target="_blank">Hill relation</a>) and $P_{\rm AB}$ is the success probability—the
+        rare quantity we want to estimate. For genuine rare events $P_{\rm AB} \ll 1$, so brute-force
+        sampling is hopeless.
+      </p>
+
+      <figure class="fig-medium">
+        <img src="../images/rare_events/transition_process.png" alt="Decomposition of a long trajectory into failure and success paths">
+        <figcaption>
+          <b>Figure 2.</b> A long-time trajectory decomposed into many short paths. Red curves are
+          failure paths returning to A; the blue curve is a successful path reaching B. The rare event problem
+          is equivalent to the overwhelming probability of generating failure paths versus the vanishingly
+          small probability of generating a success path.
+        </figcaption>
+      </figure>
+
+      <!-- ============ APPROACH ============ -->
+      <h2>Approach</h2>
+      <p>
+        The framework modifies the dynamics through an <em>importance function</em> $I(\mathbf{x})$ that
+        biases the transition kernel toward successful trajectories. The optimal choice is the committor
+        function—the probability that a path starting at $\mathbf{x}$ reaches B before A—but the committor
+        is the solution of a high-dimensional PDE on a complex landscape and is generally intractable.
+        Two ideas make the framework practical:
+      </p>
+
+      <ul class="contributions">
+        <li>
+          <b>Neural-network parameterization of the importance function.</b>
+          $I(\mathbf{x};\theta)$ is represented by a neural network and trained adaptively.
+          For atomistic systems the network respects physical symmetries (translation, rotation,
+          atom-permutation) via a SchNet-style graph neural network.
+        </li>
+        <li>
+          <b>Unbiased rate estimator that tolerates approximation error.</b>
+          Even when $I(\mathbf{x};\theta)$ is not exactly optimal, weighting each sampled path
+          $\Gamma$ by $W(\Gamma)$ derived from the stopped transition operator yields an unbiased
+          estimator of $P_{\rm AB}$ and of the rate $r_{\rm AB}$. Crucially, the relative probabilities
+          of competing reaction channels are also preserved.
+        </li>
+        <li>
+          <b>Branching random walk (BRW) for variance control.</b>
+          Naive importance sampling produces path weights with extreme variance—a few paths dominate
+          the estimator. The BRW algorithm splits over-weighted paths and prunes under-weighted ones,
+          keeping the weight distribution within a controlled range and dramatically reducing the
+          variance of $\hat{r}_{\rm AB}$.
+        </li>
+        <li>
+          <b>Reverse path sampling and bidirectional rates.</b>
+          The same neural-network importance function is used to sample both A→B and B→A transitions,
+          enabling consistent estimation of forward and reverse rates without a separate biasing strategy
+          for each direction.
+        </li>
+      </ul>
+
+      <!-- ============ RESULTS ============ -->
+      <h2>Results</h2>
+
+      <h3>2D Potential with Two Reaction Channels</h3>
+      <p>
+        The first benchmark is a two-dimensional potential with two saddle points and asymmetric
+        barriers (1.02 eV and 0.98 eV). The neural network learns the importance function
+        from short biased trajectories, and the framework recovers both the total transition rate
+        and the relative weight of each channel in close agreement with the analytical and
+        brute-force references. This is a clean setting to verify that errors in the learned
+        importance function are absorbed by the path-weight reweighting.
+      </p>
+
+      <figure>
+        <img src="../images/rare_events/nn_TC_1.0mu_23.2beta_0.01000dt_5stride_100swarm_1000escapes__3d.png"
+             alt="Neural network importance function on the 2D two-channel system">
+        <figcaption>
+          <b>Figure 3.</b> Neural-network importance function trained on the 2D two-channel system.
+          The learned $I(\mathbf{x};\theta)$ smoothly interpolates between the two basins and
+          captures the structure of the committor across both reaction channels.
+        </figcaption>
+      </figure>
+
+      <h3>14-Dimensional Rugged Potential</h3>
+      <p>
+        Scaling up, the framework is applied to a 14-dimensional rugged potential constructed by
+        embedding the two-channel system into a high-dimensional space with additional rough
+        directions. Importance sampling continues to recover accurate transition rates and channel
+        fractions, demonstrating that the neural-network parameterization scales beyond the regime
+        where exact committor PDE solvers are feasible.
+      </p>
+
+      <h3>The LJ7 Atomistic System</h3>
+      <p>
+        The most demanding benchmark is the system of seven Lennard-Jones discs (LJ7)—a 14-degree-of-
+        freedom atomistic model whose local energy minima fall into four collections $C_0,C_1,C_2,C_3$
+        (after quotienting out continuous symmetries). A soft-core form of the LJ potential is used to
+        regularize the $r_{ij}\to 0$ singularity:
+      </p>
+      <div class="eq-block">
+        $$ U_{\rm LJ7}^{\rm soft}(\{\mathbf{x}_i\}) = 4\varepsilon\sum_{i<j}\!\left[ s_{ij}^{-2} - s_{ij}^{-1} \right], \qquad s_{ij} = \alpha + (r_{ij}/\varsigma)^6. $$
+      </div>
+      <p>
+        Metastable states are labeled by the second and third central moments $(\mu_2, \mu_3)$ of the
+        atomic coordination numbers. The transition of interest goes from the ground state $C_3$
+        (region A) to the higher-energy $C_2$ family (region B), which itself decomposes into four
+        distinct transition modes $M_1$–$M_4$ with slightly different barriers (0.49 eV vs. 0.52 eV).
+      </p>
+
+      <figure class="fig-pair">
+        <img src="../images/rare_events/LJ7_potential.png" alt="Soft Lennard-Jones pair potential">
+        <img src="../images/rare_events/LJ7_map_and_clusters.png" alt="LJ7 metastable states in collective-variable space">
+        <figcaption>
+          <b>Figure 4.</b> Left: soft-core LJ pair potential, regularized to avoid divergent forces.
+          Right: the four families of LJ7 local minima projected onto the $(\mu_2,\mu_3)$ collective
+          variable space, with representative configurations.
+        </figcaption>
+      </figure>
+
+      <p>
+        At $T=600$ K the importance-sampled rate is
+        $r_{\rm AB} = (4.32 \pm 0.01)\times 10^{-4}$ fs$^{-1}$, in excellent agreement with the
+        brute-force rate $4.41\times 10^{-4}$ fs$^{-1}$. Without the path-weight reweighting—using
+        $I(\mathbf{x};\theta)$ as if it were the exact optimal importance function—the rate is
+        underestimated by roughly 40%, and the relative weights of the four transition modes collapse
+        to a near-uniform distribution rather than the correct asymmetric pattern. Reweighting is
+        what allows the framework to distinguish the lower-barrier modes $M_1, M_2$
+        (~32% each) from the higher-barrier modes $M_3, M_4$ (~18% each).
+      </p>
+
+      <figure class="fig-pair">
+        <img src="../images/rare_events/LJ7_trajectories_M1_M2.png" alt="Sampled transition paths for modes M1 and M2">
+        <img src="../images/rare_events/LJ7_trajectories_M3_M4.png" alt="Sampled transition paths for modes M3 and M4">
+        <figcaption>
+          <b>Figure 5.</b> Sampled transition paths for the four LJ7 transition modes, projected onto
+          the $(\mu_2, \mu_3)$ collective variables and colored by the learned importance function value.
+        </figcaption>
+      </figure>
+
+      <h3>Transfer Learning Across Temperatures</h3>
+      <p>
+        The optimal importance function is temperature-dependent, so naively the network would have to be
+        retrained at every temperature of interest. Instead, the network trained at $T=600$ K is used as a
+        warm start for $T=500, 400, 300$ K via transfer learning. This recovers Kramers-theory-consistent
+        rates spanning four orders of magnitude—down to $r_{\rm AB} \approx 3\times 10^{-8}$ fs$^{-1}$ at
+        300 K—at temperatures where brute-force Langevin dynamics cannot accumulate any transitions in
+        feasible wall-clock time. The agreement with Kramers theory in fact <em>improves</em> at lower
+        temperatures, where the harmonic approximation underlying Kramers becomes more accurate.
+      </p>
+
+      <figure class="fig-medium">
+        <img src="../images/rare_events/arrhenius_plot_all.png" alt="Arrhenius plot of LJ7 transition rate across temperatures">
+        <figcaption>
+          <b>Figure 6.</b> Arrhenius plot of the LJ7 transition rate $r_{\rm AB}$ across temperatures.
+          Importance sampling agrees with Kramers theory across four orders of magnitude in rate,
+          while the no-reweighting estimator deviates systematically and overestimates the rate at
+          low temperature by nearly a factor of two.
+        </figcaption>
+      </figure>
+
+      <div class="takeaway">
+        <b>Takeaway.</b> A learned, imperfect importance function is sufficient for accurate rate and
+        mechanism estimation, provided sampled paths are reweighted using the stopped-transition-operator
+        formula and their weights are managed by a branching random walk. The framework gives both the
+        right total rate and the right channel-resolved breakdown, and it generalizes across temperatures
+        through transfer learning.
+      </div>
+
+      <!-- ============ FUTURE ============ -->
+      <h2>Future Directions</h2>
+      <p>
+        Ongoing and future work extends the framework toward larger atomistic systems and richer
+        physical settings: protein conformational changes, crystal defect evolution and dislocation
+        plasticity, and underdamped Langevin dynamics where inertia plays a role. There are also
+        promising connections to maximum-diffusion reinforcement learning, score-based diffusion
+        models, and quantum-walk acceleration of Fokker-Planck propagators that I am exploring as
+        part of broader efforts to learn good importance functions automatically.
+      </p>
+
+      <!-- ============ REFERENCES ============ -->
+      <h2>Reference</h2>
+      <p style="font-size: 0.98rem; color: #444;">
+        M. M. Kim and W. Cai, <em>Accelerated Langevin Dynamics Simulation via Neural Network–Driven
+        Importance Sampling</em>, 2026.
+      </p>
+
+    </div>
+  </main>
+
+  <script>
+    // Reserved for future interactivity.
+  </script>
+</body>
+</html>

@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<!--
+  Image paths used: ../images/mcmc_rare_events/<figure>.png
+  Adjust the prefix in <img src> if your figures live elsewhere.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MCMC Rare Events Research - Myung Chul Kim</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=EB+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- MathJax for inline equations -->
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Source Serif 4', Georgia, serif;
+      background: #ffffff;
+      color: #333333;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      background: #8C1515;
+      padding: 20px 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 50px;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-weight: 600;
+      font-size: 24px;
+      position: relative;
+      padding: 8px 0;
+      transition: all 0.3s ease;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 3px;
+      background: white;
+      transition: all 0.3s ease;
+      transform: translateX(-50%);
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .nav-links a:hover {
+      transform: translateY(-2px);
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+
+    .nav-links a.active {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 8px 16px;
+      border-radius: 20px;
+    }
+
+    main {
+      padding-top: 40px;
+      padding-bottom: 60px;
+    }
+
+    .page-title {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #8C1515;
+    }
+
+    .page-subtitle {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.35rem;
+      font-style: italic;
+      color: #555;
+      margin-top: 0;
+      margin-bottom: 30px;
+    }
+
+    .content {
+      font-size: 1.1rem;
+      line-height: 1.7;
+    }
+
+    .content h2 {
+      font-family: 'EB Garamond', Georgia, serif;
+      color: #8C1515;
+      font-size: 1.75rem;
+      margin-top: 2.2em;
+      margin-bottom: 0.5em;
+      border-bottom: 2px solid #8C1515;
+      padding-bottom: 4px;
+    }
+
+    .content h3 {
+      font-family: 'EB Garamond', Georgia, serif;
+      color: #444;
+      font-size: 1.3rem;
+      margin-top: 1.6em;
+      margin-bottom: 0.4em;
+    }
+
+    .content p {
+      text-align: justify;
+      hyphens: auto;
+    }
+
+    .content a {
+      color: #8C1515;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(140, 21, 21, 0.4);
+      transition: border-color 0.2s ease;
+    }
+    .content a:hover {
+      border-bottom-color: #8C1515;
+    }
+
+    /* Paper info card */
+    .paper-card {
+      background: #faf6f6;
+      border-left: 4px solid #8C1515;
+      padding: 16px 22px;
+      margin: 0 0 30px 0;
+      font-size: 1.0rem;
+    }
+    .paper-card .authors {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.15rem;
+      margin-bottom: 4px;
+    }
+    .paper-card .venue {
+      color: #666;
+      font-style: italic;
+      font-size: 0.95rem;
+    }
+    .paper-card .links {
+      margin-top: 10px;
+    }
+    .paper-card .links a {
+      display: inline-block;
+      margin-right: 14px;
+      color: #8C1515;
+      font-weight: 600;
+      border: none;
+    }
+    .paper-card .links a i {
+      margin-right: 4px;
+    }
+
+    /* Figures */
+    figure {
+      margin: 28px auto;
+      text-align: center;
+    }
+    figure img {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #e6e6e6;
+      border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    figure.fig-narrow img { max-width: 60%; }
+    figure.fig-medium img { max-width: 80%; }
+    figure.fig-pair {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    figure.fig-pair img { max-width: 48%; }
+    figure.fig-triple {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    figure.fig-triple img { max-width: 32%; }
+    figcaption {
+      font-size: 0.92rem;
+      color: #555;
+      margin-top: 10px;
+      line-height: 1.45;
+      text-align: justify;
+      padding: 0 6px;
+    }
+    figcaption b { color: #333; }
+
+    /* Equations / display math wrapper */
+    .eq-block {
+      margin: 18px 0;
+      overflow-x: auto;
+    }
+
+    /* Highlight box for key takeaway */
+    .takeaway {
+      background: #fff8e6;
+      border-left: 4px solid #d4a017;
+      padding: 14px 20px;
+      margin: 24px 0;
+      font-size: 1.0rem;
+    }
+
+    /* Key contributions list */
+    .contributions {
+      padding-left: 0;
+      list-style: none;
+    }
+    .contributions li {
+      position: relative;
+      padding: 8px 0 8px 32px;
+      border-bottom: 1px dashed #e0e0e0;
+    }
+    .contributions li:last-child { border-bottom: none; }
+    .contributions li::before {
+      content: '\f192'; /* fontawesome dot-circle */
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      color: #8C1515;
+      position: absolute;
+      left: 4px;
+      top: 11px;
+      font-size: 0.9em;
+    }
+
+    code {
+      background: #f3f0ec;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 0.92em;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <nav>
+        <div class="nav-links">
+          <a href="../">Home</a>
+          <a href="../education.html">Education</a>
+          <a href="../publications.html">Publications</a>
+          <a href="../research.html" class="active">Research</a>
+          <a href="../notes.html">Notes</a>
+          <a href="../gallery.html">Adventures</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <h1 class="page-title">MCMC Rare Events</h1>
+    <p class="page-subtitle">Neural-network–driven importance sampling for accelerated Markov chain Monte Carlo</p>
+
+    <div class="content">
+
+      <!-- ============ PAPER CARD ============ -->
+      <div class="paper-card">
+        <div class="authors"><b>Accelerated Markov Chain Monte Carlo Simulation via Neural Network–Driven Importance Sampling</b></div>
+        <div>Michael M. Kim, Wei Cai</div>
+        <div class="venue">Department of Mechanical Engineering, Stanford University</div>
+        <div class="links">
+          <a href="#"><i class="fa-solid fa-file-pdf"></i>Paper (PDF)</a>
+          <a href="#"><i class="fa-solid fa-book"></i>arXiv</a>
+          <a href="#"><i class="fa-brands fa-github"></i>Code</a>
+          <a href="#"><i class="fa-solid fa-quote-right"></i>BibTeX</a>
+        </div>
+      </div>
+
+      <!-- ============ OVERVIEW ============ -->
+      <h2>Overview</h2>
+      <p>
+        Atomistic simulations are a powerful tool for understanding material behavior at the
+        microscopic scale, but their applicability is fundamentally limited by the timescales
+        accessible to brute-force methods. Systems remain trapped within metastable states
+        for long stretches of simulation time, while the rare transitions between states are
+        what actually drive the long-term evolution—a difficulty widely known as the
+        <em>time-scale</em> or <em>rare-event</em> problem.
+      </p>
+      <p>
+        This work presents an importance-sampling framework for accelerating
+        <em>discrete-state</em> Markov chain Monte Carlo (MCMC) simulations, in which a neural
+        network is trained to represent the optimal <em>bias potential</em>—the logarithm of
+        the optimal importance function. By operating in log-space, the method handles the
+        extremely small magnitudes of the importance function near energy minima that would
+        otherwise cause numerical underflow at low temperatures. A rigorous reweighting formula
+        recovers the unbiased transition rates of the original system, and a branching random
+        walk (BRW) procedure controls the variance of the estimator.
+      </p>
+      <p>
+        This is the discrete-state precursor to my
+        <a href="rare_events.html">continuous Langevin dynamics</a> framework, which extends
+        the same ideas to atomistic systems with continuous degrees of freedom.
+      </p>
+
+      <!-- ============ PROBLEM ============ -->
+      <h2>Problem Setup</h2>
+      <p>
+        Consider a discrete domain $\Omega$ of microscopic states laid out on a regular grid,
+        with an energy landscape $E(i)$ defined on each site. The kinetics is specified by jump
+        rates between nearest-neighbor sites:
+      </p>
+      <div class="eq-block">
+        $$ r(i \to j) = \nu_0 \, \exp\!\left[-\frac{E(j) - E(i)}{2 k_B T}\right] \, \mathbb{1}_{\rm nn}(i,j), $$
+      </div>
+      <p>
+        where $\nu_0$ is a frequency prefactor and $\mathbb{1}_{\rm nn}(i,j)=1$ for nearest
+        neighbors. These rates satisfy detailed balance with respect to the Boltzmann
+        distribution. The corresponding jump <em>probabilities</em> upon leaving site $i$ are
+        $K(i\to j) = r(i\to j)/r_{\rm tot}(i)$.
+      </p>
+
+      <figure class="fig-narrow">
+        <img src="../images/mcmc_rare_events/pel_discrete_omega.png" alt="Discrete energy landscape with two basins">
+        <figcaption>
+          <b>Figure 1.</b> A discrete domain $\Omega$ of microscopic states on a 2D grid,
+          colored by the energy landscape $E(i)$. Two metastable minima A and B sit at the
+          bottoms of the basins, separated by saddle points $S_1$ and $S_2$. The white path
+          shows a transition from A to B passing near $S_1$.
+        </figcaption>
+      </figure>
+
+      <p>
+        At low temperatures, a system initialized near A spends a long time in the A-basin
+        before a rare transition into the B-basin. The two practical objectives are
+        <em>(i)</em> obtaining accurate transition rates between metastable states, and
+        <em>(ii)</em> resolving the relative probabilities of competing reaction channels
+        (e.g.&nbsp;those that pass through $S_1$ vs.&nbsp;$S_2$).
+      </p>
+
+      <!-- ============ APPROACH ============ -->
+      <h2>Approach</h2>
+      <p>
+        Importance sampling modifies the jump probabilities through an importance function $I(i)$:
+      </p>
+      <div class="eq-block">
+        $$ K'(i\to j) = \frac{1}{n'(i)} \, K(i\to j) \, \frac{I(j)}{I(i)} \, \big[1 - \mathbb{1}_{\rm A}(j)\big], $$
+      </div>
+      <p>
+        where the indicator $\mathbb{1}_{\rm A}(j)$ removes returns to A, and $n'(i)$ is a
+        normalization factor. There exists a unique <em>optimal</em> importance function
+        $I^{\rm opt}(i)$ for which all the $n'(i) = 1$; under this choice, every successful
+        path is enhanced by exactly the same factor $I^{\rm opt}({\rm B})/I^{\rm opt}({\rm A})$,
+        so relative path probabilities are preserved and the original transition rate can be
+        recovered exactly. The catch: finding $I^{\rm opt}$ exactly is as hard as solving the
+        rare-event problem itself.
+      </p>
+
+      <p>
+        The framework solves three concrete obstacles to making this practical at high
+        dimension and low temperature:
+      </p>
+
+      <ul class="contributions">
+        <li>
+          <b>Neural-network bias potential, trained in log-space.</b>
+          Instead of fitting $I^{\rm opt}(i)$ directly—which can be exponentially small near
+          energy minima and cause numerical underflow—a neural network is trained to
+          represent the <em>bias potential</em> $E_b(i;\theta) \propto -k_B T \log I^{\rm opt}(i)$.
+          Working in log-space stabilizes both training and sampling at low temperatures.
+        </li>
+        <li>
+          <b>Adaptive sampling with simulated annealing.</b>
+          Training begins at a high effective temperature where successful transitions are
+          easy to sample, and the temperature is reduced in stages down to the target. At
+          each stage, the network is updated using the paths produced under its own
+          biased dynamics, avoiding the chicken-and-egg problem of needing successful paths
+          to learn the bias.
+        </li>
+        <li>
+          <b>Hybrid Gaussian + MLP for high dimensions.</b>
+          For the 14-dimensional system, the bias potential is parameterized as
+          $E_b = A \exp[-\sum_i a_i (x_i - c_i)^2] + \mathrm{MLP}(x; \theta)$. The Gaussian
+          term gives a coarse global gradient that drives early exploration; the MLP refines
+          it into the optimal shape.
+        </li>
+        <li>
+          <b>Unbiased rate estimator with branching random walk.</b>
+          When $I(i) \neq I^{\rm opt}(i)$, the path-weight reweighting still recovers the
+          correct rate, but with high variance. The BRW procedure splits paths whose weights
+          grow too large and prunes those whose weights become negligible, keeping the weight
+          distribution within a controlled range and dramatically reducing the variance of the
+          rate estimator.
+        </li>
+      </ul>
+
+      <!-- ============ RESULTS ============ -->
+      <h2>Results</h2>
+
+      <h3>2D System with Two Reaction Channels</h3>
+      <p>
+        The first benchmark is the 2D landscape shown in Figure&nbsp;1, with energy minima at
+        $(\pm 1.1, 0)$ nm and saddle points $S_1, S_2$ at $(0, \pm 1)$ nm with barriers of
+        $1.02$ and $0.98$ eV respectively. Because the state space is finite, the optimal
+        bias potential can be computed numerically and used as a ground truth. The neural
+        network—two hidden layers of 30 <code>tanh</code> units, trained with simulated
+        annealing from 5800 K down to 500 K—recovers the exact bias potential to high accuracy,
+        with the largest residual errors confined to sparsely sampled states far from the
+        dominant transition pathways.
+      </p>
+
+      <figure class="fig-triple">
+        <img src="../images/mcmc_rare_events/eb_nn_100e_2d.png" alt="Neural network bias potential, 2D">
+        <img src="../images/mcmc_rare_events/parity_eb_nn_100e_2d.png" alt="Parity plot, 2D">
+        <img src="../images/mcmc_rare_events/error_eb_nn_100e_2d.png" alt="Bias-potential error, 2D">
+        <figcaption>
+          <b>Figure 2.</b> Neural-network bias potential on the 2D system after 100 epochs per
+          annealing temperature. Left: learned bias potential. Center: parity plot against the
+          exact optimal bias potential. Right: spatial distribution of the residual error;
+          deviations are small along the dominant transition pathways and concentrated in
+          rarely visited states.
+        </figcaption>
+      </figure>
+
+      <h3>Variance Control via Branching Random Walk</h3>
+      <p>
+        To stress-test the framework, the network is trained on a coarse grid
+        ($\Delta x = 0.1$&nbsp;nm) and then used to bias dynamics on a refined grid
+        ($\Delta x = 0.025$&nbsp;nm), introducing a deliberate discretization mismatch.
+        Without BRW, the path weights span many orders of magnitude—a few outlier paths
+        dominate the estimator. With BRW (weight range $[0.5, 1.2]$), the weights are
+        kept within a tight band, and the success-probability estimator becomes both
+        accurate and low-variance: $\hat P_{\rm AB}=(1.52 \pm 0.06)\times 10^{-14}$ versus
+        the exact $1.41\times 10^{-14}$.
+      </p>
+
+      <figure class="fig-pair">
+        <img src="../images/mcmc_rare_events/w_nn_30e_121n_2d.png" alt="Weight distribution without BRW">
+        <img src="../images/mcmc_rare_events/w_nn_30e_121n_2d_brw_0.5_1.2.png" alt="Weight distribution with BRW">
+        <figcaption>
+          <b>Figure 3.</b> Path-weight distribution without BRW (left) versus with BRW (right).
+          BRW concentrates weights in a controlled range $[0.5, 1.2]$, eliminating both
+          near-zero ``unimportant'' paths and runaway high-weight outliers.
+        </figcaption>
+      </figure>
+
+      <h3>Transition Rates and Mechanisms</h3>
+      <p>
+        The estimated transition rates converge as the grid is refined, and their temperature
+        dependence agrees with Kramers' rate theory across more than ten orders of magnitude.
+        Crucially, the framework also resolves the <em>mechanism</em>: the fraction of
+        transitions through the upper saddle $S_1$ versus the lower saddle $S_2$ is recovered
+        accurately, including the correction beyond the naive barrier-energy ratio.
+      </p>
+
+      <figure class="fig-pair">
+        <img src="../images/mcmc_rare_events/arrhenius_plot_50e_2d_121n_100t_100f_100s_1.000_1000.000w.png" alt="Arrhenius plot">
+        <img src="../images/mcmc_rare_events/rate_nn_frac_annh.png" alt="Fraction through saddle 1">
+        <figcaption>
+          <b>Figure 4.</b> Left: Arrhenius plot of the estimated transition rate (stars)
+          against Kramers' theory (dashed). Right: fraction of transitions passing through
+          the upper saddle $S_1$ as a function of temperature; the importance-sampling
+          estimates match Kramers' theory and deviate from a naive prediction based on
+          barrier-energy differences alone.
+        </figcaption>
+      </figure>
+
+      <h3>Scaling to 14 Dimensions</h3>
+      <p>
+        The 14-dimensional benchmark embeds the 2D landscape into a higher-dimensional
+        hypercube by adding harmonic terms in the remaining twelve coordinates. The exact
+        optimal bias potential remains independent of the harmonic directions, which gives
+        a clean ground truth for the 14D-trained network when projected back to the 2D
+        subspace. With the hybrid Gaussian + MLP parameterization (two hidden layers of 100
+        <code>ReLU</code> units), the projected bias potential agrees with the exact 2D
+        solution within the regions traversed by the dominant transition pathways.
+      </p>
+
+      <figure class="fig-triple">
+        <img src="../images/mcmc_rare_events/nngbp_10000e_14d_31n_500K.png" alt="14D neural network bias potential projected to 2D">
+        <img src="../images/mcmc_rare_events/nngbp_parity_10000e_14d_31n_500K.png" alt="14D parity plot">
+        <img src="../images/mcmc_rare_events/nngbp_error_10000e_14d_31n_500K.png" alt="14D error">
+        <figcaption>
+          <b>Figure 5.</b> Hybrid Gaussian + MLP bias potential trained on the 14D system,
+          projected onto the $(x_1, x_2)$ subspace. Left: learned bias potential. Center:
+          parity against the exact 2D solution. Right: residual error, again small along the
+          dominant transition pathways.
+        </figcaption>
+      </figure>
+
+      <div class="takeaway">
+        <b>Takeaway.</b> Training a neural network to represent the bias potential—rather than
+        the importance function itself—keeps the framework numerically stable at low
+        temperatures, while simulated annealing and adaptive sampling make it work in high
+        dimensions. Combined with rigorous reweighting and branching random walk variance
+        control, the method recovers both the right transition rates and the right relative
+        channel probabilities, even when the learned bias potential is imperfect.
+      </div>
+
+      <!-- ============ FUTURE ============ -->
+      <h2>Connection and Future Directions</h2>
+      <p>
+        The continuous-state extension of this framework, applied to overdamped Langevin
+        dynamics and the Lennard-Jones&nbsp;7 atomistic benchmark, is described on the
+        <a href="rare_events.html">Rare Events page</a>. Ongoing directions include applying
+        the method to atomistic systems where rare events drive long-term behavior—crystal
+        defect evolution, dislocation dynamics, and protein conformational change—and
+        connecting it to broader machine-learning frameworks for stochastic dynamics.
+      </p>
+
+      <!-- ============ REFERENCES ============ -->
+      <h2>Reference</h2>
+      <p style="font-size: 0.98rem; color: #444;">
+        M. M. Kim and W. Cai, <em>Accelerated Markov Chain Monte Carlo Simulation via
+        Neural Network–Driven Importance Sampling</em>.
+      </p>
+
+    </div>
+  </main>
+
+  <script>
+    // Reserved for future interactivity.
+  </script>
+</body>
+</html>
