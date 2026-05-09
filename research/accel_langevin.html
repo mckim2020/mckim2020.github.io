@@ -517,6 +517,32 @@
         </figcaption>
       </figure>
 
+      <h3>Channel Probabilities Across Temperatures</h3>
+      <p>
+        Beyond the total rate, the framework also recovers the right <em>fraction</em>
+        of transitions going through each of the four modes $M_1$–$M_4$ at every
+        temperature. As $T$ decreases, the lower-barrier modes $M_1, M_2$ (0.49 eV)
+        gain weight and the higher-barrier modes $M_3, M_4$ (0.52 eV) lose it, exactly
+        as Kramers theory predicts. The no-reweighting estimator misses this entirely:
+        it gives a nearly uniform, temperature-independent split across the four modes
+        that reflects the bias of the imperfect importance function rather than the
+        underlying physics. Path-weight reweighting is what turns biased samples into
+        a faithful estimator of the channel split.
+      </p>
+
+      <figure class="fig-pair">
+        <img src="../figs/accel_langevin/fraction_plot_M1.png" alt="Fraction of rate through mode M1 vs. temperature">
+        <img src="../figs/accel_langevin/fraction_plot_M2.png" alt="Fraction of rate through mode M2 vs. temperature">
+        <img src="../figs/accel_langevin/fraction_plot_M3.png" alt="Fraction of rate through mode M3 vs. temperature">
+        <img src="../figs/accel_langevin/fraction_plot_M4.png" alt="Fraction of rate through mode M4 vs. temperature">
+        <figcaption>
+          <b>Figure 7.</b> Fraction of the total rate carried by each transition mode
+          $M_1$–$M_4$ versus temperature. Importance sampling (circles) tracks Kramers
+          theory (dashed) across all four channels, while direct counting without
+          reweighting (squares) flattens to a roughly uniform split.
+        </figcaption>
+      </figure>
+
       <div class="takeaway">
         <b>Takeaway.</b> A learned, imperfect importance function is sufficient for accurate rate and
         mechanism estimation, provided sampled paths are reweighted using the stopped-transition-operator
