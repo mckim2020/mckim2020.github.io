@@ -425,7 +425,7 @@
         importance function are absorbed by the path-weight reweighting.
       </p>
 
-      <figure>
+      <!-- <figure>
         <img src="../figs/accel_langevin/nn_TC_1.0mu_23.2beta_0.01000dt_5stride_100swarm_1000escapes__3d.png"
              alt="Neural network importance function on the 2D two-channel system">
         <figcaption>
@@ -433,7 +433,7 @@
           The learned $I(\mathbf{x};\theta)$ smoothly interpolates between the two basins and
           captures the structure of the committor across both reaction channels.
         </figcaption>
-      </figure>
+      </figure> -->
 
       <h3>14-Dimensional Rugged Potential</h3>
       <p>
@@ -452,7 +452,12 @@
         regularize the $r_{ij}\to 0$ singularity:
       </p>
       <div class="eq-block">
-        $$ U_{\rm LJ7}^{\rm soft}(\{\mathbf{x}_i\}) = 4\varepsilon\sum_{i<j}\!\left[ s_{ij}^{-2} - s_{ij}^{-1} \right], \qquad s_{ij} = \alpha + (r_{ij}/\varsigma)^6. $$
+        \[
+          U_{\mathrm{LJ7}}^{\mathrm{soft}}(\{\mathbf{x}_i\})
+          = 4\varepsilon \sum_{i<j}\left(s_{ij}^{-2} - s_{ij}^{-1}\right),
+          \qquad
+          s_{ij} = \alpha + \left(\frac{r_{ij}}{\sigma}\right)^6.
+        \]
       </div>
       <p>
         Metastable states are labeled by the second and third central moments $(\mu_2, \mu_3)$ of the
