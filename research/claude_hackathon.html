@@ -191,6 +191,43 @@
       vertical-align: middle;
     }
 
+    /* Secondary (outline) variant, used for the video link */
+    a.pdf-button.outline {
+      background: #ffffff;
+      color: #8C1515;
+      border: 2px solid #8C1515;
+      padding: 10px 22px;
+      box-shadow: 0 2px 6px rgba(140, 21, 21, 0.12);
+    }
+    a.pdf-button.outline:hover {
+      background: #8C1515;
+      color: #ffffff;
+      border: 2px solid #8C1515;
+    }
+    a.pdf-button.outline.small {
+      padding: 6px 13px;
+      border-width: 1.5px;
+    }
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    /* Embedded video */
+    figure.fig-video video {
+      width: 100%;
+      max-width: 780px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      border: 1px solid #e6e6e6;
+      border-radius: 6px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.10);
+      background: #000;
+    }
+
     /* Paper info card */
     .paper-card {
       background: #faf6f6;
@@ -539,10 +576,13 @@
 
     <div class="content">
 
-      <!-- ============ PDF CALL TO ACTION ============ -->
+      <!-- ============ PDF / VIDEO CALL TO ACTION ============ -->
       <div class="cta-row">
         <a class="pdf-button" href="../docs/claude_hackathon_writeup.pdf" target="_blank" rel="noopener noreferrer">
           <i class="fa-solid fa-file-pdf"></i> Read the full write-up (PDF)
+        </a>
+        <a class="pdf-button outline" href="#demo-video">
+          <i class="fa-solid fa-circle-play"></i> Watch the 2-minute explainer
         </a>
       </div>
 
@@ -553,6 +593,7 @@
         <div class="venue">Built with Claude: Life Sciences Hackathon (Researcher Track), in partnership with Gladstone Institutes, 2026</div>
         <div class="links">
           <a class="pdf-button small" href="../docs/claude_hackathon_writeup.pdf" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-file-pdf"></i>Write-up (PDF)</a>
+          <a class="pdf-button small outline" href="#demo-video"><i class="fa-solid fa-circle-play"></i>Video</a>
           <a href="#"><i class="fa-brands fa-github"></i>Code</a>
           <a href="#" onclick="toggleBibtex(event, 'bibtex-hackathon')"><i class="fa-solid fa-quote-right"></i>BibTeX</a>
         </div>
@@ -599,6 +640,22 @@
           a human would otherwise tune by trial and error.
         </li>
       </ul>
+
+      <!-- ============ DEMO VIDEO ============ -->
+      <figure class="fig-video" id="demo-video">
+        <video controls preload="metadata" playsinline
+               poster="../figs/claude_hackathon/video_poster.jpg">
+          <source src="../figs/claude_hackathon/claude_hackathon_video.mp4" type="video/mp4">
+          Your browser does not support embedded video.
+          <a href="../figs/claude_hackathon/claude_hackathon_video.mp4">Download the video (MP4)</a>.
+        </video>
+        <figcaption>
+          <b>Video 1.</b> A two-minute walkthrough of the project: the weight-degeneracy problem in
+          importance-sampled protein kinetics, the agentic search over weight-control schemes driven by
+          Claude Code, and the branching resampled random walk (RRS) that recovers the brute-force
+          &beta;/C<sub>5</sub> &harr; C<sub>7</sub><sup>eq</sup> isomerization rate.
+        </figcaption>
+      </figure>
 
       <!-- ============ RARE EVENT PROBLEM ============ -->
       <h2>The Rare Event Problem</h2>
