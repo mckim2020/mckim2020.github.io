@@ -215,6 +215,55 @@
       align-items: center;
     }
 
+    /* Selection / event banner */
+    .selection-banner {
+      background: linear-gradient(135deg, #faf6f6 0%, #f5eded 100%);
+      border: 1px solid #e3cfcf;
+      border-left: 5px solid #8C1515;
+      border-radius: 6px;
+      padding: 18px 24px;
+      margin: 0 0 26px 0;
+    }
+    .selection-banner .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: #8C1515;
+      color: #fff;
+      font-family: 'Source Sans 3', Helvetica, sans-serif;
+      font-weight: 700;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
+    .selection-banner p {
+      margin: 0;
+      font-size: 1.02rem;
+      line-height: 1.6;
+      text-align: left;
+    }
+    .selection-banner a {
+      font-weight: 600;
+    }
+    .selection-banner .event-meta {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: #666;
+      font-family: 'Source Sans 3', Helvetica, sans-serif;
+    }
+    .selection-banner .event-meta span {
+      display: inline-block;
+      margin-right: 16px;
+      white-space: nowrap;
+    }
+    .selection-banner .event-meta i {
+      color: #8C1515;
+      margin-right: 5px;
+    }
+
     /* Embedded video */
     figure.fig-video video {
       width: 100%;
@@ -575,6 +624,25 @@
     <p class="page-subtitle">An agentic method search for importance-sampled alanine dipeptide kinetics</p>
 
     <div class="content">
+
+      <!-- ============ SELECTION BANNER ============ -->
+      <div class="selection-banner">
+        <div class="badge"><i class="fa-solid fa-award"></i> Selected Participant</div>
+        <p>
+          I was selected to take part in
+          <a href="https://cerebralvalley.ai/e/built-with-claude-life-sciences" target="_blank" rel="noopener noreferrer"><b>Built with Claude: Life Sciences</b></a>,
+          a global hackathon hosted by <b>Anthropic</b> in partnership with the
+          <b>Gladstone Institutes</b> and produced by <b>Cerebral Valley</b>. Participants were chosen from a
+          worldwide pool of applicants and given access to Claude Science and Claude Code, Anthropic API
+          credits, and real research datasets, competing for a $100,000 prize pool. The work below is my
+          submission to the <b>Researcher Track</b>.
+        </p>
+        <div class="event-meta">
+          <span><i class="fa-regular fa-calendar"></i>July 7&ndash;13, 2026</span>
+          <span><i class="fa-solid fa-globe"></i>Global &middot; Virtual</span>
+          <span><i class="fa-solid fa-flask"></i>Researcher Track</span>
+        </div>
+      </div>
 
       <!-- ============ PDF / VIDEO CALL TO ACTION ============ -->
       <div class="cta-row">
