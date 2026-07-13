@@ -100,10 +100,15 @@
     }
 
     .page-title {
-      font-size: 2.5rem;
+      /* Scale down on narrow viewports so "Kinetics" never strands on its own line */
+      font-size: clamp(1.9rem, 5.2vw, 2.5rem);
       font-weight: bold;
       margin-bottom: 8px;
       color: #8C1515;
+      line-height: 1.18;
+      /* Split evenly across lines rather than dropping a single orphan word */
+      text-wrap: balance;
+      overflow-wrap: break-word;
     }
 
     .page-subtitle {
@@ -289,6 +294,7 @@
       font-family: 'EB Garamond', Georgia, serif;
       font-size: 1.15rem;
       margin-bottom: 4px;
+      line-height: 1.4;
     }
     .paper-card .venue {
       color: #666;
@@ -304,6 +310,21 @@
       color: #8C1515;
       font-weight: 600;
       border: none;
+    }
+    /* The generic .paper-card .links a rule above outranks a.pdf-button on
+       specificity, which would paint the solid button's text cardinal-on-cardinal.
+       Restore the intended colors inside the card. */
+    .paper-card .links a.pdf-button {
+      color: #ffffff;
+    }
+    .paper-card .links a.pdf-button:hover {
+      color: #ffffff;
+    }
+    .paper-card .links a.pdf-button.outline {
+      color: #8C1515;
+    }
+    .paper-card .links a.pdf-button.outline:hover {
+      color: #ffffff;
     }
     .paper-card .links a i {
       margin-right: 4px;
@@ -656,7 +677,7 @@
 
       <!-- ============ PAPER CARD ============ -->
       <div class="paper-card">
-        <div class="authors"><b>Agent-guided variance reduction for importance-sampled protein kinetics: recovering the alanine dipeptide &beta;/C<sub>5</sub> &harr; C<sub>7</sub><sup>eq</sup> isomerization rate</b></div>
+        <div class="authors"><b>Agent-guided variance reduction for importance-sampled protein kinetics:<br>recovering the alanine dipeptide &beta;/C<sub>5</sub> &harr; C<sub>7</sub><sup>eq</sup> isomerization rate</b></div>
         <div>Michael M. Kim</div>
         <div class="venue">Built with Claude: Life Sciences Hackathon (Researcher Track), in partnership with Gladstone Institutes, 2026</div>
         <div class="links">
