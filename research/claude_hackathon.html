@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<!--
+  Image paths used: ../figs/claude_hackathon/<figure>.png
+  Write-up PDF: ../docs/claude_hackathon_writeup.pdf
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent-Guided Variance Reduction for Protein Kinetics - Myung Chul Kim</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=EB+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- MathJax for inline equations -->
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Source Serif 4', Georgia, serif;
+      background: #ffffff;
+      color: #333333;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      background: #8C1515;
+      padding: 20px 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 50px;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-weight: 600;
+      font-size: 24px;
+      position: relative;
+      padding: 8px 0;
+      transition: all 0.3s ease;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 3px;
+      background: white;
+      transition: all 0.3s ease;
+      transform: translateX(-50%);
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .nav-links a:hover {
+      transform: translateY(-2px);
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+
+    .nav-links a.active {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 8px 16px;
+      border-radius: 20px;
+    }
+
+    main {
+      padding-top: 40px;
+      padding-bottom: 60px;
+    }
+
+    .page-title {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #8C1515;
+    }
+
+    .page-subtitle {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.35rem;
+      font-style: italic;
+      color: #555;
+      margin-top: 0;
+      margin-bottom: 30px;
+    }
+
+    .content {
+      font-size: 1.1rem;
+      line-height: 1.7;
+    }
+
+    .content h2 {
+      font-family: 'EB Garamond', Georgia, serif;
+      color: #8C1515;
+      font-size: 1.75rem;
+      margin-top: 2.2em;
+      margin-bottom: 0.5em;
+      border-bottom: 2px solid #8C1515;
+      padding-bottom: 4px;
+    }
+
+    .content h3 {
+      font-family: 'EB Garamond', Georgia, serif;
+      color: #444;
+      font-size: 1.3rem;
+      margin-top: 1.6em;
+      margin-bottom: 0.4em;
+    }
+
+    .content p {
+      text-align: justify;
+      hyphens: auto;
+    }
+
+    .content a {
+      color: #8C1515;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(140, 21, 21, 0.4);
+      transition: border-color 0.2s ease;
+    }
+    .content a:hover {
+      border-bottom-color: #8C1515;
+    }
+
+    /* Prominent PDF call-to-action button */
+    .cta-row {
+      margin: 0 0 26px 0;
+    }
+    a.pdf-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      background: #8C1515;
+      color: #ffffff;
+      padding: 12px 24px;
+      border-radius: 26px;
+      border: none;
+      font-family: 'Source Sans 3', Helvetica, sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+      letter-spacing: 0.01em;
+      text-decoration: none;
+      box-shadow: 0 2px 6px rgba(140, 21, 21, 0.25);
+      transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    a.pdf-button:hover {
+      background: #6f1010;
+      border: none;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 14px rgba(140, 21, 21, 0.32);
+    }
+    a.pdf-button i {
+      font-size: 1.1em;
+    }
+    a.pdf-button.small {
+      padding: 7px 15px;
+      font-size: 0.88rem;
+      border-radius: 20px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    /* Paper info card */
+    .paper-card {
+      background: #faf6f6;
+      border-left: 4px solid #8C1515;
+      padding: 16px 22px;
+      margin: 0 0 30px 0;
+      font-size: 1.0rem;
+    }
+    .paper-card .authors {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.15rem;
+      margin-bottom: 4px;
+    }
+    .paper-card .venue {
+      color: #666;
+      font-style: italic;
+      font-size: 0.95rem;
+    }
+    .paper-card .links {
+      margin-top: 12px;
+    }
+    .paper-card .links a {
+      display: inline-block;
+      margin-right: 14px;
+      color: #8C1515;
+      font-weight: 600;
+      border: none;
+    }
+    .paper-card .links a i {
+      margin-right: 4px;
+    }
+
+    /* Figures */
+    figure {
+      margin: 28px auto;
+      text-align: center;
+    }
+    figure img {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #e6e6e6;
+      border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    figure.fig-narrow img { max-width: 60%; }
+    figure.fig-medium img { max-width: 80%; }
+    figure.fig-pair {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    figure.fig-pair img { max-width: 48%; }
+    figure.fig-triple {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    figure.fig-triple img {
+      max-width: 32%;
+      min-width: 190px;
+    }
+    figcaption {
+      font-size: 0.92rem;
+      color: #555;
+      margin-top: 10px;
+      line-height: 1.45;
+      text-align: justify;
+      padding: 0 6px;
+    }
+    figcaption b { color: #333; }
+
+    /* Equations / display math wrapper */
+    .eq-block {
+      margin: 18px 0;
+      overflow-x: auto;
+    }
+
+    /* Highlight box for key takeaway */
+    .takeaway {
+      background: #fff8e6;
+      border-left: 4px solid #d4a017;
+      padding: 14px 20px;
+      margin: 24px 0;
+      font-size: 1.0rem;
+    }
+
+    /* Key contributions list */
+    .contributions {
+      padding-left: 0;
+      list-style: none;
+    }
+    .contributions li {
+      position: relative;
+      padding: 8px 0 8px 32px;
+      border-bottom: 1px dashed #e0e0e0;
+    }
+    .contributions li:last-child { border-bottom: none; }
+    .contributions li::before {
+      content: '\f192'; /* fontawesome dot-circle */
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      color: #8C1515;
+      position: absolute;
+      left: 4px;
+      top: 11px;
+      font-size: 0.9em;
+    }
+
+    code {
+      background: #f3f0ec;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 0.92em;
+    }
+
+    /* ---- Data table ---- */
+    .table-wrap {
+      overflow-x: auto;
+      margin: 24px 0 6px 0;
+    }
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Source Sans 3', Helvetica, sans-serif;
+      font-size: 0.93rem;
+      min-width: 560px;
+    }
+    table.data-table thead th {
+      background: #8C1515;
+      color: #ffffff;
+      font-weight: 600;
+      text-align: left;
+      padding: 10px 12px;
+      white-space: nowrap;
+    }
+    table.data-table td {
+      padding: 9px 12px;
+      border-bottom: 1px solid #ececec;
+      white-space: nowrap;
+    }
+    table.data-table tbody tr:nth-child(even) td {
+      background: #fbf9f9;
+    }
+    table.data-table tr.row-best td {
+      background: #f4e6e6;
+      color: #5f0f0f;
+      font-weight: 700;
+    }
+    table.data-table tr.row-best td:first-child {
+      box-shadow: inset 3px 0 0 #8C1515;
+    }
+    table.data-table tr.row-ref td {
+      font-style: italic;
+      color: #444;
+      background: #ffffff;
+    }
+    table.data-table tr.row-ref:first-of-type td {
+      border-top: 2px solid #8C1515;
+    }
+    .table-note {
+      font-size: 0.85rem;
+      color: #666;
+      line-height: 1.5;
+      margin: 8px 0 0 0;
+      text-align: left;
+    }
+    .table-note .caption-lead { color: #333; font-weight: 700; }
+
+    /* ---- Agentic loop diagram ---- */
+    .agent-loop {
+      display: grid;
+      grid-template-columns: 1fr minmax(150px, 0.75fr) 1fr;
+      grid-template-rows: auto auto;
+      gap: 14px;
+      margin: 26px 0 4px 0;
+      text-align: left;
+    }
+    .agent-step {
+      background: #faf6f6;
+      border: 1px solid #ecdede;
+      border-top: 3px solid #8C1515;
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-size: 0.95rem;
+      line-height: 1.45;
+    }
+    .agent-step .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 23px;
+      height: 23px;
+      border-radius: 50%;
+      background: #8C1515;
+      color: #ffffff;
+      font-family: 'Source Sans 3', Helvetica, sans-serif;
+      font-weight: 700;
+      font-size: 0.78rem;
+      margin-right: 8px;
+      vertical-align: 1px;
+    }
+    .agent-step .step-title {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-weight: 600;
+      color: #8C1515;
+      font-size: 1.08rem;
+    }
+    .agent-step p {
+      margin: 6px 0 0 0;
+      font-size: 0.9rem;
+      color: #555;
+      text-align: left;
+      line-height: 1.45;
+    }
+    .agent-hub {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      background: #8C1515;
+      color: #ffffff;
+      border-radius: 8px;
+      padding: 18px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      box-shadow: 0 3px 10px rgba(140, 21, 21, 0.22);
+    }
+    .agent-hub i {
+      font-size: 1.7rem;
+      margin-bottom: 8px;
+    }
+    .agent-hub .hub-title {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+    .agent-hub .hub-sub {
+      font-family: 'Source Sans 3', Helvetica, sans-serif;
+      font-size: 0.76rem;
+      opacity: 0.85;
+      margin-top: 8px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .agent-s1 { grid-column: 1; grid-row: 1; }
+    .agent-s2 { grid-column: 3; grid-row: 1; }
+    .agent-s3 { grid-column: 3; grid-row: 2; }
+    .agent-s4 { grid-column: 1; grid-row: 2; }
+
+    @media (max-width: 700px) {
+      .agent-loop {
+        grid-template-columns: 1fr;
+      }
+      .agent-loop > .agent-hub,
+      .agent-loop > .agent-step {
+        grid-column: 1;
+        grid-row: auto;
+      }
+      .agent-hub { padding: 14px 12px; }
+    }
+
+    /* ---- SchNet flow diagram ---- */
+    .schnet-flow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 26px 0 4px 0;
+    }
+    .schnet-box {
+      background: #faf6f6;
+      border: 1px solid #ecdede;
+      border-left: 3px solid #8C1515;
+      border-radius: 5px;
+      padding: 10px 16px;
+      width: 100%;
+      max-width: 520px;
+      box-sizing: border-box;
+      text-align: center;
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+    .schnet-box .sb-label {
+      display: block;
+      font-family: 'Source Sans 3', Helvetica, sans-serif;
+      font-weight: 600;
+      color: #8C1515;
+      font-size: 0.74rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .schnet-box.dashed {
+      border: 1px dashed #8C1515;
+      border-left: 3px solid #8C1515;
+      background: #fdfafa;
+    }
+    .schnet-box.final {
+      background: #8C1515;
+      color: #ffffff;
+      border-color: #8C1515;
+    }
+    .schnet-box.final .sb-label { color: rgba(255,255,255,0.85); }
+    .schnet-split {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      max-width: 520px;
+      flex-wrap: wrap;
+    }
+    .schnet-split .schnet-box {
+      flex: 1 1 200px;
+      max-width: none;
+    }
+    .schnet-arrow {
+      color: #8C1515;
+      font-size: 0.85rem;
+      padding: 7px 0;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <nav>
+        <div class="nav-links">
+          <a href="../">Home</a>
+          <a href="../#education">Education</a>
+          <a href="../#publications">Publications</a>
+          <a href="../#research" class="active">Research</a>
+          <a href="../#notes">Notes</a>
+          <a href="../#gallery">Adventures</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <h1 class="page-title">Agent-Guided Variance Reduction for Protein Kinetics</h1>
+    <p class="page-subtitle">An agentic method search for importance-sampled alanine dipeptide kinetics</p>
+
+    <div class="content">
+
+      <!-- ============ PDF CALL TO ACTION ============ -->
+      <div class="cta-row">
+        <a class="pdf-button" href="../docs/claude_hackathon_writeup.pdf" target="_blank" rel="noopener noreferrer">
+          <i class="fa-solid fa-file-pdf"></i> Read the full write-up (PDF)
+        </a>
+      </div>
+
+      <!-- ============ PAPER CARD ============ -->
+      <div class="paper-card">
+        <div class="authors"><b>Agent-guided variance reduction for importance-sampled protein kinetics: recovering the alanine dipeptide &beta;/C<sub>5</sub> &harr; C<sub>7</sub><sup>eq</sup> isomerization rate</b></div>
+        <div>Michael M. Kim</div>
+        <div class="venue">Built with Claude: Life Sciences Hackathon (Researcher Track), in partnership with Gladstone Institutes, 2026</div>
+        <div class="links">
+          <a class="pdf-button small" href="../docs/claude_hackathon_writeup.pdf" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-file-pdf"></i>Write-up (PDF)</a>
+          <a href="#"><i class="fa-brands fa-github"></i>Code</a>
+          <a href="#" onclick="toggleBibtex(event, 'bibtex-hackathon')"><i class="fa-solid fa-quote-right"></i>BibTeX</a>
+        </div>
+        <pre id="bibtex-hackathon" style="display:none; margin-top:12px; background:#f3f0ec; padding:12px; border-radius:4px; font-size:0.85rem; overflow-x:auto;">@misc{kim2026agentguided,
+  title={Agent-guided variance reduction for importance-sampled protein kinetics:
+         recovering the alanine dipeptide beta/C5 &lt;-&gt; C7eq isomerization rate},
+  author={Kim, Michael M.},
+  year={2026},
+  howpublished={Built with Claude: Life Sciences Hackathon (Researcher Track),
+                in partnership with Gladstone Institutes}
+}</pre>
+      </div>
+
+      <!-- ============ OVERVIEW ============ -->
+      <h2>Overview</h2>
+      <p>
+        Estimating protein conformational kinetics from importance-sampled trajectories is limited by
+        <em>weight degeneracy</em>: when biased transition paths are reweighted back to the true dynamics,
+        the variance of the path weights grows exponentially with path length and a handful of paths come
+        to dominate the estimate. The remedy is resampling—but "resample" names a family of methods, not a
+        single method, and which member works is system dependent.
+      </p>
+      <p>
+        This project asks which weight-control scheme tames that variance for a real peptide, and answers
+        it as an <em>agentic method search</em>. Claude Code proposes an estimator variant, implements it
+        in the sampler, launches a rate calculation, reads back the weight statistics and effective sample
+        size against a brute-force reference, and iterates. On the &beta;/C<sub>5</sub> &harr;
+        C<sub>7</sub><sup>eq</sup> isomerization of alanine dipeptide, the loop compared sequential
+        importance sampling (SMC), sequential importance resampling (SIR), and a branching resampled random
+        walk (RRS). RRS is the only scheme that converges in both directions, recovering the brute-force
+        rate to within 3&ndash;6% where the naive committor estimate is up to 6&times; wrong.
+      </p>
+
+      <ul class="contributions">
+        <li>
+          A committor-based, reweighted rate estimator for alanine dipeptide with an
+          <b>exact brute-force reference in both directions</b>.
+        </li>
+        <li>
+          A <b>controlled comparison</b> of SMC, SIR, and RRS weight control against that reference.
+        </li>
+        <li>
+          A demonstration that an <b>agentic method search</b> can select a variance-reduction scheme that
+          a human would otherwise tune by trial and error.
+        </li>
+      </ul>
+
+      <!-- ============ RARE EVENT PROBLEM ============ -->
+      <h2>The Rare Event Problem</h2>
+      <p>
+        The rates of protein conformational changes control biological function, yet they are among the
+        hardest quantities to compute. The transitions that matter—a loop reorganizing, a dihedral flipping,
+        a domain rotating—are rare on the timescale of the fastest molecular motions, so a direct molecular
+        dynamics trajectory spends essentially all of its steps inside a metastable region and almost none
+        crossing between regions. Waiting for enough spontaneous crossings to estimate a rate can require
+        billions of steps, and the cost grows exponentially with the barrier height.
+      </p>
+      <p>
+        The standard way out is to stop waiting. We decompose a long trajectory into short <em>paths</em>
+        $\Gamma = \{\mathbf{x}_1, \ldots, \mathbf{x}_N\}$, each initiated when the trajectory leaves region
+        A and terminated when it enters region A or B. Paths ending in A are <em>failure</em> paths; those
+        ending in B are <em>success</em> paths. With $\mathcal{K}_\tau(\mathbf{y}\,|\,\mathbf{x})$ the
+        stopped transition kernel at lag $\tau$, the density of a success path factorizes,
+      </p>
+      <div class="eq-block">
+        $$ p(\Gamma_{\rm AB}) = \rho_{\rm A}(\mathbf{x}_1) \prod_{i=1}^{N-1}
+           \mathcal{K}_\tau(\mathbf{x}_{i+1}\,|\,\mathbf{x}_i), $$
+      </div>
+      <p>
+        and the reactive probability is the integral over all success paths,
+        $P_{\rm AB} = \int p(\Gamma)\, d\Gamma$. The rate then follows from the <em>Hill relation</em>:
+      </p>
+      <div class="eq-block">
+        $$ r_{\rm AB} = \Phi_{\rm A}\, P_{\rm AB}, \qquad \mathrm{MFPT}_{\rm AB} = 1 / r_{\rm AB}, $$
+      </div>
+      <p>
+        where $\Phi_{\rm A}$ is the flux of trajectories escaping region A—the inverse mean time between
+        successive first exits. The flux is cheap, because escapes from a region are not rare. All of the
+        difficulty is concentrated in $P_{\rm AB}$: the probability that an escaped trajectory commits to
+        the far region rather than falling back.
+      </p>
+
+      <!-- ============ IMPORTANCE SAMPLING ============ -->
+      <h2>Importance Sampling and the Path Weight</h2>
+      <p>
+        For a genuine rare event the success probability is tiny compared with that of a failure path, so
+        we modify the transition kernel with an <em>importance function</em> $I(\mathbf{x})$ that biases
+        the walker toward B:
+      </p>
+      <div class="eq-block">
+        $$ \mathcal{K}'_\tau(\mathbf{y}\,|\,\mathbf{x}) = Z_\tau^{-1}(\mathbf{x})\,
+           \frac{I(\mathbf{y})}{I(\mathbf{x})}\, \mathcal{K}_\tau(\mathbf{y}\,|\,\mathbf{x}),
+           \qquad
+           Z_\tau(\mathbf{x}) = \int_\Omega d\mathbf{y}\, \frac{I(\mathbf{y})}{I(\mathbf{x})}\,
+           \mathcal{K}_\tau(\mathbf{y}\,|\,\mathbf{x}), $$
+      </div>
+      <p>
+        where the normalization factor $Z_\tau(\mathbf{x})$—computed on the fly by Monte Carlo
+        integration—keeps $\mathcal{K}'_\tau$ a probability density. Propagating a walker under
+        $\mathcal{K}'_\tau$ and reweighting back to the true dynamics attaches to each path a correction
+        factor built from those same normalizations, and this defines the <em>path weight</em>:
+      </p>
+      <div class="eq-block">
+        $$ p'(\Gamma_{\rm AB}) = \frac{I(\mathbf{x}_N)}{I(\mathbf{x}_1)}
+           \left[\prod_{i=1}^{N-1} Z_\tau^{-1}(\mathbf{x}_i)\right] p(\Gamma_{\rm AB}),
+           \qquad
+           W(\Gamma) := \prod_{i=1}^{N-1} Z_\tau(\mathbf{x}_i). $$
+      </div>
+      <p>
+        Setting $I(\mathbf{x}) = 0$ on A and $I(\mathbf{x}) = 1$ on B, the optimality condition
+        $\int I(\mathbf{y})\, \mathcal{K}_\tau(\mathbf{y}\,|\,\mathbf{x})\, d\mathbf{y} = I(\mathbf{x})$ is
+        exactly the backward equation whose solution is the committor. When $I$ equals this optimal
+        importance function every $Z_\tau = 1$, and the bias enhances success paths by the known factor
+        $I(\mathbf{x}_N)/I(\mathbf{x}_1)$. When $I$ is imperfect, the weights $W(\Gamma)$ restore the
+        unbiased statistics exactly. The reweighted estimator of the reactive probability is
+      </p>
+      <div class="eq-block">
+        $$ \widehat{P}_{\rm AB} = \frac{1}{N_p} \sum_{i=1}^{N_p} I(\mathbf{x}_1^{(i)})\, W(\Gamma_i)\,
+           \mathbf{1}\!\left[\Gamma_i \in \{\Gamma_{\rm AB}\}\right], $$
+      </div>
+      <p>
+        which is unbiased for <em>any</em> importance function, including an imperfect learned committor.
+        This is the crucial licence the method operates under: errors in the guide degrade
+        <b>efficiency</b>, not <b>correctness</b>. A neural network that is merely a decent approximation
+        of the committor still yields a statistically exact rate—provided we can afford the variance it
+        induces.
+      </p>
+
+      <!-- ============ WEIGHT VARIANCE ============ -->
+      <h2>The Weight-Variance Problem</h2>
+      <p>
+        Unbiasedness is not enough. Because $W(\Gamma)$ is a product of $N-1$ fluctuating factors, its
+        variance grows exponentially in path length,
+      </p>
+      <div class="eq-block">
+        $$ \mathrm{Var}[W] \sim e^{cN}, \qquad c > 0, $$
+      </div>
+      <p>
+        the classic weight-degeneracy pathology of sequential importance sampling. The efficiency of the
+        estimator is governed by the effective sample size,
+      </p>
+      <div class="eq-block">
+        $$ \mathrm{ESS} = \frac{\left(\sum_i W_i\right)^2}{\sum_i W_i^2}, $$
+      </div>
+      <p>
+        which collapses from $N_p$ toward $1$ as a single weight comes to dominate. Proteins are close to
+        the worst case for this pathology. The fast, stiff vibrational modes—bond stretches, angle
+        bends—make the per-step factors $Z_\tau(\mathbf{x}_i)$ noisy at every step <em>without advancing
+        the slow $(\phi,\psi)$ reorganization we actually care about</em>. Weight noise accumulates on the
+        fast clock while progress accumulates on the slow one. Degeneracy therefore sets in quickly, and a
+        raw importance-sampled estimator is unusable in practice.
+      </p>
+
+      <!-- ============ THREE SCHEMES ============ -->
+      <h2>Three Weight-Control Schemes</h2>
+      <p>
+        Resampling interrupts the exponential growth by periodically replacing the weighted population with
+        a nearly equally weighted one of the same expectation. We compare three members of that family. All
+        three share the same estimator and the same learned importance function, and differ
+        <em>only</em> in how weights are controlled—so the comparison isolates exactly one design choice.
+      </p>
+
+      <ul class="contributions">
+        <li>
+          <b>SMC — sequential importance sampling, no resampling.</b>
+          Weights accumulate unchecked. This is the baseline, and the scheme most exposed to the
+          exponential variance growth $\mathrm{Var}[W] \sim e^{cN}$.
+        </li>
+        <li>
+          <b>SIR — sequential importance resampling.</b>
+          The whole population is resampled by low-variance systematic resampling whenever
+          $\mathrm{ESS} &lt; \theta N_p$ (here $\theta = 0.5$), and every weight is reset to the mean.
+          Global resampling is aggressive: it bounds the weights, but it can over-prune walker diversity.
+        </li>
+        <li>
+          <b>RRS — resampled random walk (branching).</b>
+          Each walker is treated individually. Whenever its weight leaves a target band
+          $[w_{\min}, w_{\max}]$, it is branched into an integer number of unit-weight offspring,
+          <div class="eq-block">
+            $$ n_{\rm off} = \lfloor W \rfloor + \mathbf{1}\!\left[u &lt; W - \lfloor W \rfloor\right],
+               \qquad u \sim \mathcal{U}(0,1), $$
+          </div>
+          so overweight walkers split and underweight walkers undergo Russian-roulette pruning, with
+          survivors reset to unit weight. Branching keeps the weight distribution concentrated near unity
+          while preserving the estimator's expectation.
+        </li>
+      </ul>
+
+      <!-- ============ AGENTIC LOOP ============ -->
+      <h2>The Agentic Loop</h2>
+      <p>
+        Exploring this design space by hand is slow: each candidate is a small code change followed by a
+        long run and a careful reading of variance diagnostics. So rather than tuning the estimator by
+        hand, we treated the choice of estimator as a search problem and drove it agentically with Claude
+        Code. Conveniently, the SMC/SIR/RRS logic all lives in a single <code>process_walkers</code>
+        routine, which means a new variant is a localized diff—exactly the kind of change an agent can make
+        reliably and then evaluate honestly against ground truth.
+      </p>
+
+      <figure>
+        <div class="agent-loop">
+          <div class="agent-hub">
+            <i class="fa-solid fa-robot"></i>
+            <div class="hub-title">Claude Code</div>
+            <div class="hub-sub">Closed loop</div>
+          </div>
+          <div class="agent-step agent-s1">
+            <span class="step-num">1</span><span class="step-title">Propose</span>
+            <p>Suggest a weight-control variant, informed by <em>why</em> the previous one failed:
+               degeneracy, over-pruning, or non-convergence.</p>
+          </div>
+          <div class="agent-step agent-s2">
+            <span class="step-num">2</span><span class="step-title">Implement</span>
+            <p>Write it as a branch of the sampler's <code>process_walkers</code> routine—a localized,
+               reviewable diff.</p>
+          </div>
+          <div class="agent-step agent-s3">
+            <span class="step-num">3</span><span class="step-title">Run</span>
+            <p>Launch the biased rate calculation together with the matched brute-force reference.</p>
+          </div>
+          <div class="agent-step agent-s4">
+            <span class="step-num">4</span><span class="step-title">Analyze</span>
+            <p>Read back the rate-versus-trial log, the path-weight histogram, and the ESS, and compare
+               against the exact rate.</p>
+          </div>
+        </div>
+        <figcaption>
+          <b>Figure 1.</b> The agentic method search. Claude Code drives a closed loop over estimator
+          designs: propose a weight-control scheme, implement it as a localized change to the sampler, run
+          the biased rate calculation against a matched brute-force reference, and read back weight-variance
+          and effective-sample-size diagnostics to decide the next variant. Claude also generated the
+          diagnostics (weight distributions, convergence traces, MFPT bar charts) that appear as the figures
+          below. The full propose&ndash;implement&ndash;run&ndash;analyze loop was logged end to end, so the
+          search is auditable and reproducible. The loop selected RRS for this protein.
+        </figcaption>
+      </figure>
+
+      <!-- ============ LEARNED IMPORTANCE FUNCTION ============ -->
+      <h2>The Learned Importance Function</h2>
+      <p>
+        The importance function $I(\mathbf{x})$ is a SchNet-style graph neural network acting on ten
+        chemically distinct heavy atoms selected from the 22-atom topology, with 64 features, three
+        interaction layers, a 20-Gaussian radial basis (cutoff 0.9 nm), and translational/rotational
+        invariance built in. A single scalar head yields a <em>bidirectional</em> committor via
+        $I_+ = \sigma(f)$ and $I_- = \sigma(-f)$, so the same network guides both the forward and reverse
+        transitions. Each interaction layer updates atom features through a continuous-filter convolution,
+      </p>
+      <div class="eq-block">
+        $$ \mathbf{h}_i^{(\ell+1)} = \mathbf{h}_i^{(\ell)} + \sum_{j \neq i} \mathbf{W}^{(\ell)}
+           \mathbf{h}_j^{(\ell)} \odot \boldsymbol{\phi}^{(\ell)}\!\left(\mathbf{e}(r_{ij})\right). $$
+      </div>
+      <p>
+        Training minimizes the log-space residual of the optimality condition,
+        $\ln\!\left[\int I(\mathbf{y}) \mathcal{K}_\tau(\mathbf{y}\,|\,\mathbf{x})\, d\mathbf{y}\right] -
+        \ln I(\mathbf{x})$, over swarm-propagated lags, using a bootstrapped target network updated by
+        exponential moving average ($\tau_{\rm ema} = 5 \times 10^{-3}$), a replay buffer, and gradient
+        clipping. The production importance function is an <em>ensemble average</em> of checkpoints from
+        epochs 1000&ndash;1100, which reduces the estimator noise of any single network.
+      </p>
+
+      <figure>
+        <div class="schnet-flow">
+          <div class="schnet-box">
+            <span class="sb-label">Input</span>
+            Atomic positions $\{\mathbf{x}_i\}_{i=1}^{22}$
+          </div>
+          <div class="schnet-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+          <div class="schnet-box">
+            <span class="sb-label">Atom selection</span>
+            $\{\mathbf{x}_i\}_{i \in S}$, &nbsp; $|S| = 10$
+          </div>
+          <div class="schnet-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+          <div class="schnet-box">
+            <span class="sb-label">Pairwise distances</span>
+            $r_{ij} = \|\mathbf{x}_i - \mathbf{x}_j\|$
+          </div>
+          <div class="schnet-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+          <div class="schnet-split">
+            <div class="schnet-box">
+              <span class="sb-label">Atom embedding</span>
+              $\mathbf{h}_i^{(0)} = \mathbf{E}[s_i]$
+            </div>
+            <div class="schnet-box">
+              <span class="sb-label">RBF expansion</span>
+              $e_k(r_{ij}) = e^{-\gamma (r_{ij} - \nu_k)^2}$
+            </div>
+          </div>
+          <div class="schnet-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+          <div class="schnet-box dashed">
+            <span class="sb-label">Interaction layer &times; L</span>
+            Continuous-filter convolution: linear map $\mathbf{W}^{(\ell)}\mathbf{h}_j^{(\ell)}$
+            &odot; filter network $\boldsymbol{\phi}^{(\ell)}(\mathbf{e}(r_{ij}))$, added as a residual
+          </div>
+          <div class="schnet-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+          <div class="schnet-box">
+            <span class="sb-label">Per-atom readout</span>
+            $f_{\rm RO}(\mathbf{h}) = \mathbf{w}_2^{\mathsf{T}}\,
+            \mathrm{SiLU}(\mathbf{W}_1 \mathbf{h} + \mathbf{b}_1) + b_2$
+          </div>
+          <div class="schnet-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+          <div class="schnet-box final">
+            <span class="sb-label">Importance function</span>
+            $I(\{\mathbf{x}_i\}; \theta) = \sigma\!\left[\sum_i f_{\rm RO}\!\left(\mathbf{h}_i^{(L)}\right)\right]$
+          </div>
+        </div>
+        <figcaption>
+          <b>Figure 2.</b> SchNet-style graph neural network parameterizing the committor
+          $I(\{\mathbf{x}_i\}; \theta)$ for alanine dipeptide. Ten chemically distinct atoms are selected
+          from the 22-atom topology; their pairwise distances feed a per-atom embedding and a radial-basis
+          expansion. Each of the $L$ interaction layers updates atom features through a continuous-filter
+          convolution. A per-atom readout, summed and passed through a sigmoid, yields the importance
+          function.
+        </figcaption>
+      </figure>
+
+      <!-- ============ SETUP ============ -->
+      <h2>Setup</h2>
+      <p>
+        As a molecular proof of principle we take alanine dipeptide (Ac-Ala-NHMe, 22 atoms) in vacuum, the
+        standard benchmark for conformational sampling and rare-event dynamics. Molecular-mechanics
+        parameters come from the AMBER14 force field and the dynamics are propagated with OpenMM tooling.
+        The system is evolved by constrained overdamped Langevin dynamics, integrated with the
+        Euler&ndash;Maruyama scheme,
+      </p>
+      <div class="eq-block">
+        $$ \mathbf{x}(t + \Delta t) = \mathbf{x}(t) - \gamma^{-1}\mathbf{M}^{-1}\nabla U(\mathbf{x}(t))\,
+           \Delta t + \sqrt{2 \gamma^{-1}\beta^{-1}\Delta t}\; \mathbf{M}^{-1/2}\boldsymbol{\xi},
+           \qquad \boldsymbol{\xi} \sim \mathcal{N}(\mathbf{0}, \mathbb{I}), $$
+      </div>
+      <p>
+        at $T = 300$ K, damping $\gamma = 1.0$ ps$^{-1}$, and timestep $\Delta t = 0.01$ fs, with hydrogen
+        bond-length constraints imposed by SHAKE-like projection. The conformation is characterized by the
+        backbone dihedrals $(\phi, \psi)$, and the metastable regions are disks of radius
+        $10^\circ$ in Ramachandran space: A $=$ &beta;/C<sub>5</sub> centered at
+        $(-150^\circ, 160^\circ)$ and B $=$ C<sub>7</sub><sup>eq</sup> centered at
+        $(-75^\circ, 60^\circ)$. The $\alpha_{\rm R}$ region at $(-70^\circ, -40^\circ)$ acts as an
+        absorbing guard so that indirect crossings are not miscounted. All runs use random seed 2026.
+      </p>
+      <p>
+        The escape flux $\Phi$ is measured by counting successive first exits from a region during an
+        equilibration run ($10^4$ escapes). The reactive probability $P_{\rm AB}$ is estimated by launching
+        $N_p = 1000$ importance-guided walkers, each carrying a swarm of $n_{\rm swarm} = 100$ micro-steps
+        used to estimate the normalization factor $Z_\tau$, accumulating weights, applying the chosen
+        resampling scheme, and evaluating the estimator; the calculation is repeated for 1000 independent
+        trials. RRS uses the weight band $[1, \infty)$ (Russian-roulette pruning of sub-unit weights) and
+        SIR the threshold $\theta = 0.5$.
+      </p>
+      <p>
+        For an exact reference we launch $10^4$ unbiased walkers from each region and record first-passage
+        times to the other, giving
+        $r_{\rm AB}^{\rm BF} = 1.08 \times 10^{-3}$ fs$^{-1}$ (MFPT $=$ 926 fs) and
+        $r_{\rm BA}^{\rm BF} = 4.48 \times 10^{-4}$ fs$^{-1}$ (MFPT $=$ 2234 fs). These are the yardstick
+        for every estimator below.
+      </p>
+
+      <!-- ============ RESULTS ============ -->
+      <h2>Results</h2>
+
+      <h3>A Benchmark with an Exact Answer</h3>
+      <p>
+        Alanine dipeptide places the two slow states in a two-dimensional dihedral plane whose free-energy
+        surface we can draw explicitly. The &beta;/C<sub>5</sub> and C<sub>7</sub><sup>eq</sup> regions sit
+        in separate free-energy wells; because the peptide is small, unbiased MD still yields a converged
+        first-passage rate in both directions. Every biased estimate can therefore be checked against an
+        exact number rather than against itself—which is what makes the system usable as a testbed for a
+        method search at all.
+      </p>
+
+      <figure class="fig-triple">
+        <img src="../figs/claude_hackathon/AD_equilibrium_states.png" alt="Potential of mean force of alanine dipeptide in the backbone dihedrals phi and psi, with the beta/C5 and C7eq metastable regions marked by dashed rings">
+        <img src="../figs/claude_hackathon/AD_state_A.png" alt="Ball-and-stick rendering of the beta/C5 conformation of alanine dipeptide">
+        <img src="../figs/claude_hackathon/AD_state_B.png" alt="Ball-and-stick rendering of the C7eq conformation of alanine dipeptide">
+        <figcaption>
+          <b>Figure 3.</b> The &beta;/C<sub>5</sub> &harr; C<sub>7</sub><sup>eq</sup> benchmark.
+          <em>(a)</em> Potential of mean force in the backbone dihedrals $(\phi, \psi)$; the two metastable
+          regions &beta;/C<sub>5</sub> and C<sub>7</sub><sup>eq</sup> (dashed rings) are separated by a
+          free-energy barrier. <em>(b,c)</em> The two metastable conformations of alanine dipeptide
+          (carbon black, nitrogen blue, oxygen red, hydrogen white).
+        </figcaption>
+      </figure>
+
+      <h3>Weight Degeneracy Is Severe</h3>
+      <p>
+        The path-weight distributions make the central difficulty concrete. Although the vast majority of
+        weights sit near the mean $\langle W(\Gamma) \rangle$, the distribution is extraordinarily heavy
+        tailed, with rare paths reaching weights orders of magnitude larger. A single such path can outweigh
+        the other $10^5$ combined—precisely the effective-sample-size collapse anticipated by the theory.
+        Any scheme that does not actively control this tail produces a rate dominated by a few paths.
+      </p>
+
+      <figure class="fig-pair">
+        <img src="../figs/claude_hackathon/w_A.png" alt="Log-frequency histogram of path weights for the beta/C5 to C7eq direction, showing a heavy tail far above the mean weight">
+        <img src="../figs/claude_hackathon/w_B.png" alt="Log-frequency histogram of path weights for the C7eq to beta/C5 direction, showing a heavy tail far above the mean weight">
+        <figcaption>
+          <b>Figure 4.</b> The weight-variance problem. Histograms (log frequency) of path weights
+          $W(\Gamma)$ under RRS, for <em>(a)</em> &beta;/C<sub>5</sub> &rarr; C<sub>7</sub><sup>eq</sup> and
+          <em>(b)</em> C<sub>7</sub><sup>eq</sup> &rarr; &beta;/C<sub>5</sub>. Even after branching control,
+          the distribution is heavy tailed—rare paths carry weights far above the mean
+          $\langle W(\Gamma) \rangle$ (dashed)—illustrating why naive reweighting is unusable and why weight
+          control is essential.
+        </figcaption>
+      </figure>
+
+      <h3>The Method Search: SMC Degenerates, SIR Is Unstable, RRS Converges</h3>
+      <p>
+        The pattern the agent uncovered is stark. <b>SMC</b> (no resampling) completes the A&rarr;B direction
+        but stalls after only 31 of 1000 trials in the reverse direction, where weight degeneracy inflates
+        the population and the compute budget is exhausted before convergence. <b>SIR</b> (global resampling)
+        never settles: its per-trial relative standard deviation is 2&ndash;3&times; the mean, and both
+        directions were terminated early (118 and 533 trials) as the estimate wandered rather than
+        converged—aggressive global resampling destroys walker diversity here. <b>RRS</b> is the only scheme
+        that runs all 1000 trials in both directions and converges cleanly, with per-trial spread comparable
+        to or better than the alternatives and no catastrophic tail behavior.
+      </p>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Scheme</th>
+              <th>Direction</th>
+              <th>Trials</th>
+              <th>Rate (fs<sup>&minus;1</sup>)</th>
+              <th>&sigma;/&mu;</th>
+              <th>MFPT (fs)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>SMC (no resampling)</td>
+              <td>C<sub>5</sub> &rarr; C<sub>7</sub><sup>eq</sup></td>
+              <td>1000</td>
+              <td>1.02 &times; 10<sup>&minus;3</sup></td>
+              <td>0.70</td>
+              <td>978</td>
+            </tr>
+            <tr>
+              <td>SMC (no resampling)</td>
+              <td>C<sub>7</sub><sup>eq</sup> &rarr; C<sub>5</sub></td>
+              <td>31 &dagger;</td>
+              <td>3.91 &times; 10<sup>&minus;4</sup></td>
+              <td>0.38</td>
+              <td>2555</td>
+            </tr>
+            <tr>
+              <td>SIR (global resample)</td>
+              <td>C<sub>5</sub> &rarr; C<sub>7</sub><sup>eq</sup></td>
+              <td>118 &dagger;</td>
+              <td>1.22 &times; 10<sup>&minus;3</sup></td>
+              <td>2.18</td>
+              <td>822</td>
+            </tr>
+            <tr>
+              <td>SIR (global resample)</td>
+              <td>C<sub>7</sub><sup>eq</sup> &rarr; C<sub>5</sub></td>
+              <td>533 &dagger;</td>
+              <td>5.25 &times; 10<sup>&minus;4</sup></td>
+              <td>3.15</td>
+              <td>1906</td>
+            </tr>
+            <tr class="row-best">
+              <td>RRS (branching)</td>
+              <td>C<sub>5</sub> &rarr; C<sub>7</sub><sup>eq</sup></td>
+              <td>1000</td>
+              <td>1.05 &times; 10<sup>&minus;3</sup></td>
+              <td>0.92</td>
+              <td>950</td>
+            </tr>
+            <tr class="row-best">
+              <td>RRS (branching)</td>
+              <td>C<sub>7</sub><sup>eq</sup> &rarr; C<sub>5</sub></td>
+              <td>1000</td>
+              <td>4.22 &times; 10<sup>&minus;4</sup></td>
+              <td>0.66</td>
+              <td>2372</td>
+            </tr>
+            <tr class="row-ref">
+              <td>Brute force (exact)</td>
+              <td>C<sub>5</sub> &rarr; C<sub>7</sub><sup>eq</sup></td>
+              <td>&mdash;</td>
+              <td>1.08 &times; 10<sup>&minus;3</sup></td>
+              <td>&mdash;</td>
+              <td>926</td>
+            </tr>
+            <tr class="row-ref">
+              <td>Brute force (exact)</td>
+              <td>C<sub>7</sub><sup>eq</sup> &rarr; C<sub>5</sub></td>
+              <td>&mdash;</td>
+              <td>4.48 &times; 10<sup>&minus;4</sup></td>
+              <td>&mdash;</td>
+              <td>2234</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">
+        <span class="caption-lead">Table 1.</span> Weight-control schemes versus brute force. Final
+        estimates over up to 1000 trials ($N_p = 1000$ walkers, ensemble importance function, seed 2026).
+        "Trials" is the number completed before convergence or termination; &sigma;/&mu; is the per-trial
+        relative standard deviation of the rate, a proxy for weight variance. Only RRS (highlighted)
+        completes both directions and matches the reference.<br>
+        &dagger; Run terminated before 1000 trials (degeneracy / non-convergence).
+      </p>
+
+      <h3>RRS Recovers the Brute-Force Rate; the Naive Committor Does Not</h3>
+      <p>
+        The running-rate traces for the selected RRS estimator show the reweighted estimate $r^{\rm IS}$
+        settling onto the brute-force line $r^{\rm BF}$ within a few hundred trials, far above the naive
+        committor estimate $r^{\rm NS}$.
+      </p>
+      <p>
+        This is the headline validation, and it is worth stating precisely: using the <em>same</em> learned
+        committor two different ways gives very different answers. Applied naively—flux times the mean
+        committor over escape configurations ("N.S.")—the estimate is badly biased: MFPT$_{\rm AB} = 926$ fs
+        against a naive 5412 fs, and MFPT$_{\rm BA} = 2234$ fs against a naive 4028 fs, i.e. up to
+        $\sim 6\times$ too slow, because an imperfect committor does not satisfy the exact flux relation.
+        Using that same committor as an importance-sampling guide and reweighting with RRS ("I.S.") corrects
+        this to 950 fs ($+2.6\%$) and 2372 fs ($+6.2\%$), both within error of the brute-force bars ("B.F.").
+        The reweighting turns an imperfect learned object into a quantitatively correct rate—the property
+        promised by the unbiased estimator—provided the weight variance is controlled, which is exactly what
+        RRS delivers.
+      </p>
+
+      <figure class="fig-pair">
+        <img src="../figs/claude_hackathon/AD_r_estim_A.png" alt="Running rate estimate versus trial for the beta/C5 to C7eq direction, converging onto the brute-force reference line">
+        <img src="../figs/claude_hackathon/AD_r_estim_B.png" alt="Running rate estimate versus trial for the C7eq to beta/C5 direction, converging onto the brute-force reference line">
+        <img src="../figs/claude_hackathon/AD_mfpt_A.png" alt="Bar chart of mean first-passage time for the beta/C5 to C7eq direction comparing naive committor, RRS importance sampling, and brute-force MD">
+        <img src="../figs/claude_hackathon/AD_mfpt_B.png" alt="Bar chart of mean first-passage time for the C7eq to beta/C5 direction comparing naive committor, RRS importance sampling, and brute-force MD">
+        <figcaption>
+          <b>Figure 5.</b> RRS recovers the exact kinetics. <em>(a,b)</em> Running estimate of the reweighted
+          rate $r^{\rm IS}$ (with confidence band) versus trial, compared to the brute-force reference
+          $r^{\rm BF}$ (red dashed) and the naive committor estimate $r^{\rm NS}$ (black dashed); the
+          importance-sampling estimate converges onto the exact rate in both directions. <em>(c,d)</em> Mean
+          first-passage time from the naive committor (N.S.), the RRS importance-sampling estimate (I.S.),
+          and brute-force MD (B.F.): the naive estimate is up to 6&times; too slow, while reweighted RRS
+          matches brute force to within 3&ndash;6%.
+        </figcaption>
+      </figure>
+
+      <!-- ============ TAKEAWAY ============ -->
+      <h2>Takeaway</h2>
+      <div class="takeaway">
+        <b>Takeaway.</b> On the &beta;/C<sub>5</sub> &harr; C<sub>7</sub><sup>eq</sup> isomerization of
+        alanine dipeptide—with an exact brute-force rate available in both directions—a Claude-driven method
+        search compared sequential importance sampling, global resampling, and a branching resampled random
+        walk, and selected RRS. It is the only scheme that completes both directions, controls the
+        heavy-tailed weight distribution, and recovers the true rate to within <b>3&ndash;6%</b>, where the
+        naive committor estimate is up to <b>6&times; wrong</b>. The scientific content is the estimator and
+        its validation; the methodological content is that the estimator was <em>found</em>, not hand-tuned,
+        by an agent reading its own variance diagnostics against ground truth.
+      </div>
+
+      <!-- ============ FUTURE ============ -->
+      <h2>Future Directions</h2>
+      <p>
+        Several limitations frame the outlook. The benchmark is a single peptide in vacuum, and the
+        exponential weight growth is milder here than it will be for a larger, solvated system—so the real
+        test of RRS is whether it <em>scales</em>. The B&rarr;A direction also retains a slightly larger
+        residual bias and per-trial variance than A&rarr;B, which points to the weight band
+        $[w_{\min}, w_{\max}]$ and the ESS trigger as hyperparameters worth autotuning; these are themselves
+        natural targets for the agent to optimize.
+      </p>
+      <p>
+        More broadly, the agentic loop is not specific to resampling. An agent that can propose an
+        estimator, implement it, run it, and read back a variance diagnostic against a trusted reference is
+        a general engine for numerical-scheme discovery in molecular simulation. Turning Claude loose on the
+        functional <em>form</em> of the bias, not just the resampling, is the direction I find most
+        promising.
+      </p>
+
+      <!-- ============ ACKNOWLEDGEMENTS ============ -->
+      <h2>Acknowledgements</h2>
+      <p style="font-size: 0.98rem; color: #444;">
+        This work was carried out during the <em>Built with Claude: Life Sciences</em> hackathon, in
+        partnership with Gladstone Institutes. I thank the organizers and the Anthropic team, and gratefully
+        acknowledge the Anthropic API credits provided for the event. The committor and rate-estimation
+        framework builds on prior work on importance sampling for rare transition paths
+        (<a href="accel_langevin.html">accelerated Langevin dynamics</a> and
+        <a href="accel_mcmc.html">accelerated MCMC</a>, Kim &amp; Cai 2026). Every result uses random seed
+        2026 and is reproducible from the accompanying pipeline: equilibration, brute-force MD, committor
+        training, branching-random-walk rate estimation, and plotting.
+      </p>
+
+    </div>
+  </main>
+
+  <script>
+    function toggleBibtex(e, id) {
+      e.preventDefault();
+      const el = document.getElementById(id);
+      el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+  </script>
+</body>
+</html>
