@@ -21,10 +21,16 @@
         displayMath: [['$$', '$$'], ['\\[', '\\]']],
         tags: 'none'
       },
+      // Automatic line breaking (MathJax v4; not available in v3):
+      // wrap display equations that exceed the container width instead of overflowing.
+      output: {
+        displayOverflow: 'linebreak',
+        linebreaks: { inline: true, width: '100%' }
+      },
       svg: { fontCache: 'global' }
     };
   </script>
-  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
 
   <style>
     body {
@@ -253,10 +259,22 @@
     }
     figcaption b { color: #333; }
 
-    /* Equations / display math wrapper */
+    /* Equations / display math wrapper.
+       No overflow-x scrolling: equations are re-flowed to fit the column,
+       and MathJax v4's displayOverflow:'linebreak' wraps anything wider
+       than the container instead of letting it overflow. */
     .eq-block {
       margin: 18px 0;
-      overflow-x: auto;
+      max-width: 100%;
+    }
+    .eq-block mjx-container {
+      max-width: 100%;
+    }
+    /* Last resort at phone widths only: a few equations contain unbreakable
+       fenced groups (e.g. matrices) wider than a narrow screen. No scrollbar
+       ever appears at desktop width. */
+    @media (max-width: 640px) {
+      .eq-block { overflow-x: auto; }
     }
 
     /* Algorithm box */
@@ -775,7 +793,13 @@
         $$ L(\theta) = \int_\Omega \mathcal{L}(\mathbf{x},\theta)\, g(\mathbf{x})\, d\mathbf{x}, \tag{33} $$
       </div>
       <div class="eq-block">
-        $$ \mathcal{L}(\mathbf{x},\theta) = \left(\ln\!\int_\Omega d\mathbf{y}\, I(\mathbf{y};\theta)\,\mathcal{K}_\tau(\mathbf{y}\,|\,\mathbf{x}) - \ln I(\mathbf{x};\theta)\right)^2 + \left(\ln\!\left[1 - \int_\Omega d\mathbf{y}\, I(\mathbf{y};\theta)\,\mathcal{K}_\tau(\mathbf{y}\,|\,\mathbf{x})\right] - \ln\!\left[1 - I(\mathbf{x};\theta)\right]\right)^2, \tag{34} $$
+        $$
+        \begin{split}
+        \mathcal{L}(\mathbf{x},\theta) ={}& \left(\ln\!\int_\Omega d\mathbf{y}\, I(\mathbf{y};\theta)\,\mathcal{K}_\tau(\mathbf{y}\,|\,\mathbf{x}) - \ln I(\mathbf{x};\theta)\right)^2 \\
+        &+ \left(\ln\!\left[1 - \int_\Omega d\mathbf{y}\, I(\mathbf{y};\theta)\,\mathcal{K}_\tau(\mathbf{y}\,|\,\mathbf{x})\right] - \ln\!\left[1 - I(\mathbf{x};\theta)\right]\right)^2,
+        \end{split}
+        \tag{34}
+        $$
       </div>
       <p>
         where $g(\mathbf{x}) > 0$ is a distribution function. The loss reaches its global minimum of $0$ when
