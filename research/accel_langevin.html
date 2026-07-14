@@ -443,7 +443,7 @@
           sampling while preserving relative probabilities between transition paths. We provide a rigorous
           mathematical formulation to recover the original transition rates between metastable states from the
           biased dynamics, and use a branching random walk algorithm to control the statistical variance of the
-          estimated rates. We validate the framework on 2- and 14-dimensional problems, as well as the system of
+          estimated rates. We validate the framework on a two-dimensional problem, as well as the system of
           7 Lennard-Jones discs as a benchmark atomistic model. The framework provides a scalable foundation for
           accelerating the simulation of rare events in atomistic systems.
         </p>
@@ -887,8 +887,8 @@
       <!-- ============ 4. RESULTS ============ -->
       <h2>4. Results</h2>
       <p>
-        We validate the framework on a two-dimensional system, a fourteen-dimensional system, and the
-        Lennard-Jones 7 (LJ7) benchmark, demonstrating its robustness and scalability.
+        We validate the framework on a two-dimensional system and the Lennard-Jones 7 (LJ7) benchmark,
+        demonstrating its robustness and scalability.
       </p>
 
       <h3>4.1 Two-Dimensional Potential with Two Reaction Channels</h3>
@@ -997,89 +997,20 @@
         significant errors, especially at low temperature.
       </p>
 
-      <h3>4.2 Fourteen-Dimensional Potential with Two Reaction Channels</h3>
-      <p>
-        We embed the two-channel system in fourteen dimensions with a harmonic
-        confinement<a class="cite" href="#ref-56">[56]</a>,
-      </p>
-      <div class="eq-block">
-        $$ U_{\rm TC14D}(\mathbf{x}) = U_{\rm TC}(\mathbf{x}_{1:2}) + \frac{1}{\sigma^2}\,\mathbf{x}_{3:14}^{\top}\mathbf{x}_{3:14}, \tag{43} $$
-      </div>
-      <p>
-        where $\mathbf{x}\in\mathbb{R}^{14}$ and the confinement width is
-        $\sigma = 2.0$ nm$^{1/2}$ eV$^{-1/2}$. The minima are at
-        $\mathbf{x}_{\rm A} = [-1.1, 0, \ldots, 0]^{\top}$ and $\mathbf{x}_{\rm B} = [1.1, 0, \ldots, 0]^{\top}$,
-        and regions A and B are hypercylinders of radius $0.1$ nm about these center lines in the
-        $(x_1, x_2)$ subspace. By construction the optimal importance function depends only on the first two
-        dimensions, so it can still be computed by FEM on the 2D subspace for comparison. The importance function
-        is again $I(\mathbf{x};\theta) = \sigma(h(\mathbf{x};\theta))$ (Eq. 44) with
-      </p>
-      <div class="eq-block">
-        $$ h(\mathbf{x};\theta) = A\exp\!\left[-\sum_i a_i (x_i - c_i)^2\right] + \mathrm{MLP}(\mathbf{x};\theta), \tag{45} $$
-      </div>
-      <p>
-        but now the Gaussian parameters $\{A, \{a_i\}, \{c_i\}\}$ are also trainable. The MLP has two hidden
-        layers of 50 neurons with $\tanh$ activations. Training is performed at $T = 500$ K for 5,000 iterations
-        with ADAM at learning rate $5\times 10^{-3}$; simulations use $\gamma = 1$ eV nm$^{-2}$ fs and
-        $\Delta t = 10^{-2}$ fs.
-      </p>
-      <p>
-        Sampling at $T = 500$ K over 1,000 trials of 1,000 paths (BRW weights $[1.0, 2.0]$) gives
-        $P_{\rm AB} = (8.9963 \pm 0.0942)\times 10^{-13}$, while direct evaluation without sampling yields
-        $P_{\rm AB}^{\rm NS} = 8.4594\times 10^{-12}$&mdash;nearly a factor of 10 too high. With flux
-        $J_{\rm A} = 8.1180$ fs$^{-1}$ (from $10^5$ escape configurations), the rate is
-        $r_{\rm AB} = (7.3033 \pm 0.0765)\times 10^{-12}$ fs$^{-1}$, in excellent agreement with the Kramers
-        value $r_{\rm AB}^{\rm Kr} = 7.1755\times 10^{-12}$ fs$^{-1}$; without sampling the rate is
-        $r_{\rm AB}^{\rm NS} = 6.8674\times 10^{-11}$ fs$^{-1}$. The $S_1$ fraction is $0.3003 \pm 0.0059$
-        (Kramers $0.2938$), versus $0.4391$ from direct counting (Table 2).
-      </p>
-
-      <div class="table-wrap">
-        <table class="data-table">
-          <caption>(a) Transition rates (in $10^{-12}$ fs$^{-1}$)</caption>
-          <thead>
-            <tr><th>Method</th><th>$r_{\rm AB}$</th></tr>
-          </thead>
-          <tbody>
-            <tr class="row-best"><td>Importance Sampling</td><td>7.3033 &plusmn; 0.0765</td></tr>
-            <tr><td>Kramers</td><td>7.1755</td></tr>
-            <tr><td>No Sampling</td><td>68.6741</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="table-wrap">
-        <table class="data-table">
-          <caption>(b) Transition rate fraction through $S_1$</caption>
-          <thead>
-            <tr><th>Method</th><th>$r_{\rm AB}(S_1)/r_{\rm AB}$</th></tr>
-          </thead>
-          <tbody>
-            <tr class="row-best"><td>Importance Sampling</td><td>0.3003 &plusmn; 0.0059</td></tr>
-            <tr><td>Kramers</td><td>0.2938</td></tr>
-            <tr><td>No Reweighting</td><td>0.4391</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="table-note">
-        <span class="caption-lead">Table 2.</span> Results for the 14-dimensional system at 500 K, comparing
-        importance sampling, Kramers rate theory, and no sampling / no reweighting, as in Table 1.
-      </p>
-
-      <h3>4.3 Sampling Bidirectional Transitions</h3>
+      <h3>4.2 Sampling Bidirectional Transitions</h3>
       <p>
         Using the reverse-sampling scheme of Section 3.9, a single network boosts both forward
         ($\Omega_{\rm A}\to\Omega_{\rm B}$) and backward ($\Omega_{\rm B}\to\Omega_{\rm A}$) transitions. Here
         the importance function is the sigmoid of an MLP with no Gaussian term,
       </p>
       <div class="eq-block">
-        $$ I(\mathbf{x};\theta) = \sigma\!\left(\mathrm{MLP}(\mathbf{x};\theta)\right). \tag{46} $$
+        $$ I(\mathbf{x};\theta) = \sigma\!\left(\mathrm{MLP}(\mathbf{x};\theta)\right). \tag{43} $$
       </div>
       <p>
         For the 2D system the MLP has two hidden layers of 50 neurons ($\tanh$), trained for 2,000 epochs
-        (ADAM, learning rate $5\times10^{-3}$); for the 14D system it has two hidden layers of 100 neurons,
-        trained for 5,000 epochs. Sampling both directions during training yields a more accurate importance
-        function after the same number of epochs than sampling only escapes from $\Omega_{\rm A}$, and it
-        removes the need to select a Gaussian term. As summarized in Tables 3 and 4, the importance-sampling
+        (ADAM, learning rate $5\times10^{-3}$). Sampling both directions during training yields a more accurate
+        importance function after the same number of epochs than sampling only escapes from $\Omega_{\rm A}$, and
+        it removes the need to select a Gaussian term. As summarized in Table 2, the importance-sampling
         rates $r_{\rm AB}$ and $r_{\rm BA}$ and their $S_1$ fractions agree closely with Kramers theory in both
         directions, while direct evaluation without reweighting yields significantly biased rates and incorrect
         fractions.
@@ -1112,47 +1043,17 @@
         </table>
       </div>
       <p class="table-note">
-        <span class="caption-lead">Table 3.</span> Bidirectional results for the 2-dimensional system at 500 K.
+        <span class="caption-lead">Table 2.</span> Bidirectional results for the 2-dimensional system at 500 K.
       </p>
 
-      <div class="table-wrap">
-        <table class="data-table">
-          <caption>(a) Transition rates (in $10^{-12}$ fs$^{-1}$)</caption>
-          <thead>
-            <tr><th>Method</th><th>$r_{\rm AB}$</th><th>$r_{\rm BA}$</th></tr>
-          </thead>
-          <tbody>
-            <tr class="row-best"><td>Importance Sampling</td><td>7.3067 &plusmn; 0.0523</td><td>7.2655 &plusmn; 0.0552</td></tr>
-            <tr><td>Kramers</td><td>7.1755</td><td>7.1755</td></tr>
-            <tr><td>No Sampling</td><td>12.0419</td><td>36.2771</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="table-wrap">
-        <table class="data-table">
-          <caption>(b) Transition rate fractions through $S_1$</caption>
-          <thead>
-            <tr><th>Method</th><th>$r_{\rm AB}(S_1)/r_{\rm AB}$</th><th>$r_{\rm BA}(S_1)/r_{\rm BA}$</th></tr>
-          </thead>
-          <tbody>
-            <tr class="row-best"><td>Importance Sampling</td><td>0.2927 &plusmn; 0.0033</td><td>0.2958 &plusmn; 0.0031</td></tr>
-            <tr><td>Kramers</td><td>0.2938</td><td>0.2938</td></tr>
-            <tr><td>No Reweighting</td><td>0.4811</td><td>0.4885</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="table-note">
-        <span class="caption-lead">Table 4.</span> Bidirectional results for the 14-dimensional system at 500 K.
-      </p>
-
-      <h3>4.4 Lennard&ndash;Jones 7 (LJ7) System</h3>
+      <h3>4.3 Lennard&ndash;Jones 7 (LJ7) System</h3>
       <p>
         The most demanding benchmark is the system of 7 Lennard-Jones discs (LJ7), a 14-degree-of-freedom
         atomistic model<a class="cite" href="#ref-26">[26]</a><a class="cite" href="#ref-41">,[41]</a><a class="cite" href="#ref-62">,[62]</a>.
         The soft-core potential is
       </p>
       <div class="eq-block">
-        $$ U_{\rm LJ7}^{\rm soft}(\{\mathbf{x}_i\}) = 4\varepsilon \sum_{i&lt;j}\left[s_{ij}^{-2} - s_{ij}^{-1}\right], \qquad s_{ij} = \alpha + \left(\frac{r_{ij}}{\varsigma}\right)^6, \tag{47} $$
+        $$ U_{\rm LJ7}^{\rm soft}(\{\mathbf{x}_i\}) = 4\varepsilon \sum_{i&lt;j}\left[s_{ij}^{-2} - s_{ij}^{-1}\right], \qquad s_{ij} = \alpha + \left(\frac{r_{ij}}{\varsigma}\right)^6, \tag{44} $$
       </div>
       <p>
         where $r_{ij} = \|\mathbf{x}_i - \mathbf{x}_j\|$, and we choose $\varepsilon = 1.0$ eV, $\alpha = 0.5$,
@@ -1167,14 +1068,14 @@
         such states using a coordination number $c_i$ for each atom,
       </p>
       <div class="eq-block">
-        $$ c_i = \sum_{i \neq j} \frac{1 - \left(\frac{2 r_{ij}}{3\varsigma}\right)^{8}}{1 - \left(\frac{2 r_{ij}}{3\varsigma}\right)^{16}}, \tag{48} $$
+        $$ c_i = \sum_{i \neq j} \frac{1 - \left(\frac{2 r_{ij}}{3\varsigma}\right)^{8}}{1 - \left(\frac{2 r_{ij}}{3\varsigma}\right)^{16}}, \tag{45} $$
       </div>
       <p>
         and the second and third central moments of the coordination
         numbers<a class="cite" href="#ref-11">[11]</a><a class="cite" href="#ref-63">,[63]</a>&ndash;<a class="cite" href="#ref-65">[65]</a>,
       </p>
       <div class="eq-block">
-        $$ \mu_2 = \frac{1}{7}\sum_{i=1}^{7} (c_i - \bar c)^2, \quad \mu_3 = \frac{1}{7}\sum_{i=1}^{7} (c_i - \bar c)^3, \quad \bar c = \frac{1}{7}\sum_{j=1}^{7} c_j. \tag{49} $$
+        $$ \mu_2 = \frac{1}{7}\sum_{i=1}^{7} (c_i - \bar c)^2, \quad \mu_3 = \frac{1}{7}\sum_{i=1}^{7} (c_i - \bar c)^3, \quad \bar c = \frac{1}{7}\sum_{j=1}^{7} c_j. \tag{46} $$
       </div>
       <p>
         All local minima group into four collections $C_0, C_1, C_2, C_3$ in $(\mu_2, \mu_3)$ space (Figure 4b).
@@ -1206,14 +1107,14 @@
         $\mathcal{N}_{11}$ at the $C_3$ minimum,
       </p>
       <div class="eq-block">
-        $$ \mathrm{A} = \left\{\{\mathbf{x}_i\}\ \middle|\ \max_{(i,j)\in\mathcal{N}_{11}} \left|r_{ij} - r^*_{ij}\right| &lt; \delta_{\rm A}\right\}, \tag{50} $$
+        $$ \mathrm{A} = \left\{\{\mathbf{x}_i\}\ \middle|\ \max_{(i,j)\in\mathcal{N}_{11}} \left|r_{ij} - r^*_{ij}\right| &lt; \delta_{\rm A}\right\}, \tag{47} $$
       </div>
       <p>
         with $\delta_{\rm A} = 0.1\,\varsigma$; region B is a circular region in $(\mu_2, \mu_3)$ space about the
         $C_2$ minimum,
       </p>
       <div class="eq-block">
-        $$ \mathrm{B} = \left\{\{\mathbf{x}_i\}\ \middle|\ \left(\mu_2 - \mu_2(C_2)\right)^2 + \left(\mu_3 - \mu_3(C_2)\right)^2 &lt; \delta_{\rm B}^2\right\}, \tag{51} $$
+        $$ \mathrm{B} = \left\{\{\mathbf{x}_i\}\ \middle|\ \left(\mu_2 - \mu_2(C_2)\right)^2 + \left(\mu_3 - \mu_3(C_2)\right)^2 &lt; \delta_{\rm B}^2\right\}, \tag{48} $$
       </div>
       <p>
         where $(\mu_2(C_2), \mu_3(C_2)) = (0.7736, 0.3520)$ and $\delta_{\rm B} = 10^{-2}$. Region B encompasses
@@ -1226,22 +1127,22 @@
         translations, rotations, and permutations of identical atoms. Distances are expanded in a radial basis,
       </p>
       <div class="eq-block">
-        $$ e_k(r_{ij}) = \exp\!\left(-\gamma\,(r_{ij} - \mu_k)^2\right), \quad k = 1, \ldots, n_{\rm rbf}, \tag{52} $$
+        $$ e_k(r_{ij}) = \exp\!\left(-\gamma\,(r_{ij} - \mu_k)^2\right), \quad k = 1, \ldots, n_{\rm rbf}, \tag{49} $$
       </div>
       <p>
         atom features are updated through $L$ interaction layers with continuous filters,
       </p>
       <div class="eq-block">
-        $$ \mathbf{h}_i^{(\ell+1)} = \mathbf{h}_i^{(\ell)} + \sum_{j\neq i} \mathbf{W}^{(\ell)}\mathbf{h}_j^{(\ell)} \odot \boldsymbol{\phi}^{(\ell)}\!\left(\mathbf{e}(r_{ij})\right), \tag{53} $$
+        $$ \mathbf{h}_i^{(\ell+1)} = \mathbf{h}_i^{(\ell)} + \sum_{j\neq i} \mathbf{W}^{(\ell)}\mathbf{h}_j^{(\ell)} \odot \boldsymbol{\phi}^{(\ell)}\!\left(\mathbf{e}(r_{ij})\right), \tag{50} $$
       </div>
       <p>
         and a per-atom readout followed by summation and a sigmoid gives the importance function,
       </p>
       <div class="eq-block">
-        $$ f_{\rm RO}(\mathbf{h}) = \mathbf{w}_2^{\top}\,\mathrm{SiLU}(\mathbf{W}_1\mathbf{h} + \mathbf{b}_1) + b_2, \tag{54} $$
+        $$ f_{\rm RO}(\mathbf{h}) = \mathbf{w}_2^{\top}\,\mathrm{SiLU}(\mathbf{W}_1\mathbf{h} + \mathbf{b}_1) + b_2, \tag{51} $$
       </div>
       <div class="eq-block">
-        $$ I(\{\mathbf{x}_i\};\theta) = \sigma\!\left[\sum_{i=1}^{N} f_{\rm RO}\!\left(\mathbf{h}_i^{(L)}\right)\right]. \tag{55} $$
+        $$ I(\{\mathbf{x}_i\};\theta) = \sigma\!\left[\sum_{i=1}^{N} f_{\rm RO}\!\left(\mathbf{h}_i^{(L)}\right)\right]. \tag{52} $$
       </div>
       <p>
         We use $n_{\rm f} = 64$ features, $n_{\rm rbf} = 50$ radial basis functions, and $L = 3$ interaction
@@ -1275,7 +1176,7 @@
         framework also resolves the four mechanisms: modes $M_1$ and $M_2$ each carry $\approx 32\%$ of the rate
         and modes $M_3$ and $M_4$ each $\approx 18\%$, an asymmetry consistent with the higher $0.52$ eV barrier
         of $M_3, M_4$ versus $0.49$ eV for $M_1, M_2$. The no-reweighting estimate incorrectly predicts a nearly
-        uniform split (Table 5).
+        uniform split (Table 3).
       </p>
 
       <div class="table-wrap">
@@ -1315,13 +1216,13 @@
         </table>
       </div>
       <p class="table-note">
-        <span class="caption-lead">Table 5.</span> Relative transition probabilities $r_{\rm AB}(M_k)/r_{\rm AB}$
+        <span class="caption-lead">Table 3.</span> Relative transition probabilities $r_{\rm AB}(M_k)/r_{\rm AB}$
         through each mechanism and total transition rates $r_{\rm AB}$ (in $10^{-4}$ fs$^{-1}$) for the LJ7
         system at 600 K, from importance sampling, brute-force Langevin dynamics, Kramers theory, and no
         sampling / no reweighting (Eq. 31 assuming $I \approx I_{\rm opt}$).
       </p>
 
-      <h3>4.5 Lennard&ndash;Jones (LJ7) System Across Temperatures</h3>
+      <h3>4.4 Lennard&ndash;Jones (LJ7) System Across Temperatures</h3>
       <p>
         Because the optimal importance function is temperature dependent, the network must in principle be
         retrained at each temperature. To avoid this cost we use transfer
@@ -1391,7 +1292,7 @@
         sampling of transition paths while preserving the relative probabilities of different pathways, and
         (2) providing an unbiased estimator for transition rates. Both are accomplished by assigning statistical
         weights to sampled paths, and a branching random walk (BRW) algorithm actively controls the variance of
-        those weights. We validated the framework on 2- and 14-dimensional systems and on the LJ7 benchmark,
+        those weights. We validated the framework on a two-dimensional system and on the LJ7 benchmark,
         confirming that it accurately recovers transition rates and relative escape-channel probabilities even
         in the presence of approximation errors. This offers a practical route to accurate kinetic
         characterization of complex, high-dimensional systems where the exact importance function (the
