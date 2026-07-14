@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <!--
-  Image paths used: ../images/mcmc_rare_events/<figure>.png
-  Adjust the prefix in <img src> if your figures live elsewhere.
+  Image paths used: ../figs/accel_mcmc/<figure>.png
+  Only images that appear in the paper are referenced.
 -->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MCMC Rare Events Research - Myung Chul Kim</title>
+  <title>Accelerated Markov Chain Monte Carlo via Importance Sampling - Myung Chul Kim</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,12 +18,19 @@
     MathJax = {
       tex: {
         inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        tags: 'none'
+      },
+      // Automatic line breaking (MathJax v4; not available in v3):
+      // wrap display equations that exceed the container width instead of overflowing.
+      output: {
+        displayOverflow: 'linebreak',
+        linebreaks: { inline: true, width: '100%' }
       },
       svg: { fontCache: 'global' }
     };
   </script>
-  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
 
   <style>
     body {
@@ -100,30 +107,30 @@
     }
 
     .page-title {
-      font-size: 2.5rem;
+      font-size: 2.3rem;
       font-weight: bold;
       margin-bottom: 8px;
       color: #8C1515;
+      line-height: 1.2;
     }
 
     .page-subtitle {
       font-family: 'EB Garamond', Georgia, serif;
-      font-size: 1.35rem;
-      font-style: italic;
+      font-size: 1.3rem;
       color: #555;
       margin-top: 0;
-      margin-bottom: 30px;
+      margin-bottom: 26px;
     }
 
     .content {
-      font-size: 1.1rem;
+      font-size: 1.08rem;
       line-height: 1.7;
     }
 
     .content h2 {
       font-family: 'EB Garamond', Georgia, serif;
       color: #8C1515;
-      font-size: 1.75rem;
+      font-size: 1.7rem;
       margin-top: 2.2em;
       margin-bottom: 0.5em;
       border-bottom: 2px solid #8C1515;
@@ -133,8 +140,8 @@
     .content h3 {
       font-family: 'EB Garamond', Georgia, serif;
       color: #444;
-      font-size: 1.3rem;
-      margin-top: 1.6em;
+      font-size: 1.28rem;
+      margin-top: 1.7em;
       margin-bottom: 0.4em;
     }
 
@@ -152,6 +159,35 @@
     .content a:hover {
       border-bottom-color: #8C1515;
     }
+
+    /* Inline citation links */
+    a.cite {
+      border-bottom: none;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* Abstract block */
+    .abstract {
+      font-size: 1.0rem;
+      line-height: 1.62;
+      margin: 6px 0 12px 0;
+      padding: 18px 30px;
+      background: #faf8f6;
+      border: 1px solid #ecdede;
+      border-radius: 4px;
+    }
+    .abstract .abstract-label {
+      display: block;
+      text-align: center;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-weight: 600;
+      font-size: 1.15rem;
+      color: #8C1515;
+      margin-bottom: 8px;
+      letter-spacing: 0.02em;
+    }
+    .abstract p { margin: 0; }
 
     /* Paper info card */
     .paper-card {
@@ -187,7 +223,7 @@
 
     /* Figures */
     figure {
-      margin: 28px auto;
+      margin: 30px auto;
       text-align: center;
     }
     figure img {
@@ -206,15 +242,15 @@
       flex-wrap: wrap;
     }
     figure.fig-pair img { max-width: 48%; }
-    figure.fig-triple {
+    figure.fig-quad {
       display: flex;
-      gap: 10px;
+      gap: 12px;
       justify-content: center;
       flex-wrap: wrap;
     }
-    figure.fig-triple img { max-width: 32%; }
+    figure.fig-quad img { max-width: 47%; }
     figcaption {
-      font-size: 0.92rem;
+      font-size: 0.9rem;
       color: #555;
       margin-top: 10px;
       line-height: 1.45;
@@ -223,10 +259,48 @@
     }
     figcaption b { color: #333; }
 
-    /* Equations / display math wrapper */
+    /* Equations / display math wrapper.
+       No overflow-x scrolling: equations are re-flowed to fit the column,
+       and MathJax v4's displayOverflow:'linebreak' wraps anything wider
+       than the container instead of letting it overflow. */
     .eq-block {
       margin: 18px 0;
-      overflow-x: auto;
+      max-width: 100%;
+    }
+    .eq-block mjx-container {
+      max-width: 100%;
+    }
+    /* Last resort at phone widths only: a few equations contain unbreakable
+       fenced groups (e.g. matrices) wider than a narrow screen. No scrollbar
+       ever appears at desktop width. */
+    @media (max-width: 640px) {
+      .eq-block { overflow-x: auto; }
+    }
+
+    /* Algorithm box */
+    .algo-box {
+      border: 1px solid #d9cccc;
+      border-top: 3px solid #8C1515;
+      border-radius: 5px;
+      background: #fbf9f9;
+      padding: 14px 20px;
+      margin: 22px 0;
+      font-family: 'Source Sans 3', Helvetica, sans-serif;
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+    .algo-box .algo-title {
+      font-weight: 700;
+      color: #8C1515;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.1rem;
+      margin-bottom: 6px;
+    }
+    .algo-box .algo-io { font-size: 0.86rem; color: #555; margin-bottom: 6px; }
+    .algo-box ol { margin: 6px 0 0 0; padding-left: 1.4em; }
+    .algo-box ol li { margin-bottom: 3px; }
+    .algo-box .algo-phase {
+      font-weight: 700; color: #8C1515; margin-top: 8px;
     }
 
     /* Highlight box for key takeaway */
@@ -238,34 +312,82 @@
       font-size: 1.0rem;
     }
 
-    /* Key contributions list */
-    .contributions {
-      padding-left: 0;
-      list-style: none;
-    }
-    .contributions li {
-      position: relative;
-      padding: 8px 0 8px 32px;
-      border-bottom: 1px dashed #e0e0e0;
-    }
-    .contributions li:last-child { border-bottom: none; }
-    .contributions li::before {
-      content: '\f192'; /* fontawesome dot-circle */
-      font-family: 'Font Awesome 6 Free';
-      font-weight: 900;
-      color: #8C1515;
-      position: absolute;
-      left: 4px;
-      top: 11px;
-      font-size: 0.9em;
-    }
-
     code {
       background: #f3f0ec;
       padding: 1px 5px;
       border-radius: 3px;
       font-size: 0.92em;
     }
+
+    /* ---- Data tables ---- */
+    .table-wrap {
+      overflow-x: auto;
+      margin: 22px 0 6px 0;
+    }
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Source Sans 3', Helvetica, sans-serif;
+      font-size: 0.92rem;
+      min-width: 460px;
+    }
+    table.data-table caption {
+      caption-side: top;
+      text-align: left;
+      font-weight: 600;
+      color: #8C1515;
+      padding: 0 0 6px 0;
+      font-size: 0.9rem;
+    }
+    table.data-table thead th {
+      background: #8C1515;
+      color: #ffffff;
+      font-weight: 600;
+      text-align: left;
+      padding: 9px 12px;
+      white-space: nowrap;
+    }
+    table.data-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #ececec;
+      white-space: nowrap;
+    }
+    table.data-table tbody tr:nth-child(even) td {
+      background: #fbf9f9;
+    }
+    table.data-table tr.row-best td {
+      background: #f4e6e6;
+      color: #5f0f0f;
+      font-weight: 700;
+    }
+    table.data-table tr.row-best td:first-child {
+      box-shadow: inset 3px 0 0 #8C1515;
+    }
+    .table-note {
+      font-size: 0.84rem;
+      color: #666;
+      line-height: 1.5;
+      margin: 8px 0 0 0;
+      text-align: left;
+    }
+    .table-note .caption-lead { color: #333; font-weight: 700; }
+
+    /* ---- References ---- */
+    ol.references {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: #444;
+      padding-left: 2.4em;
+    }
+    ol.references li {
+      margin-bottom: 6px;
+      padding-left: 4px;
+    }
+    ol.references li:target {
+      background: #fff8e6;
+      border-radius: 3px;
+    }
+    ol.references li a { border-bottom: none; }
   </style>
 </head>
 <body>
@@ -285,267 +407,1054 @@
   </header>
 
   <main class="container">
-    <h1 class="page-title">Accelerating Markov Chain Monte Carlo</h1>
-    <p class="page-subtitle">Neural network-driven importance sampling for accelerated Markov chain Monte Carlo</p>
+    <h1 class="page-title">Accelerated Markov Chain Monte Carlo Simulation via Neural Network&ndash;Driven Importance Sampling</h1>
+    <p class="page-subtitle">Michael Kim and Wei Cai &middot; Department of Mechanical Engineering, Stanford University</p>
 
     <div class="content">
 
       <!-- ============ PAPER CARD ============ -->
       <div class="paper-card">
         <div class="authors"><b>Accelerated Markov Chain Monte Carlo Simulation via Neural Network-Driven Importance Sampling</b></div>
-        <div>Michael M. Kim, Wei Cai</div>
-        <div class="venue">ArXiv Preprint (2026)</div>
+        <div>Michael Kim, Wei Cai</div>
+        <div class="venue">arXiv preprint arXiv:2602.12294 (2026)</div>
         <div class="links">
-          <a href="#"><i class="fa-solid fa-file-pdf"></i>Paper (PDF)</a>
-          <a href="#"><i class="fa-solid fa-book"></i>arXiv</a>
+          <a href="../docs/importance_sampling_mcmc.pdf" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-file-pdf"></i>Paper (PDF)</a>
+          <a href="https://arxiv.org/abs/2602.12294" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-book"></i>arXiv</a>
           <a href="#"><i class="fa-brands fa-github"></i>Code</a>
-          <a href="#"><i class="fa-solid fa-quote-right"></i>BibTeX</a>
+          <a href="#" onclick="toggleBibtex(event, 'bibtex-mcmc')"><i class="fa-solid fa-quote-right"></i>BibTeX</a>
         </div>
+        <pre id="bibtex-mcmc" style="display:none; margin-top:12px; background:#f3f0ec; padding:12px; border-radius:4px; font-size:0.85rem; overflow-x:auto;">@article{kim2026acceleratedmcmc,
+  title={Accelerated Markov Chain Monte Carlo Simulation via Neural Network-Driven Importance Sampling},
+  author={Kim, Michael and Cai, Wei},
+  journal={arXiv preprint arXiv:2602.12294},
+  year={2026}
+}</pre>
       </div>
 
-      <!-- ============ OVERVIEW ============ -->
-      <h2>Overview</h2>
+      <!-- ============ ABSTRACT ============ -->
+      <div class="abstract">
+        <span class="abstract-label">Abstract</span>
+        <p>
+          Atomistic simulations provide valuable insights into the physical processes governing material
+          behavior. However, their applicability is fundamentally constrained by the limited time scales
+          accessible to brute-force simulations. This bottleneck often stems from complex energy landscapes where
+          the systems stay trapped in metastable states for long periods of time. Yet, the long-term evolution is
+          controlled by the transitions between the metastable states, which are rare events and difficult to
+          observe. We present an importance sampling method designed to accelerate the time scale of Markov chain
+          Monte Carlo (MCMC) simulations. By employing a bias potential, our approach enhances the sampling of
+          rare transition events while preserving the relative probabilities of distinct transition pathways. The
+          bias potential is represented by a neural network which enables the flexibility needed for
+          high-dimensional systems. We propose a rigorous formulation to obtain the original transition rates
+          between metastable states using transition paths obtained from the biased simulation. We further use a
+          branching random walk (BRW) technique to enhance efficiency and to reduce variance. The proposed
+          methodology is validated on 2-dimensional and 14-dimensional systems, demonstrating its accuracy and
+          scalability.
+        </p>
+      </div>
+
+      <!-- ============ 1. INTRODUCTION ============ -->
+      <h2>1. Introduction</h2>
       <p>
-        Atomistic simulations are a powerful tool for understanding material behavior at the
-        microscopic scale, but their applicability is fundamentally limited by the timescales
-        accessible to brute-force methods. Systems remain trapped within metastable states
-        for long stretches of simulation time, while the rare transitions between states are
-        what actually drive the long-term evolution—a difficulty widely known as the
-        <em>time-scale</em> or <em>rare-event</em> problem.
+        Atomistic simulations play a crucial role in understanding the fundamental processes governing the
+        behavior of materials at the microscopic scale. However, they are fundamentally limited by the accessible
+        time scale of brute-force methods. Simulations frequently remain trapped within metastable states for
+        extended periods, hindering the observation of transitions between these states. Consequently, capturing
+        these transitions that drive long-term evolution can be prohibitively expensive. This intrinsic
+        limitation is widely recognized as the time-scale or <em>rare event
+        problem</em><a class="cite" href="#ref-1">[1]</a>&ndash;<a class="cite" href="#ref-3">[3]</a>.
       </p>
       <p>
-        This work presents an importance-sampling framework for accelerating
-        <em>discrete-state</em> Markov chain Monte Carlo (MCMC) simulations, in which a neural
-        network is trained to represent the optimal <em>bias potential</em>—the logarithm of
-        the optimal importance function. By operating in log-space, the method handles the
-        extremely small magnitudes of the importance function near energy minima that would
-        otherwise cause numerical underflow at low temperatures. A rigorous reweighting formula
-        recovers the unbiased transition rates of the original system, and a branching random
-        walk (BRW) procedure controls the variance of the estimator.
+        Various methodologies have been established to overcome the time-scale limitations of standard
+        simulations. Methods such as hyperdynamics<a class="cite" href="#ref-4">[4]</a>, steered molecular
+        dynamics<a class="cite" href="#ref-5">[5]</a>, and
+        metadynamics<a class="cite" href="#ref-6">[6]</a>&ndash;<a class="cite" href="#ref-8">[8]</a> rely on
+        external forces or bias potentials to accelerate the escape from metastable basins. Alternatively,
+        trajectory-based approaches, including the weighted ensemble
+        method<a class="cite" href="#ref-9">[9]</a><a class="cite" href="#ref-10">,[10]</a> and forward flux
+        sampling<a class="cite" href="#ref-11">[11]</a>, enhance sampling efficiency by selectively branching
+        trajectories along a reaction coordinate. In parallel, transition path
+        theory<a class="cite" href="#ref-12">[12]</a>&ndash;<a class="cite" href="#ref-15">[15]</a> offers a
+        mathematical basis for analyzing the statistics of reactive pathways. Importance sampling
+        methods<a class="cite" href="#ref-16">[16]</a>&ndash;<a class="cite" href="#ref-21">[21]</a> represent
+        another established direction, designed to capture dominant transition pathways and estimate dynamical
+        properties of rare events. In this work, we focus on applying importance sampling to extend the time
+        scale of Markov chain Monte Carlo simulations.
       </p>
       <p>
-        This is the discrete-state precursor to my
-        <a href="rare_events.html">continuous Langevin dynamics</a> framework, which extends
-        the same ideas to atomistic systems with continuous degrees of freedom.
+        The importance sampling method pursues two primary objectives. First, it aims to enhance the sampling of
+        successful transition paths between metastable states without artificially favoring one reaction channel
+        over another: the relative probabilities of competing pathways must be preserved so that the transition
+        mechanism remains unbiased. Second, the applied enhancement must be quantifiable, allowing the true
+        transition rates of the original system to be recovered. In practice, importance sampling modifies the
+        system kinetics by updating the transition probabilities with an importance
+        function<a class="cite" href="#ref-18">[18]</a><a class="cite" href="#ref-21">,[21]</a>. The requirement
+        that these updated probabilities remain normalized serves as a constraint that uniquely determines the
+        <em>optimal</em> importance function. Consequently, importance sampling reformulates the rare event
+        problem into an optimization problem.
+      </p>
+      <p>
+        Several significant challenges remain. An increase in the size or dimensionality of the system drastically
+        increases the computational burden of finding the optimal importance function. In addition, numerical
+        stability becomes critical at low temperatures, where the magnitude of the optimal importance function
+        near the energy minima of the starting metastable state can become exceedingly small, leading to
+        underflow errors. Most importantly, the accuracy of the estimated transition rates relies heavily on the
+        quality of the importance function: even a small deviation from the optimal solution causes the variance
+        of the estimator to increase drastically, resulting in large errors in the estimated rates.
+      </p>
+      <p>
+        In this work we propose a robust method to overcome these limitations in Markov chain Monte Carlo (MCMC)
+        simulations of spatially discrete systems. First, to address the challenge of searching for the optimal
+        importance function in high dimensions, we employ a neural network combined with adaptive sampling.
+        Second, to resolve numerical instability at low temperatures, we perform the optimization in logarithmic
+        space by introducing an optimal <em>bias potential</em>, which effectively prevents underflow near energy
+        minima. Finally, we present a general formulation for estimating transition rates, complemented by a
+        branching random walk (BRW) technique that significantly reduces the variance of the estimator.
       </p>
 
-      <!-- ============ PROBLEM ============ -->
-      <h2>Problem Setup</h2>
+      <!-- ============ 2. PROBLEM STATEMENT ============ -->
+      <h2>2. Problem Statement</h2>
       <p>
-        Consider a discrete domain $\Omega$ of microscopic states laid out on a regular grid,
-        with an energy landscape $E(i)$ defined on each site. The kinetics is specified by jump
-        rates between nearest-neighbor sites:
+        Consider a domain $\Omega$, a set of allowed microscopic states corresponding to points on a regular grid
+        in a two-dimensional region, as shown in Figure 1. On this domain an energy landscape $E(i)$ is defined,
+        specifying the energy of any microscopic state $i$. The kinetics of the system is defined through the
+        function $r(i\to j)$, the jump rate between any two microscopic states $i$ and $j$ on the grid,
       </p>
       <div class="eq-block">
-        $$ r(i \to j) = \nu_0 \, \exp\!\left[-\frac{E(j) - E(i)}{2 k_B T}\right] \, \mathbb{1}_{\rm nn}(i,j), $$
+        $$ r(i\to j) = \nu_0\,\exp\!\left(-\frac{E(j) - E(i)}{2k_{\rm B}T}\right)\mathbb{1}_{\rm nn}(i,j), \tag{1} $$
       </div>
       <p>
-        where $\nu_0$ is a frequency prefactor and $\mathbb{1}_{\rm nn}(i,j)=1$ for nearest
-        neighbors. These rates satisfy detailed balance with respect to the Boltzmann
-        distribution. The corresponding jump <em>probabilities</em> upon leaving site $i$ are
-        $K(i\to j) = r(i\to j)/r_{\rm tot}(i)$.
+        where $\nu_0$ is a constant frequency prefactor and $\mathbb{1}_{\rm nn}(i,j)$ equals $1$ if $i$ and $j$
+        are nearest-neighbor grid points in $\Omega$ and $0$ otherwise. The jump rate defined in Eq. (1)
+        satisfies the detailed balance condition,
       </p>
+      <div class="eq-block">
+        $$ r(i\to j)\,\exp\!\left(-\frac{E(i)}{k_{\rm B}T}\right) = r(j\to i)\,\exp\!\left(-\frac{E(j)}{k_{\rm B}T}\right), \quad \forall\, i, j \in \Omega. \tag{2} $$
+      </div>
 
       <figure class="fig-narrow">
-        <img src="../images/mcmc_rare_events/pel_discrete_omega.png" alt="Discrete energy landscape with two basins">
+        <img src="../figs/accel_mcmc/domain_grid.png" alt="Two-dimensional grid domain colored by the energy landscape, showing metastable states A and B, saddle points S1 and S2, and a white transition path from A to B">
         <figcaption>
-          <b>Figure 1.</b> A discrete domain $\Omega$ of microscopic states on a 2D grid,
-          colored by the energy landscape $E(i)$. Two metastable minima A and B sit at the
-          bottoms of the basins, separated by saddle points $S_1$ and $S_2$. The white path
-          shows a transition from A to B passing near $S_1$.
+          <b>Figure 1.</b> Domain $\Omega$ is a set of allowed microscopic states (e.g. labeled as $i$ and $j$)
+          corresponding to points on a regular grid in a two-dimensional region. The colored background
+          corresponds to the energy landscape $E(i)$. Microscopic states A and B correspond to the local minima
+          of the energy landscape. Microscopic states $S_1$ and $S_2$ are the saddle points of the energy
+          landscape. The white path through the microscopic states indicates a transition path from A to B.
         </figcaption>
       </figure>
 
       <p>
-        At low temperatures, a system initialized near A spends a long time in the A-basin
-        before a rare transition into the B-basin. The two practical objectives are
-        <em>(i)</em> obtaining accurate transition rates between metastable states, and
-        <em>(ii)</em> resolving the relative probabilities of competing reaction channels
-        (e.g.&nbsp;those that pass through $S_1$ vs.&nbsp;$S_2$).
+        Assume the energy landscape contains two deep basins corresponding to two metastable states. Let A and B
+        be the local energy minima at the bottom of these basins, and assume there are two saddle points, $S_1$
+        and $S_2$, located on two distinct transition pathways between A and B. At low temperatures, a system
+        starting in the neighborhood of A is likely to spend a long time in the basin containing A, and the
+        transition to the basin containing B is a rare event. When such a rare transition does occur, the
+        transition path is likely to pass through the neighborhood of either $S_1$ or $S_2$.
+      </p>
+      <p>
+        Importance sampling aims to accelerate the time scale of MCMC simulations while preserving the relative
+        probabilities of distinct pathways. The objectives are twofold: (1) obtain accurate transition rates
+        between metastable states, and (2) reveal the underlying transition mechanisms by sampling transition
+        paths with their correct probabilities. Although the example above is a simple 2-dimensional system, the
+        algorithm is designed to be robust enough to handle high-dimensional systems, where rare events are
+        computationally prohibitive.
       </p>
 
-      <!-- ============ APPROACH ============ -->
-      <h2>Approach</h2>
+      <!-- ============ 3. METHODS ============ -->
+      <h2>3. Methods</h2>
+
+      <h3>3.1 Importance Sampling of Rare Transition Paths</h3>
       <p>
-        Importance sampling modifies the jump probabilities through an importance function $I(i)$:
+        If the system is in microscopic state $i$, the probability of jumping to microscopic state $j$ upon
+        leaving $i$ is
       </p>
       <div class="eq-block">
-        $$ K'(i\to j) = \frac{1}{n'(i)} \, K(i\to j) \, \frac{I(j)}{I(i)} \, \big[1 - \mathbb{1}_{\rm A}(j)\big], $$
+        $$ K(i\to j) = \frac{r(i\to j)}{r_{\rm tot}(i)}, \qquad r_{\rm tot}(i) = \sum_{k\in\mathcal{N}(i)} r(i\to k), \tag{3} $$
       </div>
       <p>
-        where the indicator $\mathbb{1}_{\rm A}(j)$ removes returns to A, and $n'(i)$ is a
-        normalization factor. There exists a unique <em>optimal</em> importance function
-        $I^{\rm opt}(i)$ for which all the $n'(i) = 1$; under this choice, every successful
-        path is enhanced by exactly the same factor $I^{\rm opt}({\rm B})/I^{\rm opt}({\rm A})$,
-        so relative path probabilities are preserved and the original transition rate can be
-        recovered exactly. The catch: finding $I^{\rm opt}$ exactly is as hard as solving the
-        rare-event problem itself.
+        where $r_{\rm tot}(i)$ is the total jump rate out of state $i$ and $\mathcal{N}(i)$ is the set of all
+        microscopic states accessible from (i.e. adjacent to) $i$. We define a <em>path</em> as a Monte Carlo
+        trajectory that starts at A and ends at either A or B. Paths that end at A are called <em>failure</em>
+        paths, and paths that end at B are <em>success</em> paths. The probability of sampling a given success
+        path $\Gamma_{\rm AB} = \{{\rm A}, i_1, i_2, \cdots, i_n, {\rm B}\}$ is
       </p>
-
+      <div class="eq-block">
+        $$ P(\Gamma_{\rm AB}) = K({\rm A}\to i_1)\cdot K(i_1\to i_2)\cdots K(i_n\to {\rm B}). \tag{4} $$
+      </div>
       <p>
-        The framework solves three concrete obstacles to making this practical at high
-        dimension and low temperature:
+        The rare event problem stems from the fact that, under the dynamics defined by $K(i\to j)$, the
+        probability of sampling a success path is extremely small. Direct Monte Carlo simulations are therefore
+        computationally inefficient, as the vast majority of resources are expended sampling failure paths. With
+        importance sampling we construct a new kinetics in which the jump probability $K'$ is modified from the
+        original probability $K$ through an <em>importance function</em> $I(i)$,
       </p>
-
-      <ul class="contributions">
-        <li>
-          <b>Neural-network bias potential, trained in log-space.</b>
-          Instead of fitting $I^{\rm opt}(i)$ directly—which can be exponentially small near
-          energy minima and cause numerical underflow—a neural network is trained to
-          represent the <em>bias potential</em> $E_b(i;\theta) \propto -k_B T \log I^{\rm opt}(i)$.
-          Working in log-space stabilizes both training and sampling at low temperatures.
-        </li>
-        <li>
-          <b>Adaptive sampling with simulated annealing.</b>
-          Training begins at a high effective temperature where successful transitions are
-          easy to sample, and the temperature is reduced in stages down to the target. At
-          each stage, the network is updated using the paths produced under its own
-          biased dynamics, avoiding the chicken-and-egg problem of needing successful paths
-          to learn the bias.
-        </li>
-        <li>
-          <b>Hybrid Gaussian + MLP for high dimensions.</b>
-          For the 14-dimensional system, the bias potential is parameterized as
-          $E_b = A \exp[-\sum_i a_i (x_i - c_i)^2] + \mathrm{MLP}(x; \theta)$. The Gaussian
-          term gives a coarse global gradient that drives early exploration; the MLP refines
-          it into the optimal shape.
-        </li>
-        <li>
-          <b>Unbiased rate estimator with branching random walk.</b>
-          When $I(i) \neq I^{\rm opt}(i)$, the path-weight reweighting still recovers the
-          correct rate, but with high variance. The BRW procedure splits paths whose weights
-          grow too large and prunes those whose weights become negligible, keeping the weight
-          distribution within a controlled range and dramatically reducing the variance of the
-          rate estimator.
-        </li>
-      </ul>
-
-      <!-- ============ RESULTS ============ -->
-      <h2>Results</h2>
-
-      <h3>2D System with Two Reaction Channels</h3>
+      <div class="eq-block">
+        $$ K'(i\to j) = K(i\to j)\,\frac{I(j)}{I(i)}\left[1 - \mathbb{1}_{\rm A}(j)\right], \tag{5} $$
+      </div>
       <p>
-        The first benchmark is the 2D landscape shown in Figure&nbsp;1, with energy minima at
-        $(\pm 1.1, 0)$ nm and saddle points $S_1, S_2$ at $(0, \pm 1)$ nm with barriers of
-        $1.02$ and $0.98$ eV respectively. Because the state space is finite, the optimal
-        bias potential can be computed numerically and used as a ground truth. The neural
-        network—two hidden layers of 30 <code>tanh</code> units, trained with simulated
-        annealing from 5800 K down to 500 K—recovers the exact bias potential to high accuracy,
-        with the largest residual errors confined to sparsely sampled states far from the
-        dominant transition pathways.
+        where $\mathbb{1}_{\rm A}(j) = 1$ if $j = {\rm A}$ and $0$ otherwise. However, $K'(i\to j)$, being a
+        probability matrix, has to be normalized,
+      </p>
+      <div class="eq-block">
+        $$ \sum_{j\in\mathcal{N}(i)} K'(i\to j) = 1. \tag{6} $$
+      </div>
+      <p>
+        We define the importance function that guarantees the normalization condition, Eq. (6), as the
+        <em>optimal</em> importance function $I_{\rm opt}(i)$. In general, when $I(i)$ does not equal
+        $I_{\rm opt}(i)$ (because the latter is unknown), we must introduce a normalization factor $n'(i)$ to
+        ensure that $K'(i\to j)$ is properly normalized,
+      </p>
+      <div class="eq-block">
+        $$
+        \begin{split}
+        K'(i\to j) &= \frac{1}{n'(i)}\,K(i\to j)\,\frac{I(j)}{I(i)}\left[1 - \mathbb{1}_{\rm A}(j)\right], \\
+        n'(i) &= \sum_{j\in\mathcal{N}(i)} K(i\to j)\,\frac{I(j)}{I(i)}\left[1 - \mathbb{1}_{\rm A}(j)\right].
+        \end{split}
+        \tag{7}
+        $$
+      </div>
+      <p>
+        The new probability of sampling the same path $\Gamma_{\rm AB}$ under the modified Monte Carlo simulation
+        is
+      </p>
+      <div class="eq-block">
+        $$ P'(\Gamma_{\rm AB}) = \left[\frac{1}{n'({\rm A})}\prod_{k=1}^{n}\frac{1}{n'(i_k)}\right] P(\Gamma_{\rm AB})\,\frac{I({\rm B})}{I({\rm A})}. \tag{8} $$
+      </div>
+      <p>
+        In the event that all the normalization factors equal $1$ (when $I(i) = I_{\rm opt}(i)$), we obtain a
+        remarkable outcome,
+      </p>
+      <div class="eq-block">
+        $$ P'(\Gamma_{\rm AB}) = P(\Gamma_{\rm AB})\,\frac{I_{\rm opt}({\rm B})}{I_{\rm opt}({\rm A})}. \tag{9} $$
+      </div>
+      <p>
+        This expression implies that the two requirements identified in Section 2 are exactly satisfied: (1) the
+        sampling of all successful paths from A to B is enhanced by the same amount (the enhancement factor is
+        path independent), and (2) the enhancement factor is known, so we can obtain the transition rate of the
+        original system from that of the modified system. In practice $I_{\rm opt}(i)$ is not known, and finding
+        it exactly is at least as difficult as solving the original rare event problem; the well-established
+        approach of importance sampling (widely successful in quantum
+        chemistry<a class="cite" href="#ref-22">[22]</a>) is to develop &ldquo;good enough&rdquo; approximations
+        to $I_{\rm opt}(i)$. What has been achieved is the reformulation of the rare event problem into an
+        optimization problem. The optimality condition Eq. (6) can be written equivalently as
+      </p>
+      <div class="eq-block">
+        $$ \sum_{j\in\mathcal{N}(i)\setminus\{{\rm A}\}} K(i\to j)\,I(j) = I(i). \tag{10} $$
+      </div>
+      <p>
+        In other words, the optimal importance function is the (right) eigenvector of the transition probability
+        matrix $K(i\to j)\left[1 - \mathbb{1}_{\rm A}(j)\right]$ with eigenvalue $1$ (which corresponds to the
+        largest eigenvalue). We set $I({\rm B}) = 1$ without loss of generality. The optimal importance function
+        corresponds to the discrete <em>committor</em> function (Section 3.3). Recalling Eq. (1), modifying the
+        jump probability matrix using $I(i)$ as in Eq. (5) is equivalent to introducing a <em>bias potential</em>,
+      </p>
+      <div class="eq-block">
+        $$ E_{\rm b}(i) = -2\,k_{\rm B}T\,\log I(i), \tag{11} $$
+      </div>
+      <p>
+        which is added to the original potential energy $E(i)$ to modify the Monte Carlo trajectory. Searching
+        for the optimal importance function is thus equivalent to searching for the optimal bias potential.
       </p>
 
-      <figure class="fig-triple">
-        <img src="../images/mcmc_rare_events/eb_nn_100e_2d.png" alt="Neural network bias potential, 2D">
-        <img src="../images/mcmc_rare_events/parity_eb_nn_100e_2d.png" alt="Parity plot, 2D">
-        <img src="../images/mcmc_rare_events/error_eb_nn_100e_2d.png" alt="Bias-potential error, 2D">
+      <h3>3.2 Generalized Formulation of Importance Sampling of Rare Events</h3>
+      <p>
+        Defining failure and success through single discrete microscopic states (A or B) becomes an artifact when
+        the grid spacing $\Delta x$ is systematically refined: the optimal importance function then exhibits an
+        increasingly sharp gradient around the points A and B. This is analogous to applying boundary conditions
+        at a single point of a continuum satisfying a partial differential equation, which is generally
+        ill-advised. A more robust formulation defines failure and success of a trajectory using a finite region
+        whose size stays constant as the grid is refined.
+      </p>
+      <p>
+        Instead of selecting two microscopic states A and B, we augment the original system with two additional
+        states, F and S, enlarging the domain to $\tilde{\Omega} = \Omega\cup\{{\rm F},{\rm S}\}$. Multiple
+        microscopic states (around A or B) are given a nonzero jump rate into F or S. If a trajectory enters F it
+        is called a &ldquo;failure&rdquo;; if it enters S it is called a &ldquo;success.&rdquo; The functions
+        $f(i)$ and $s(i)$ control whether microstate $i$ is allowed to jump into F or S; they are non-zero only
+        in a small area around A and B, respectively, and can be selected to have the form of a truncated
+        Gaussian,
+      </p>
+      <div class="eq-block">
+        $$ f(i) = \epsilon\,(\Delta x)^d\,\exp\!\left(-\frac{\|\mathbf{x}(i) - \mathbf{x}({\rm A})\|^2}{2\sigma^2}\right)\cdot\mathbb{1}\!\left(\|\mathbf{x}(i) - \mathbf{x}({\rm A})\| < r_{\rm c}\right), \tag{12} $$
+      </div>
+      <div class="eq-block">
+        $$ s(i) = \epsilon\,(\Delta x)^d\,\exp\!\left(-\frac{\|\mathbf{x}(i) - \mathbf{x}({\rm B})\|^2}{2\sigma^2}\right)\cdot\mathbb{1}\!\left(\|\mathbf{x}(i) - \mathbf{x}({\rm B})\| < r_{\rm c}\right), \tag{13} $$
+      </div>
+      <p>
+        where $\mathbf{x}(i)$ is the position vector of microscopic state $i$ in a $d$-dimensional system,
+        $\|\cdot\|$ is the Euclidean norm, and $\mathbb{1}(\cdot)$ is an indicator function. The prefactor
+        $(\Delta x)^d$ ensures that the flux between state $i$ and F remains nearly constant regardless of the
+        choice of $\Delta x$. After also defining the energies $E({\rm F})$ and $E({\rm S})$ of the two auxiliary
+        states, the jump rate between any two microscopic states $i$ and $j$ ($i \neq j$) in $\tilde{\Omega}$ is
+      </p>
+      <div class="eq-block">
+        $$
+        \begin{split}
+        \tilde{r}(i\to j) ={}& \nu\,\exp\!\left(-\frac{E(j) - E(i)}{2k_{\rm B}T}\right) \\
+        &\times\left[\mathbb{1}_{\rm nn}(i,j) + \mathbb{1}_{\rm F}(j)f(i) + \mathbb{1}_{\rm F}(i)f(j) + \mathbb{1}_{\rm S}(j)s(i) + \mathbb{1}_{\rm S}(i)s(j)\right],
+        \end{split}
+        \tag{14}
+        $$
+      </div>
+      <p>
+        where $\mathbb{1}_{\rm F}$ and $\mathbb{1}_{\rm S}$ are the indicators for states F and S, and
+        $\tilde{r}(i\to j) = 0$ if $i = j$. This jump rate satisfies detailed balance in $\tilde{\Omega}$,
+        exactly as $r(i\to j)$ does in $\Omega$. The goal of this design is to minimize the perturbation of the
+        kinetics of the original system: all we have added are two extra states, whose effect becomes minimal as
+        the total number of states in $\Omega$ becomes very large. Given the jump rates, the probability of
+        jumping to microscopic state $j$ upon leaving $i$ is
+      </p>
+      <div class="eq-block">
+        $$ \tilde{K}(i\to j) = \frac{\tilde{r}(i\to j)}{\tilde{r}_{\rm tot}(i)}, \qquad \tilde{r}_{\rm tot}(i) = \sum_{j\in\mathcal{A}(i)} \tilde{r}(i\to j), \tag{15} $$
+      </div>
+      <p>
+        where $\mathcal{A}(i) = \mathcal{N}(i)\cup\{{\rm F},{\rm S}\}$ is the set of microscopic states the
+        system is allowed to jump to from $i$. Because $f(i) > 0$ only in a small region around A and $s(i) > 0$
+        only in a small region around B, the system repeatedly visits F many times before it visits S for the
+        first time. A trajectory that starts and ends at F is a failure path, and one that starts at F and ends
+        at S is a success path; the rare event problem is equivalent to the extremely low probability of sampling
+        success paths using $\tilde{K}(i\to j)$. To overcome this, the importance function $I(i)$, defined on
+        every $i\in\Omega$, modifies the transition probability as
+      </p>
+      <div class="eq-block">
+        $$
+        \begin{split}
+        \tilde{K}'(i\to j) &= \frac{1}{\tilde{n}'(i)}\,\tilde{K}(i\to j)\,\frac{I(j)}{I(i)}\left[1 - \mathbb{1}_{\rm F}(j)\right], \\
+        \tilde{n}'(i) &= \sum_{j\in\mathcal{A}(i)} \tilde{K}(i\to j)\,\frac{I(j)}{I(i)}\left[1 - \mathbb{1}_{\rm F}(j)\right],
+        \end{split}
+        \tag{16}
+        $$
+      </div>
+      <p>
+        where $\tilde{n}'(i)$ is the normalization factor. The optimality condition is $\tilde{n}'(i) = 1$ for
+        all $i\in\Omega$, which can be equivalently written as
+      </p>
+      <div class="eq-block">
+        $$ \sum_{j\in\mathcal{A}(i)\setminus\{{\rm F}\}} \tilde{K}(i\to j)\,I(j) = I(i). \tag{17} $$
+      </div>
+      <p>
+        Note that $\mathcal{A}(i)\setminus\{{\rm F}\} = \mathcal{N}(i)\cup\{{\rm S}\}$, i.e. the sum over $j$
+        does not include state F. Note also that in this formulation importance sampling is <em>not</em> applied
+        to jumps out of state F, i.e. $\tilde{K}'({\rm F}\to j) = \tilde{K}({\rm F}\to j)$, so it is not
+        necessary to define $I({\rm F})$. In the following we set $I({\rm S}) = 1$ without loss of generality.
+      </p>
+
+      <h3>3.3 Transition Rate Estimation</h3>
+      <p>
+        With the auxiliary states F and S, the transition rate between the two metastable states is very close to
+        the transition rate between the microscopic states F and S, $r_{\rm FS}$, which equals the inverse of the
+        mean first passage time $T_{\rm FS}$ from F to S,
+      </p>
+      <div class="eq-block">
+        $$ r_{\rm FS} = \frac{1}{\langle T_{\rm FS}\rangle}, \tag{18} $$
+      </div>
+      <p>
+        where $\langle\cdot\rangle$ indicates an average over all statistical realizations. Consider a trajectory
+        that starts from F and eventually ends at S, as shown in Figure 2. In a typical situation the system
+        visits F many times before visiting S for the first time, so the mean first passage time reads
+      </p>
+      <div class="eq-block">
+        $$ \langle T_{\rm FS}\rangle = \langle N_{\rm F}\rangle\,\langle t_{\rm FF}\rangle + \langle t_{\rm FS}\rangle, \tag{19} $$
+      </div>
+      <p>
+        where $\langle N_{\rm F}\rangle$ is the average number of times the system returns to F before visiting
+        S, $\langle t_{\rm FF}\rangle$ is the average time of a failure path, and $\langle t_{\rm FS}\rangle$ is
+        the average time of a success path. In evaluating $\langle t_{\rm FF}\rangle$ we adopt the convention of
+        excluding the time accrued while the system stays in state F, so that $r_{\rm FS}$ follows the transition
+        rate of the original system as closely as possible. In the rare event limit,
+        $\langle N_{\rm F}\rangle \gg 1$, and
+      </p>
+      <div class="eq-block">
+        $$ \langle T_{\rm FS}\rangle \approx \langle N_{\rm F}\rangle\,\langle t_{\rm FF}\rangle \approx \frac{\langle t_{\rm FF}\rangle}{p_{\rm S}({\rm F})}, \tag{20} $$
+      </div>
+      <p>
+        where $p_{\rm S}({\rm F})$ is the probability of the system starting from F to visit S before returning
+        to F. In general, $p_{\rm S}(i)$ &mdash; the probability of visiting S before F starting from $i$ &mdash;
+        is the discrete <em>committor function</em> and equals the optimal importance function
+        $I_{\rm opt}(i)$. The transition rate can therefore be written as
+      </p>
+      <div class="eq-block">
+        $$ r_{\rm FS} \approx \frac{p_{\rm S}({\rm F})}{\langle t_{\rm FF}\rangle} = \frac{I_{\rm opt}({\rm F})}{\langle t_{\rm FF}\rangle}, \tag{21} $$
+      </div>
+      <p>
+        where $I_{\rm opt}({\rm F}) = \sum_{j\in\Omega}\tilde{K}({\rm F}\to j)\,I_{\rm opt}(j)$. It is
+        straightforward to compute $\langle t_{\rm FF}\rangle$ using the standard kinetic Monte Carlo
+        algorithm<a class="cite" href="#ref-23">[23]</a>&ndash;<a class="cite" href="#ref-25">[25]</a> with
+        $\tilde{r}(i,j)$ and without importance sampling, since failure paths are abundant. Our primary task is
+        thus to determine $p_{\rm S}({\rm F})$ using an approximate importance function $I(i)$.
+      </p>
+
+      <figure class="fig-medium">
+        <img src="../figs/accel_mcmc/transition_F_to_S.png" alt="Schematic of the first passage from state F to state S, showing many failure excursions returning to F before a single success trajectory reaches S">
         <figcaption>
-          <b>Figure 2.</b> Neural-network bias potential on the 2D system after 100 epochs per
-          annealing temperature. Left: learned bias potential. Center: parity plot against the
-          exact optimal bias potential. Right: spatial distribution of the residual error;
-          deviations are small along the dominant transition pathways and concentrated in
-          rarely visited states.
+          <b>Figure 2.</b> Transition from state F to S. Failure (i.e., coming back to F after starting from F)
+          occurs $N_{\rm F}$ times before the success (i.e., arriving at S before hitting F after starting from
+          F) takes place. The first passage time can be considered as a sum of the durations of the failure and
+          success paths. In the case of rare events, the number of failures before success is very large.
         </figcaption>
       </figure>
 
-      <h3>Variance Control via Branching Random Walk</h3>
       <p>
-        To stress-test the framework, the network is trained on a coarse grid
-        ($\Delta x = 0.1$&nbsp;nm) and then used to bias dynamics on a refined grid
-        ($\Delta x = 0.025$&nbsp;nm), introducing a deliberate discretization mismatch.
-        Without BRW, the path weights span many orders of magnitude—a few outlier paths
-        dominate the estimator. With BRW (weight range $[0.5, 1.2]$), the weights are
-        kept within a tight band, and the success-probability estimator becomes both
-        accurate and low-variance: $\hat P_{\rm AB}=(1.52 \pm 0.06)\times 10^{-14}$ versus
-        the exact $1.41\times 10^{-14}$.
+        The transition rate $r_{\rm FS}$ is proportional to the frequency prefactor $\nu_0$ appearing in Eq. (1).
+        Since the grid spacing $\Delta x$ is a numerical artifact and it is of interest to consider the continuum
+        limit $\Delta x\to 0$, we let the frequency prefactor depend on temperature and grid spacing as
+      </p>
+      <div class="eq-block">
+        $$ \nu_0 = \frac{\mu\,k_{\rm B}T}{(\Delta x)^d}, \tag{22} $$
+      </div>
+      <p>
+        where $\mu$ is the mobility constant (we choose $\mu = 1.0\ \mathrm{m^2\,s^{-1}\,eV^{-1}}$), $k_{\rm B}$
+        is the Boltzmann constant, $T$ is the temperature, and $d$ is the dimension. This allows the transition
+        rate $r_{\rm FS}$ to remain unchanged in the limit $\Delta x\to 0$ (Figure 6a).
       </p>
 
-      <figure class="fig-pair">
-        <img src="../images/mcmc_rare_events/w_nn_30e_121n_2d.png" alt="Weight distribution without BRW">
-        <img src="../images/mcmc_rare_events/w_nn_30e_121n_2d_brw_0.5_1.2.png" alt="Weight distribution with BRW">
+      <h3>3.4 Success Probability Calculation</h3>
+      <p>
+        We now compute the success probability $p_{\rm S}({\rm F})$ given an importance function $I(i)$ that is
+        not necessarily optimal. Define a path $\Gamma$ as a trajectory that starts at F and ends at either F or
+        S, without visiting F or S in between, and let $P(\Gamma)$ be the probability of sampling $\Gamma$
+        following $\tilde{K}(i,j)$. Let $\{\Gamma_{\rm FF}\}$ denote the set of failure paths and
+        $\{\Gamma_{\rm FS}\}$ the set of success paths. The success probability is
+      </p>
+      <div class="eq-block">
+        $$ p_{\rm S}({\rm F}) = \sum_{\Gamma\in\{\Gamma_{\rm FS}\}} P(\Gamma). \tag{23} $$
+      </div>
+      <p>
+        Defining a &ldquo;reward&rdquo; function $R(\Gamma) = 1$ if $\Gamma\in\{\Gamma_{\rm FS}\}$ and $0$
+        otherwise, the success probability can be rewritten as a sum over <em>all</em> paths, and hence as a
+        statistical average over all paths sampled by the Monte Carlo simulation,
+      </p>
+      <div class="eq-block">
+        $$ p_{\rm S}({\rm F}) = \sum_{\Gamma} R(\Gamma)\,P(\Gamma) = \left\langle R(\Gamma)\right\rangle_\Gamma. \tag{24} $$
+      </div>
+      <p>
+        Even though Eq. (24) is a simple recipe, for systems exhibiting rare event behavior it is extremely
+        inefficient, because the vast majority of sampled paths are failure paths for which the reward is zero.
+        Using the importance function to modify the transition probability to $\tilde{K}'(i\to j)$ as defined in
+        Eq. (16), the new probability of sampling a specific success path
+        $\Gamma_{\rm FS} = \{{\rm F}, i_1, i_2, \cdots, i_n, {\rm S}\}$ is related to the original probability by
+      </p>
+      <div class="eq-block">
+        $$ P'(\Gamma_{\rm FS}) = \left[\prod_{k=1}^{n}\frac{1}{\tilde{n}'(i_k)}\right] P(\Gamma_{\rm FS})\,\frac{I({\rm S})}{I(i_1)}. \tag{25} $$
+      </div>
+      <p>
+        Defining the weight of a path as the product of the normalization factors of all states visited along the
+        path, excluding the starting and final states F and S,
+      </p>
+      <div class="eq-block">
+        $$ W(\Gamma_{\rm FS}) := \prod_{k=1}^{n} \tilde{n}'(i_k), \tag{26} $$
+      </div>
+      <p>
+        the original probability becomes
+        $P(\Gamma_{\rm FS}) = W(\Gamma_{\rm FS})\,\frac{I(i_1)}{I({\rm S})}\,P'(\Gamma_{\rm FS})$, which
+        substituted into Eq. (24) gives
+      </p>
+      <div class="eq-block">
+        $$ p_{\rm S}({\rm F}) = \frac{1}{I({\rm S})}\sum_{\Gamma} R(\Gamma)\,W(\Gamma)\,I(i_1)\,P'(\Gamma) = \frac{1}{I({\rm S})}\Big\langle R(\Gamma)\,W(\Gamma)\,I(i_1)\Big\rangle'_\Gamma, \tag{27} $$
+      </div>
+      <p>
+        where $\langle\cdot\rangle'_\Gamma$ means averaging over all paths sampled using the transition
+        probability $\tilde{K}'$, i.e. using importance sampling. The advantage is that if $I(i)$ is close to
+        $I_{\rm opt}(i)$, it is very likely to sample success paths for which the reward is non-zero. If $I(i)$
+        equals $I_{\rm opt}(i)$, the success probability expression reduces to
+      </p>
+      <div class="eq-block">
+        $$ p_{\rm S}({\rm F}) = \sum_{j\in\Omega}\tilde{K}({\rm F}\to j)\,I_{\rm opt}(j), \tag{28} $$
+      </div>
+      <p>
+        meaning the success probability could be computed <em>without sampling any transition paths</em> if
+        $I_{\rm opt}(i)$ were known. However, since in practice the accessible $I(i)$ is only an approximation of
+        $I_{\rm opt}(i)$, the proper way to compute the success probability is through Eq. (27), which requires
+        importance sampling of transition paths. Recall that the first step of every path &mdash; the jump out of
+        state F &mdash; is not subjected to importance sampling (Section 3.7).
+      </p>
+
+      <h3>3.5 Efficient Sampling via Branching Random Walk</h3>
+      <p>
+        While Eq. (27) provides an unbiased estimate of $p_{\rm S}({\rm F})$, the number of paths needed for
+        statistical convergence depends strongly on the quality of $I(i)$. In practice $I(i)$ may be so different
+        from $I_{\rm opt}(i)$ that an excessive number of paths is needed, undermining the efficiency of the
+        method. This is addressed by replacing the importance-sampled Monte Carlo simulation with a
+        <em>branching random walk</em> (BRW) process.
+      </p>
+      <p>
+        The BRW process starts from a single random walker located at state F, with its weight set to unity. At
+        each step the walker updates its weight by multiplying it with the normalization factor of its current
+        state. If the weight $W$ is less than a threshold $W_{\min}$ (e.g. $0.5$), an attempt is made to
+        annihilate the walker with probability $1 - W$; if annihilated, the path is terminated and marked a
+        failure (reward zero), and if it survives, its weight is restored to $1$. If the weight $W$ is greater
+        than a threshold $W_{\max}$ (e.g. $2$), the walker is split into $\lfloor W\rfloor + 1$ walkers with
+        probability $W - \lfloor W\rfloor$, or $\lfloor W\rfloor$ walkers otherwise, with all weights reset to
+        $1$. This can be formulated rigorously with a stochastic rounding function, a technique widely applied in
+        Monte Carlo rendering and particle transport
+        simulations<a class="cite" href="#ref-26">[26]</a>&ndash;<a class="cite" href="#ref-28">[28]</a>,
+      </p>
+      <div class="eq-block">
+        $$ \mathcal{R}(W) = \begin{cases} \lfloor W\rfloor + 1, & \text{with probability } W - \lfloor W\rfloor, \\ \lfloor W\rfloor, & \text{otherwise.}\end{cases} \tag{29} $$
+      </div>
+      <p>
+        At every step, if a walker's weight falls outside the threshold bounds $[W_{\min}, W_{\max}]$, the walker
+        transforms into $\mathcal{R}(W)$ new walkers: $\mathcal{R}(W) = 0$ terminates the walker, while
+        $\mathcal{R}(W)\geq 1$ means the process proceeds with $\mathcal{R}(W)$ walkers. If any walker visits
+        state S it is terminated and its path is marked a success. Once the process is complete, each successful
+        walker receives a base reward of unity, weighted by the product of its current path weight $W(\Gamma)$
+        and $I(i_1)$, the value of the importance function at the first intermediate state. This weighted
+        summation is a statistical estimate of $\langle R(\Gamma)W(\Gamma)I(i_1)\rangle'_\Gamma$, ensuring the
+        result is unbiased, while the branching mechanism keeps the path weights controlled within
+        $[W_{\min}, W_{\max}]$.
+      </p>
+
+      <h3>3.6 Neural Network Representation of the Bias Potential</h3>
+      <p>
+        As the grid is refined, the total number of microscopic states increases &mdash; drastically so in high
+        dimensions &mdash; making it computationally intractable to optimize the importance function $I(i)$, or
+        the bias potential $E_{\rm b}(i)$, for every microscopic state. To overcome this we integrate machine
+        learning techniques<a class="cite" href="#ref-29">[29]</a>&ndash;<a class="cite" href="#ref-31">[31]</a>
+        into the framework: the importance function is represented by a neural network $I(i;\theta)$ with
+        trainable parameters $\theta$, optimized towards satisfying the normalization condition
+        $\tilde{n}'(i) = 1$ everywhere through the loss function
+      </p>
+      <div class="eq-block">
+        $$ \mathcal{L}(\theta) = \sum_{i\in\Omega}\mathcal{L}_\theta(i), \qquad \mathcal{L}_\theta(i) = \left[\ln\!\left(\sum_{j\in\mathcal{A}(i)\setminus\{{\rm F}\}} \tilde{K}(i\to j)\,\frac{I(j;\theta)}{I(i;\theta)}\right)\right]^2. \tag{30} $$
+      </div>
+      <p>
+        In systems exhibiting rare event problems, $I_{\rm opt}(i)$ often yields extremely small values at
+        microscopic states near F, so training a network to approximate the importance function directly can
+        encounter numerical instabilities due to underflow. We address this by optimizing the <em>bias
+        potential</em> instead: by Eq. (11), even when the importance function takes extremely small values the
+        corresponding bias potential still takes values of manageable magnitude. Parameterizing
+        $E_{\rm b}(i;\theta)$ with a neural network keeps it within a numerically stable range, and the loss
+        function is rewritten as
+      </p>
+      <div class="eq-block">
+        $$ \mathcal{L}_\theta(i) = \left[\ln\!\left(\sum_{j\in\mathcal{A}(i)\setminus\{{\rm F}\}} \tilde{K}(i\to j)\,\exp\!\left(-\frac{E_{\rm b}(j;\theta) - E_{\rm b}(i;\theta)}{k_{\rm B}T}\right)\right)\right]^2. \tag{31} $$
+      </div>
+      <p>
+        This approach is analogous to a recently proposed method<a class="cite" href="#ref-31">[31]</a>. In
+        practice it is impossible &mdash; and unnecessary &mdash; to perform the sum in Eq. (30) over all
+        microscopic states: the normalization condition only needs to be well satisfied on states that lie along
+        the transition paths from F to S. We therefore replace the sum with one over the microscopic states
+        sampled by the importance sampling itself, using an <em>adaptive sampling</em> scheme (Algorithm 1). A
+        random walk is initiated from state F, governed by $\tilde{K}'(i\to j)$, with the network parameters held
+        fixed; once enough states are accumulated, the network is updated by minimizing the loss evaluated over
+        the sampled states, and the algorithm returns to the sampling stage with the updated bias potential.
+        Furthermore, we apply a <em>simulated annealing</em> protocol: training starts at an elevated temperature
+        and decreases stepwise to the target temperature, which helps avoid numerical instabilities and benefits
+        convergence.
+      </p>
+      <p>
+        A useful feature of this framework is that a neural network trained on a coarse grid can be applied
+        directly to accelerate transitions on a finer grid <em>without retraining</em>. This is particularly
+        valuable because the length of the transition paths increases as the grid is refined, raising the cost of
+        bias-potential training (which requires adaptive path sampling). The branching random walk of Section 3.5
+        brings the variance under control even when the transferred bias potential is not the optimal one.
+      </p>
+
+      <div class="algo-box">
+        <div class="algo-title">Algorithm 1 &mdash; Adaptive Training of the Bias Potential</div>
+        <div class="algo-io">
+          <b>Input:</b> extended kinetics $\tilde{r}(i\to j)$ on $\tilde{\Omega}$, auxiliary states F and S, loss
+          density $\mathcal{L}_\theta(i)$, annealing schedule $T_1 > T_2 > \cdots > T_{\rm target}$.
+          &nbsp;<b>Output:</b> optimized bias potential $E_{\rm b}(i;\theta)$.
+        </div>
+        <ol>
+          <li>Initialize the neural network parameters $\theta$.</li>
+          <li><b>for</b> each temperature $T_k$ in the annealing schedule <b>do</b>:
+            <div class="algo-phase">1. Sampling stage</div>
+            <ol type="a">
+              <li>Initiate a random walk from state F governed by the modified transition probabilities $\tilde{K}'(i\to j)$, determined by the current $E_{\rm b}(i;\theta)$ with parameters held fixed.</li>
+              <li>Accumulate the microscopic states visited along the sampled transition paths.</li>
+            </ol>
+            <div class="algo-phase">2. Training stage</div>
+            <ol type="a">
+              <li>Update $\theta \leftarrow \theta - \eta\,\nabla_\theta \sum_{i} \mathcal{L}_\theta(i)$ over the sampled states using the ADAM optimizer.</li>
+              <li>Repeat the sampling/training cycle for the prescribed number of epochs at $T_k$, then cool to $T_{k+1}$.</li>
+            </ol>
+          </li>
+        </ol>
+      </div>
+
+      <h3>3.7 Sampling Initial Microscopic States</h3>
+      <p>
+        The first step in path sampling is to sample the microscopic state $i$ jumping out of state F according
+        to $\tilde{K}({\rm F}\to i)$. In low-dimensional systems this can be done by enumerating all states
+        accessible from F, but in high dimensions enumeration is impossible. We achieve a tractable scheme by
+        modifying the control function $f(i)$ of Eq. (12) to
+      </p>
+      <div class="eq-block">
+        $$ f(i) = \xi\,(\Delta x)^d\,\exp\!\left(-\frac{E(i) - E({\rm F})}{2k_{\rm B}T}\right)\cdot\exp\!\left(-\frac{E_{\rm C}(i)}{k_{\rm B}T}\right)\cdot\mathbb{1}\!\left(\|\mathbf{x}(i) - \mathbf{x}({\rm A})\| < r_{\rm c}\right), \tag{32} $$
+      </div>
+      <p>
+        where $\xi$ is a dimensionless constant and $E_{\rm C}(i)$ is a newly introduced <em>confinement
+        potential</em> &mdash; an arbitrary convex function having its global minimum at the microscopic state A.
+        For simplicity it is chosen as
+      </p>
+      <div class="eq-block">
+        $$ E_{\rm C}(i) = \frac{1}{2\eta^2}\,\|\mathbf{x}(i) - \mathbf{x}({\rm A})\|^2, \tag{33} $$
+      </div>
+      <p>
+        with a constant parameter $\eta$; the confinement potential smoothly confines the sampled states to lie
+        near A. According to Eq. (14), the jump rate from F to $i$ then becomes
+      </p>
+      <div class="eq-block">
+        $$ r({\rm F}\to i) = \nu\,\xi\,(\Delta x)^d\,\exp\!\left(-\frac{E(i) - E({\rm F})}{k_{\rm B}T}\right)\cdot\exp\!\left(-\frac{E_{\rm C}(i)}{k_{\rm B}T}\right)\cdot\mathbb{1}\!\left(\|\mathbf{x}(i) - \mathbf{x}({\rm A})\| < r_{\rm c}\right). \tag{34} $$
+      </div>
+      <p>
+        This significantly simplifies the sampling of initial microscopic states in high dimensions, because
+        Eq. (34) corresponds to the equilibrium distribution governed by the effective potential
+        $E(i) + E_{\rm C}(i) - E({\rm F})$; such states can be readily sampled with a standard Monte Carlo
+        simulation. It is not necessary to compute the total jump rate out of F, because the time spent in F is
+        excluded when calculating the transition rate (Section 3.3). The reverse jump rate follows from detailed
+        balance,
+      </p>
+      <div class="eq-block">
+        $$ r(i\to {\rm F}) = \nu\,\xi\,(\Delta x)^d\cdot\exp\!\left(-\frac{E_{\rm C}(i)}{k_{\rm B}T}\right)\cdot\mathbb{1}\!\left(\|\mathbf{x}(i) - \mathbf{x}({\rm A})\| < r_{\rm c}\right), \tag{35} $$
+      </div>
+      <p>
+        which grows as the microscopic state $i$ gets closer to A, provided the confinement potential is convex
+        with its minimum at A.
+      </p>
+
+      <!-- ============ 4. RESULTS ============ -->
+      <h2>4. Results</h2>
+      <p>
+        The importance sampling framework integrated with a neural network is applied to 2-dimensional and
+        14-dimensional systems to demonstrate its effectiveness and scalability.
+      </p>
+
+      <h3>4.1 Two-Dimensional System</h3>
+      <p>
+        The 2-dimensional potential energy landscape (in eV) shown in Figure 1 can be written analytically as
+      </p>
+      <div class="eq-block">
+        $$
+        \begin{split}
+        E_{\rm 2D}(x_1, x_2) ={}& 0.02\,x_2 + \frac{1}{6}\Big[\,4\left(1 - x_1^2 - x_2^2\right)^2 + 2\left(x_1^2 - 2\right)^2 \\
+        &+ \left((x_1 + x_2)^2 - 1\right)^2 + \left((x_1 - x_2)^2 - 1\right)^2 - 2\,\Big].
+        \end{split}
+        \tag{36}
+        $$
+      </div>
+      <p>
+        The landscape is discretized over the domain $x_1, x_2 \in [-1.5, 1.5]$ using equal grid spacing
+        $\Delta x_1 = \Delta x_2 = 0.1$. The energy minima are located at microscopic state
+        ${\rm A}\ (-1.1, 0.0)$ and microscopic state ${\rm B}\ (1.1, 0.0)$, which correspond to the two
+        metastable states, and the two saddle points at $S_1\ (0.0, 1.0)$ and $S_2\ (0.0, -1.0)$, with energy
+        barriers of <b>1.02 eV</b> at $S_1$ and <b>0.98 eV</b> at $S_2$. Transitions from A to B are rare events,
+        particularly at low temperature, and the primary transition pathways proceed through regions proximal to
+        $S_1$ and $S_2$. The truncated-Gaussian control functions of Eqs. (12)&ndash;(13) use $\epsilon = 0.1$,
+        $\sigma = 5\times 10^{-3}$, $r_{\rm c} = 0.3$, $E({\rm F}) = -0.5$ eV and $E({\rm S}) = -0.5$ eV.
+      </p>
+      <p>
+        The neural network architecture comprises two hidden layers, each containing 30 perceptrons with $\tanh$
+        activation functions. We employ a simulated annealing protocol in which training initially starts at
+        $5800$ K and is subsequently cooled to the target of $500$ K over a sequence of $8$ discrete stages. At
+        each temperature the training is performed for $30$ or $100$ epochs using the
+        ADAM<a class="cite" href="#ref-32">[32]</a> algorithm with a learning rate of $10^{-3}$. For the
+        2-dimensional system we can enumerate all the states and store the entire transition probability matrix
+        $K(i\to j)$, so the optimal importance function $I_{\rm opt}(i)$ can be solved
+        numerically<a class="cite" href="#ref-18">[18]</a> and the exact optimal bias potential obtained from
+        Eq. (11). The neural network bias potential trained for $100$ epochs at each temperature shows
+        substantially improved agreement with the exact optimal bias potential compared with the one trained for
+        $30$ epochs. Notably, the largest deviations occur at sparsely sampled microscopic states that lie far
+        from the dominant transition pathways (Figure 3).
+      </p>
+
+      <figure class="fig-medium">
+        <img src="../figs/accel_mcmc/nn_bias_potential_2d.png" alt="Six-panel figure: neural network bias potential surfaces over the 2D domain, parity plots against the exact optimal bias potential, and error maps, for 30 and 100 training epochs per temperature">
         <figcaption>
-          <b>Figure 3.</b> Path-weight distribution without BRW (left) versus with BRW (right).
-          BRW concentrates weights in a controlled range $[0.5, 1.2]$, eliminating both
-          near-zero ``unimportant'' paths and runaway high-weight outliers.
+          <b>Figure 3.</b> Neural network bias potential over a 2-dimensional domain after (a) training for 30
+          epochs and (d) 100 epochs (at each temperature). Parity plots between the neural network bias potential
+          and the exact optimal bias potential after training for (b) 30 epochs and (e) 100 epochs. Differences
+          between the neural network bias potential and the exact solution after training for (c) 30 epochs and
+          (f) 100 epochs. The largest errors arise at sparsely sampled states remote from the dominant transition
+          pathways.
         </figcaption>
       </figure>
 
-      <h3>Transition Rates and Mechanisms</h3>
+      <h3>4.2 Success Probability Estimate</h3>
       <p>
-        The estimated transition rates converge as the grid is refined, and their temperature
-        dependence agrees with Kramers' rate theory across more than ten orders of magnitude.
-        Crucially, the framework also resolves the <em>mechanism</em>: the fraction of
-        transitions through the upper saddle $S_1$ versus the lower saddle $S_2$ is recovered
-        accurately, including the correction beyond the naive barrier-energy ratio.
+        We demonstrate in the 2-dimensional system that the success probability estimator given by Eq. (27) is
+        unbiased even when the importance function is not exactly the optimal solution. The optimal importance
+        function can be used to compute the reference success probability,
+      </p>
+      <div class="eq-block">
+        $$ p_{\rm S}({\rm F}) = \frac{I_{\rm opt}({\rm F})}{I_{\rm opt}({\rm S})}, \tag{37} $$
+      </div>
+      <p>
+        which is $2.1899\times 10^{-13}$ at $T = 500$ K ($k_{\rm B}T = 0.043087$ eV). The neural network bias
+        potential $E_{\rm b}(i;\theta)$ is then employed to accelerate the transition and sample 100 successful
+        paths, whose scores are used to estimate the success probability $p_{\rm S}^{\theta}({\rm F})$ via
+        Eq. (27); this accelerated sampling was repeated 100 times to improve statistical accuracy. The estimated
+        success probabilities are $(2.1921\pm 0.0082)\times 10^{-13}$ and $(2.1937\pm 0.0065)\times 10^{-13}$ for
+        models trained for 30 and 100 epochs at each temperature, respectively, both close to the reference value
+        (Table 1).
+      </p>
+      <p>
+        The deviation of the mean path weights from unity indicates that the neural network importance functions
+        are not optimal; nevertheless, their mean values provide unbiased estimates of the true success
+        probability. The network trained for a longer duration (100 epochs at each temperature) exhibits sharper
+        weight and success-probability distributions, indicating an improved approximation of the optimal
+        importance function (Figure 4).
       </p>
 
-      <figure class="fig-pair">
-        <img src="../images/mcmc_rare_events/arrhenius_plot_50e_2d_121n_100t_100f_100s_1.000_1000.000w.png" alt="Arrhenius plot">
-        <img src="../images/mcmc_rare_events/rate_nn_frac_annh.png" alt="Fraction through saddle 1">
+      <div class="table-wrap">
+        <table class="data-table">
+          <caption>Success probability estimates, 2D system at $T = 500$ K (in $10^{-13}$)</caption>
+          <thead>
+            <tr><th>Method</th><th>$p_{\rm S}({\rm F})$</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Reference (exact $I_{\rm opt}$, Eq. 37)</td><td>2.1899</td></tr>
+            <tr><td>Importance sampling, 30 epochs / temperature</td><td>2.1921 &plusmn; 0.0082</td></tr>
+            <tr class="row-best"><td>Importance sampling, 100 epochs / temperature</td><td>2.1937 &plusmn; 0.0065</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">
+        <span class="caption-lead">Table 1.</span> Success probability estimates for the 2-dimensional system at
+        $500$ K from the unbiased estimator Eq. (27), using neural network bias potentials trained for 30 and 100
+        epochs at each annealing temperature, compared against the reference value computed from the exact
+        optimal importance function. Both estimates are unbiased; the longer-trained model has the smaller
+        variance.
+      </p>
+
+      <figure class="fig-medium">
+        <img src="../figs/accel_mcmc/success_probability_2d.png" alt="Four-panel figure: path weight histograms and success probability estimate histograms for the 2D system, for bias potentials trained 30 and 100 epochs">
         <figcaption>
-          <b>Figure 4.</b> Left: Arrhenius plot of the estimated transition rate (stars)
-          against Kramers' theory (dashed). Right: fraction of transitions passing through
-          the upper saddle $S_1$ as a function of temperature; the importance-sampling
-          estimates match Kramers' theory and deviate from a naive prediction based on
-          barrier-energy differences alone.
+          <b>Figure 4.</b> Weight distribution of successful paths for importance-sampled success paths using
+          neural network bias potentials trained for (a) 30 epochs and (c) 100 epochs (at each temperature).
+          Distribution of success probability estimates for bias potentials trained for (b) 30 epochs and (d) 100
+          epochs. Dashed lines mark the mean path weight $\langle W(\Gamma)\rangle$ and the reference success
+          probability. The deviation of the mean weight from unity shows that the learned importance functions
+          are not optimal, yet the mean estimates remain unbiased.
         </figcaption>
       </figure>
 
-      <h3>Scaling to 14 Dimensions</h3>
+      <h3>4.3 Branching Random Walk</h3>
       <p>
-        The 14-dimensional benchmark embeds the 2D landscape into a higher-dimensional
-        hypercube by adding harmonic terms in the remaining twelve coordinates. The exact
-        optimal bias potential remains independent of the harmonic directions, which gives
-        a clean ground truth for the 14D-trained network when projected back to the 2D
-        subspace. With the hybrid Gaussian + MLP parameterization (two hidden layers of 100
-        <code>ReLU</code> units), the projected bias potential agrees with the exact 2D
-        solution within the regions traversed by the dominant transition pathways.
+        To study the robustness of the method against approximation errors, we intentionally introduce a
+        discretization mismatch between the training and sampling phases: the neural network importance function
+        trained on a coarse grid ($\Delta x_1 = \Delta x_2 = 0.1$) is used to bias the dynamics of the system on
+        a refined grid ($\Delta x_1 = \Delta x_2 = 0.025$). Sampling <em>without</em> the BRW process over 50
+        batches of 100 paths each shows that the majority of sampled successful paths have near-zero weights,
+        i.e. they are unimportant paths contributing minimally to the estimate. The estimated success probability
+        is $(1.5198\pm 0.0627)\times 10^{-14}$, while the reference (exact) value is $1.4120\times 10^{-14}$.
+      </p>
+      <p>
+        Using the BRW process of Section 3.5, the weights of successful paths are maintained within a specified
+        range, and paths with sufficiently small weights are terminated early, enhancing efficiency. Sampling was
+        done with the BRW process over 100 batches of 100 paths each (weights controlled within $[0.5, 1.2]$) to
+        match the variance obtained without BRW, giving an estimated success probability of
+        $(1.5210\pm 0.0690)\times 10^{-14}$. While both approaches yield unbiased estimates, the BRW process is
+        markedly more efficient: the total number of Monte Carlo steps without BRW is $7{,}967{,}789$, whereas
+        with BRW it is $958{,}928$ &mdash; an approximately <b>8-fold speedup</b> (Table 2, Figure 5).
       </p>
 
-      <figure class="fig-triple">
-        <img src="../images/mcmc_rare_events/nngbp_10000e_14d_31n_500K.png" alt="14D neural network bias potential projected to 2D">
-        <img src="../images/mcmc_rare_events/nngbp_parity_10000e_14d_31n_500K.png" alt="14D parity plot">
-        <img src="../images/mcmc_rare_events/nngbp_error_10000e_14d_31n_500K.png" alt="14D error">
+      <div class="table-wrap">
+        <table class="data-table">
+          <caption>BRW efficiency on the refined grid ($\Delta x = 0.025$) with a coarse-trained bias potential</caption>
+          <thead>
+            <tr><th>Method</th><th>$p_{\rm S}({\rm F})$ (in $10^{-14}$)</th><th>Monte Carlo steps</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Reference (exact)</td><td>1.4120</td><td>&mdash;</td></tr>
+            <tr><td>Without BRW</td><td>1.5198 &plusmn; 0.0627</td><td>7,967,789</td></tr>
+            <tr class="row-best"><td>With BRW, weights in $[0.5, 1.2]$</td><td>1.5210 &plusmn; 0.0690</td><td>958,928</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">
+        <span class="caption-lead">Table 2.</span> Success probability estimates and Monte Carlo cost with and
+        without the branching random walk (BRW) process for the 2-dimensional system, where a bias potential
+        trained on the coarse grid ($\Delta x = 0.1$) is applied to a refined grid ($\Delta x = 0.025$). Both
+        estimators are unbiased, but the BRW process reaches a comparable variance with roughly $8\times$ fewer
+        Monte Carlo steps.
+      </p>
+
+      <figure class="fig-medium">
+        <img src="../figs/accel_mcmc/brw_weight_distributions.png" alt="Four-panel figure: path weight histograms and success probability estimate histograms of sampled paths, without and with the branching random walk process">
         <figcaption>
-          <b>Figure 5.</b> Hybrid Gaussian + MLP bias potential trained on the 14D system,
-          projected onto the $(x_1, x_2)$ subspace. Left: learned bias potential. Center:
-          parity against the exact 2D solution. Right: residual error, again small along the
-          dominant transition pathways.
+          <b>Figure 5.</b> Weight distributions of the sampled paths (a) without and (c) with the BRW process.
+          Distribution of success probability estimates (b) without and (d) with the BRW process. Without BRW the
+          overwhelming majority of successful paths carry near-zero weight; the BRW process confines the weights
+          to $[0.5, 1.2]$, terminating unimportant paths early while leaving the estimator unbiased.
         </figcaption>
       </figure>
+
+      <h3>4.4 Transition Rate and Mechanisms</h3>
+      <p>
+        We demonstrate that the transition rates estimated by the method of Section 3.3 are consistent across
+        grid sizes. For systems with different numbers of grid points per dimension (corresponding to grid sizes
+        $\Delta x = 3.0/(N-1)$) at $T = 500$ K, and using the neural network bias potential trained on the
+        $\Delta x = 0.1$ system throughout, the estimated transition rates converge with increasing $N$ to a
+        value in good agreement with the exact transition rate of $6.9191\times 10^{-12}$ for the 2-dimensional
+        system with grid size $\Delta x = 0.025$ (Figure 6a). This confirms that the frequency prefactor of
+        Eq. (22) keeps $r_{\rm FS}$ invariant under grid refinement.
+      </p>
+      <p>
+        To validate accuracy, we compare against Kramers rate
+        theory<a class="cite" href="#ref-33">[33]</a><a class="cite" href="#ref-34">,[34]</a> for overdamped
+        dynamics. The channel-resolved Kramers rate expressions read
+      </p>
+      <div class="eq-block">
+        $$ r({\rm A}\to S_1 \to {\rm B}) = \nu_1\exp\!\left(-\frac{E(S_1) - E({\rm A})}{k_{\rm B}T}\right), \tag{38} $$
+      </div>
+      <div class="eq-block">
+        $$ r({\rm A}\to S_2 \to {\rm B}) = \nu_2\exp\!\left(-\frac{E(S_2) - E({\rm A})}{k_{\rm B}T}\right), \tag{39} $$
+      </div>
+      <p>
+        where $\nu_1$ and $\nu_2$ are frequency prefactors associated with the saddle points $S_1$ and $S_2$
+        (Appendix A). The Arrhenius plot of the estimated transition rates demonstrates good agreement with
+        Kramers rate theory (Figure 6b).
+      </p>
+      <p>
+        The accelerated sampling also accurately resolves the transition rates associated with the distinct
+        reaction channels. At $T = 500$ K the accelerated Monte Carlo simulation estimates the fraction of the
+        transition rate proceeding through $S_1$ to be $0.2910$, and at $T = 1000$ K the fraction increases to
+        $0.3967$; these agree well with the Kramers predictions of $0.2938$ and $0.3951$, respectively
+        (Figure 6c). Notably, this fraction <em>cannot</em> be determined from the energy difference between the
+        two saddle points alone (i.e. by assuming $\nu_1 = \nu_2$ in Eqs. 38&ndash;39); such a simplified
+        analytic theory deviates significantly from the Monte Carlo results. The observed temperature dependence
+        arises from the distinct rate prefactors $\nu_1$ and $\nu_2$ set by the different local curvatures of the
+        potential energy landscape at $S_1$ and $S_2$.
+      </p>
+
+      <figure class="fig-medium">
+        <img src="../figs/accel_mcmc/transition_rate_and_fraction.png" alt="Three-panel figure: transition rate versus number of grid points, Arrhenius plot of transition rate versus inverse temperature, and fraction of transitions through saddle point S1 versus temperature">
+        <figcaption>
+          <b>Figure 6.</b> <em>(a)</em> Transition rate at temperature $T = 500$ K computed using importance
+          sampling with BRW for systems with different grid sizes; the dotted line represents the transition rate
+          with grid size $\Delta x = 0.025$. <em>(b)</em> Temperature dependence of the transition rate computed
+          (stars) at fixed grid spacing $\Delta x = 0.025$; the theoretical prediction from Kramers' rate theory
+          is shown as a dashed line. <em>(c)</em> Fraction of the transitions going through the top channel near
+          saddle point $S_1$ as a function of temperature. The Monte Carlo sampling results are shown as stars;
+          theoretical predictions based on barrier energy differences only (dotted line) and on Kramers' theory
+          (dashed line) are provided for comparison.
+        </figcaption>
+      </figure>
+
+      <h3>4.5 Fourteen-Dimensional System</h3>
+      <p>
+        A 14-dimensional potential energy landscape (in eV) is constructed by extending the 2-dimensional system
+        of Eq. (36) through the addition of harmonic terms in the remaining coordinates,
+      </p>
+      <div class="eq-block">
+        $$ E_{\rm 14D}(x_1, x_2, \ldots, x_{14}) = E_{\rm 2D}(x_1, x_2) + \frac{1}{\zeta^2}\sum_{i=3}^{14} x_i^2, \tag{40} $$
+      </div>
+      <p>
+        with $\zeta = 0.5\ \mathrm{eV^{-1/2}}$, considered at $T = 500$ K. The system is discretized over the
+        domain $x_i \in [-1.5, 1.5]$, a hypercube in 14-dimensional space, using equal lattice spacing
+        $\Delta x_i = 0.1$ for $i = 1, 2, \ldots, 14$. As in the 2-dimensional case, the energy minima are at
+        ${\rm A}: (-1.1, 0.0, 0.0, \ldots, 0.0)$ and ${\rm B}: (1.1, 0.0, 0.0, \ldots, 0.0)$, while the
+        first-order saddle points are at $S_1: (0.0, 1.0, 0.0, \ldots, 0.0)$ and
+        $S_2: (0.0, -1.0, 0.0, \ldots, 0.0)$. The transition pathway of interest depends solely on the first two
+        coordinates of the position vectors.
+      </p>
+      <p>
+        For the 14-dimensional system we adopt a hybrid parameterization of the neural network bias potential,
+      </p>
+      <div class="eq-block">
+        $$ E_{\rm b}(x_1, x_2, \ldots, x_{14};\theta) = A\,\exp\!\left[-\sum_{i=1}^{14} a_i\left(x_i - c_i\right)^2\right] + \mathrm{MLP}(x_1, x_2, \ldots, x_{14};\theta), \tag{41} $$
+      </div>
+      <p>
+        the sum of a Gaussian bias potential and a fully connected feed-forward neural network, with
+        $\{A, a_i, c_i, \theta\}$ forming the trainable parameter set. The explicit Gaussian term facilitates
+        rapid exploration of the microscopic states during the early stages of adaptive training, while the
+        feed-forward network serves as a flexible correction capturing the complex, non-Gaussian features of the
+        optimal bias potential. The MLP comprises two hidden layers, each containing 100 neurons with ReLU
+        activation functions, trained directly at the target temperature of $T = 500$ K for $10{,}000$ epochs
+        using ADAM<a class="cite" href="#ref-32">[32]</a> with a learning rate of $10^{-3}$. Projecting the
+        trained bias potential onto the primary 2-dimensional subspace $(x_1, x_2)$ by setting the harmonic
+        coordinates $x_{j\geq 3} = 0$ shows close agreement with the exact optimal bias potential of the
+        2-dimensional system, with residual deviations remaining minimal within the regions traversed by the
+        dominant transition pathways (Figure 7).
+      </p>
+
+      <figure class="fig-medium">
+        <img src="../figs/accel_mcmc/nn_bias_potential_14d.png" alt="Three-panel figure: 14-dimensional neural network bias potential projected onto the 2D subspace, parity plot against the exact 2D bias potential, and spatial map of the residual error">
+        <figcaption>
+          <b>Figure 7.</b> <em>(a)</em> Neural network bias potential of the 14-dimensional system projected onto
+          a 2-dimensional domain (setting $x_{j\geq 3} = 0$). <em>(b)</em> Parity plot between the projected
+          14-dimensional neural network bias potential and the exact bias potential calculated for the
+          2-dimensional system. <em>(c)</em> Error in the projected neural network bias potential compared to the
+          exact bias potential of the 2-dimensional system; deviations remain minimal within the regions
+          traversed by the dominant transition pathways.
+        </figcaption>
+      </figure>
+
+      <p>
+        During sampling in the 14-dimensional system, the BRW algorithm restricts the path weights to the
+        interval $[1.0, 1.2]$, and each success probability estimate is derived from a batch of 100 paths
+        (Figure 8). Using the unbiased estimator of Eq. (27), we obtain a mean success probability
+        $\langle p_{\rm S}({\rm F})\rangle = (3.3598 \pm 0.0322)\times 10^{-11}$. Concurrently, unbiased Monte
+        Carlo simulations as described in Section 3.3 yield a mean failure-path duration
+        $\langle t_{\rm FF}\rangle = 4.9805 \pm 0.0564$. Combining these, the transition rate is estimated as
+        $r_{\rm FS} = (6.7459 \pm 0.1429)\times 10^{-12}$, in excellent agreement with the exact transition rate
+        of $6.9191\times 10^{-12}$ calculated for the underlying 2-dimensional system. To highlight the
+        criticality of the reweighting procedure, the estimate obtained by neglecting the path scores (Eq. 28)
+        yields a transition rate of $2.0156\times 10^{-12}$, an underestimation by a factor of three. This
+        discrepancy demonstrates that importance sampling of the transition paths, <em>after</em> the approximate
+        bias potential (or committor function) is trained, is crucial for an unbiased rate estimate.
+      </p>
+      <p>
+        The accelerated framework also captures the relative transition probabilities of the distinct reaction
+        channels in high dimensions: the accelerated Monte Carlo simulations estimate the fraction of the total
+        transition flux passing through saddle point $S_1$ to be $0.2850$, in close agreement with the prediction
+        of $0.2938$ from Kramers' rate theory for the 2-dimensional system (Table 3). This reaffirms that the
+        method correctly captures the difference in the entropic prefactors ($\nu_1$ and $\nu_2$) arising from
+        the local curvature of the potential energy surface at $S_1$ and $S_2$, in addition to the energy barrier
+        difference between the two saddle points.
+      </p>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <caption>Transition rate and $S_1$ channel fraction, 14D system at $T = 500$ K</caption>
+          <thead>
+            <tr><th>Method</th><th>$r_{\rm FS}$ (in $10^{-12}$)</th><th>Fraction through $S_1$</th></tr>
+          </thead>
+          <tbody>
+            <tr class="row-best"><td>Importance Sampling (Eq. 27)</td><td>6.7459 &plusmn; 0.1429</td><td>0.2850</td></tr>
+            <tr><td>Exact / Kramers</td><td>6.9191</td><td>0.2938</td></tr>
+            <tr><td>No Reweighting (Eq. 28)</td><td>2.0156</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">
+        <span class="caption-lead">Table 3.</span> Transition rate $r_{\rm FS}$ and fraction of transitions
+        through saddle point $S_1$ for the 14-dimensional system at $500$ K, from importance sampling with path
+        reweighting (Eq. 27), the exact transition rate of the underlying 2-dimensional system / Kramers rate
+        theory, and the estimate that neglects path scores (Eq. 28, assuming $I \approx I_{\rm opt}$). Neglecting
+        the reweighting underestimates the rate by a factor of three.
+      </p>
+
+      <figure class="fig-medium">
+        <img src="../figs/accel_mcmc/success_probability_14d.png" alt="Two-panel figure: path weight histogram and success probability estimate histogram for the 14-dimensional system sampled with the BRW algorithm">
+        <figcaption>
+          <b>Figure 8.</b> Distribution of <em>(a)</em> weights and <em>(b)</em> success probability estimates
+          from the successful paths sampled using the neural network bias potential in the 14-dimensional system.
+          During sampling, the branching random walk algorithm restricts the path weights to the interval
+          $[1.0, 1.2]$; each success probability estimate is derived from a batch of 100 paths.
+        </figcaption>
+      </figure>
+
+      <!-- ============ 5. CONCLUSION ============ -->
+      <h2>5. Conclusion</h2>
+      <p>
+        We developed a machine learning method for importance sampling of rare events in discrete-domain Monte
+        Carlo simulations. We trained a neural network to learn the optimal <em>bias potential</em>, which is
+        proportional to the logarithm of the optimal importance function. Working with the bias potential allows
+        the neural network to deal with the extremely small values of the importance function inherent to rare
+        event problems. We further demonstrated how this learned bias potential can be used to accurately compute
+        the transition rates between metastable states. The method is rigorously validated on 2D and 14D model
+        potentials, showing excellent agreement with available theoretical predictions. This approach provides a
+        unique combination of importance sampling and trainable bias potentials applied to Markov chain Monte
+        Carlo simulations in the discrete domain, and demonstrates a novel way to accelerate rare event
+        simulations in high-dimensional and low-temperature systems where conventional methods are intractable.
+        The next logical step is to apply this framework to atomistic systems, enabling the simulation of
+        long-term processes such as defect evolution in crystals and protein dynamics in solution.
+      </p>
 
       <div class="takeaway">
-        <b>Takeaway.</b> Training a neural network to represent the bias potential—rather than
-        the importance function itself—keeps the framework numerically stable at low
-        temperatures, while simulated annealing and adaptive sampling make it work in high
-        dimensions. Combined with rigorous reweighting and branching random walk variance
-        control, the method recovers both the right transition rates and the right relative
-        channel probabilities, even when the learned bias potential is imperfect.
+        <b>Takeaway.</b> Learning the <em>bias potential</em> rather than the importance function directly is
+        what makes the optimization numerically stable, since the optimal importance function underflows near the
+        starting basin. Reweighting the sampled transition paths then yields an unbiased transition rate even
+        when the learned bias potential is imperfect &mdash; skipping the reweighting underestimates the 14D rate
+        by a factor of three. A branching random walk keeps the path weights bounded, reaching comparable
+        variance with roughly $8\times$ fewer Monte Carlo steps.
       </div>
 
-      <!-- ============ FUTURE ============ -->
-      <h2>Connection and Future Directions</h2>
+      <!-- ============ APPENDIX A ============ -->
+      <h2>Appendix A. Kramers' Rate Theory</h2>
       <p>
-        The continuous-state extension of this framework, applied to overdamped Langevin
-        dynamics and the Lennard-Jones&nbsp;7 atomistic benchmark, is described on the
-        <a href="rare_events.html">Rare Events page</a>. Ongoing directions include applying
-        the method to atomistic systems where rare events drive long-term behavior—crystal
-        defect evolution, dislocation dynamics, and protein conformational change—and
-        connecting it to broader machine-learning frameworks for stochastic dynamics.
+        Kramers' rate theory predicts the transition rate from the basin containing A, through the neighborhood
+        of saddle point $S_1$, to the basin containing B as
+      </p>
+      <div class="eq-block">
+        $$ r({\rm A}\to S_1 \to {\rm B}) = \mu\,k_{\rm B}T\,\frac{Z(S_1)}{Z({\rm A})\,Z^{\dagger}(S_1)}\exp\!\left(-\frac{E(S_1) - E({\rm A})}{k_{\rm B}T}\right), \tag{42} $$
+      </div>
+      <p>
+        where $Z(\cdot)$ denotes the local partition functions,
+      </p>
+      <div class="eq-block">
+        $$
+        \begin{split}
+        Z({\rm A}) &= \int_{\Omega_{\rm A}} \exp\!\left(-\frac{E(\mathbf{x}) - E({\rm A})}{k_{\rm B}T}\right) d\mathbf{x}, \\
+        Z(S_1) &= \int_{\Omega^{\perp}_{S_1}} \exp\!\left(-\frac{E(\mathbf{x}) - E(S_1)}{k_{\rm B}T}\right) d\mathbf{x}, \\
+        Z^{\dagger}(S_1) &= \int_{\Gamma_1} \exp\!\left(\frac{E(\mathbf{x}) - E(S_1)}{k_{\rm B}T}\right) d\mathbf{x},
+        \end{split}
+        \tag{43}
+        $$
+      </div>
+      <p>
+        where $\Omega_{\rm A}$ is the basin containing microscopic state A, $\Omega^{\perp}_{S_1}$ denotes the
+        $(d-1)$-dimensional hyperplane orthogonal to the reaction path at the saddle point $S_1$, and $\Gamma_1$
+        represents the 1-dimensional minimum energy path passing through $S_1$. Comparing Eq. (42) with Eq. (38)
+        identifies the prefactor
+      </p>
+      <div class="eq-block">
+        $$ \nu_1 = \mu\,k_{\rm B}T\,\frac{Z(S_1)}{Z({\rm A})\,Z^{\dagger}(S_1)}, \tag{44} $$
+      </div>
+      <p>
+        where $\mu$ is related to $\nu_0$ through Eq. (22). If one invokes the harmonic approximation, the
+        prefactor reduces to the more familiar form
+      </p>
+      <div class="eq-block">
+        $$ \nu_1 = \frac{\left|\lambda^{*}(S_1)\right|}{2\pi}\sqrt{\frac{\det\!\left(H({\rm A})\right)}{\left|\det\!\left(H(S_1)\right)\right|}}, \tag{45} $$
+      </div>
+      <p>
+        where $H(\cdot)$ is the local Hessian matrix around a given microscopic state and $\lambda^{*}(S_1)$ is
+        the negative eigenvalue of $H(S_1)$. In Section 4.4 the more rigorous expression, Eq. (44), rather than
+        the harmonic form Eq. (45), is used to evaluate the Kramers rate prediction.
       </p>
 
       <!-- ============ REFERENCES ============ -->
-      <h2>Reference</h2>
-      <p style="font-size: 0.98rem; color: #444;">
-        M. M. Kim and W. Cai, <em>Accelerated Markov Chain Monte Carlo Simulation via
-        Neural Network–Driven Importance Sampling</em>.
-      </p>
+      <h2>References</h2>
+      <ol class="references">
+        <li id="ref-1">A. F. Voter, F. Montalenti, and T. C. Germann. &ldquo;Extending the Time Scale in Atomistic Simulation of Materials&rdquo;. <em>Annual Review of Materials Research</em> 32 (2002), 321&ndash;346.</li>
+        <li id="ref-2">A. F. Voter. &ldquo;Introduction to the time scale problem&rdquo;. In: <em>Proceedings of the International Conference on Computational Nanoscience</em>. 2002.</li>
+        <li id="ref-3">A. F. Voter. &ldquo;Introduction to the Kinetic Monte Carlo Method&rdquo;. In: <em>Radiation Effects in Solids</em>. Ed. by K. E. Sickafus, E. A. Kotomin, and B. P. Uberuaga. Dordrecht: Springer Netherlands, 2007, 1&ndash;23.</li>
+        <li id="ref-4">A. F. Voter. &ldquo;Hyperdynamics: Accelerated Molecular Dynamics of Infrequent Events&rdquo;. <em>Physical Review Letters</em> 78.20 (1997), 3908&ndash;3911.</li>
+        <li id="ref-5">S. Izrailev et al. &ldquo;Steered Molecular Dynamics&rdquo;. In: <em>Computational Molecular Dynamics: Challenges, Methods, Ideas</em>. Ed. by P. Deuflhard et al. Berlin, Heidelberg: Springer, 1999, 39&ndash;65.</li>
+        <li id="ref-6">A. Laio and M. Parrinello. &ldquo;Escaping free-energy minima&rdquo;. <em>Proceedings of the National Academy of Sciences</em> 99.20 (2002), 12562&ndash;12566.</li>
+        <li id="ref-7">A. Laio and F. L. Gervasio. &ldquo;Metadynamics: a method to simulate rare events and reconstruct the free energy in biophysics, chemistry and material science&rdquo;. <em>Reports on Progress in Physics</em> 71.12 (2008), 126601.</li>
+        <li id="ref-8">Y. Wang et al. &ldquo;Frequency adaptive metadynamics for the calculation of rare-event kinetics&rdquo;. <em>The Journal of Chemical Physics</em> 149.7 (2018), 072309.</li>
+        <li id="ref-9">G. A. Huber and S. Kim. &ldquo;Weighted-ensemble Brownian dynamics simulations for protein association reactions&rdquo;. <em>Biophysical Journal</em> 70.1 (1996), 97&ndash;110.</li>
+        <li id="ref-10">D. M. Zuckerman and L. T. Chong. &ldquo;Weighted ensemble simulation: review of methodology, applications, and software&rdquo;. <em>Annual Review of Biophysics</em> 46 (2017), 43&ndash;57.</li>
+        <li id="ref-11">R. J. Allen, C. Valeriani, and P. R. Ten Wolde. &ldquo;Forward flux sampling for rare event simulations&rdquo;. <em>Journal of Physics: Condensed Matter</em> 21.46 (2009), 463102.</li>
+        <li id="ref-12">C. Dellago, P. G. Bolhuis, and P. L. Geissler. &ldquo;Transition Path Sampling&rdquo;. In: <em>Advances in Chemical Physics</em>. John Wiley &amp; Sons, 2002, Chap. 1, 1&ndash;78.</li>
+        <li id="ref-13">E. Vanden-Eijnden. &ldquo;Transition Path Theory&rdquo;. In: <em>Computer Simulations in Condensed Matter Systems: From Materials to Chemical Biology Volume 1</em>. Ed. by M. Ferrario, G. Ciccotti, and K. Binder. Berlin, Heidelberg: Springer, 2006, 453&ndash;493.</li>
+        <li id="ref-14">Weinan E. and E. Vanden-Eijnden. &ldquo;Towards a Theory of Transition Paths&rdquo;. <em>Journal of Statistical Physics</em> 123.3 (2006), 503&ndash;523.</li>
+        <li id="ref-15">P. Metzner, C. Sch&uuml;tte, and E. Vanden-Eijnden. &ldquo;Transition path theory for Markov jump processes&rdquo;. <em>Multiscale Modeling &amp; Simulation</em> 7.3 (2009), 1192&ndash;1219.</li>
+        <li id="ref-16">H. Kahn and A. W. Marshall. &ldquo;Methods of Reducing Sample Size in Monte Carlo Computations&rdquo;. <em>Journal of the Operations Research Society of America</em> 1.5 (1953), 263&ndash;278.</li>
+        <li id="ref-17">P. W. Glynn and D. L. Iglehart. &ldquo;Importance Sampling for Stochastic Simulations&rdquo;. <em>Management Science</em> 35.11 (1989), 1367&ndash;1392.</li>
+        <li id="ref-18">W. Cai et al. &ldquo;Importance sampling of rare transition events in Markov processes&rdquo;. <em>Physical Review E</em> 66.4 (2002), 046703.</li>
+        <li id="ref-19">P. L&rsquo;Ecuyer, M. Mandjes, and B. Tuffin. &ldquo;Importance Sampling in Rare Event Simulation&rdquo;. In: <em>Rare Event Simulation using Monte Carlo Methods</em>. John Wiley &amp; Sons, 2009, Chap. 2, 17&ndash;38.</li>
+        <li id="ref-20">P. Dupuis and H. Wang. &ldquo;Importance Sampling, Large Deviations, and Differential Games&rdquo;. <em>Stochastics and Stochastic Reports</em> 76.6 (2004), 481&ndash;508.</li>
+        <li id="ref-21">M. de Koning et al. &ldquo;Adaptive importance sampling Monte Carlo simulation of rare transition events&rdquo;. <em>The Journal of Chemical Physics</em> 122.7 (2005).</li>
+        <li id="ref-22">M. H. Kalos and P. A. Whitlock. <em>Monte Carlo Methods</em>. John Wiley &amp; Sons, 2009.</li>
+        <li id="ref-23">A. F. Voter. &ldquo;Introduction to the kinetic Monte Carlo method&rdquo;. In: <em>Radiation Effects in Solids</em>. Springer, 2007, 1&ndash;23.</li>
+        <li id="ref-24">A. P. J. Jansen. <em>An Introduction to Kinetic Monte Carlo Simulations of Surface Reactions</em>. Vol. 856. Springer, 2012.</li>
+        <li id="ref-25">C. C. Battaile. &ldquo;The kinetic Monte Carlo method: Foundation, implementation, and application&rdquo;. <em>Computer Methods in Applied Mechanics and Engineering</em> 197.41&ndash;42 (2008), 3386&ndash;3398.</li>
+        <li id="ref-26">J. Vorba and J. K&#345;iv&aacute;nek. &ldquo;Adjoint-driven Russian roulette and splitting in light transport simulation&rdquo;. <em>ACM Transactions on Graphics (TOG)</em> 35.4 (2016), 1&ndash;11.</li>
+        <li id="ref-27">J. Arvo and D. Kirk. &ldquo;Particle transport and image synthesis&rdquo;. In: <em>Proceedings of the 17th Annual Conference on Computer Graphics and Interactive Techniques</em>. 1990, 63&ndash;66.</li>
+        <li id="ref-28">A. Rath et al. &ldquo;EARS: efficiency-aware Russian roulette and splitting&rdquo;. <em>ACM Transactions on Graphics (TOG)</em> 41.4 (2022), 1&ndash;14.</li>
+        <li id="ref-29">H. Li et al. &ldquo;A semigroup method for high dimensional committor functions based on neural network&rdquo;. In: <em>Mathematical and Scientific Machine Learning</em>. PMLR, 2022, 598&ndash;618.</li>
+        <li id="ref-30">J. Yuan et al. &ldquo;Optimal control for sampling the transition path process and estimating rates&rdquo;. <em>Communications in Nonlinear Science and Numerical Simulation</em> 129 (2024), 107701.</li>
+        <li id="ref-31">A. R. Mitchell and G. M. Rotskoff. &ldquo;Committor Guided Estimates of Molecular Transition Rates&rdquo;. <em>Journal of Chemical Theory and Computation</em> 20.21 (2024), 9378&ndash;9393.</li>
+        <li id="ref-32">D. P. Kingma. &ldquo;Adam: A method for stochastic optimization&rdquo;. <em>arXiv preprint</em> arXiv:1412.6980 (2014).</li>
+        <li id="ref-33">H. A. Kramers. &ldquo;Brownian motion in a field of force and the diffusion model of chemical reactions&rdquo;. <em>Physica</em> 7.4 (1940), 284&ndash;304.</li>
+        <li id="ref-34">H. Eyring. &ldquo;The Activated Complex in Chemical Reactions&rdquo;. <em>The Journal of Chemical Physics</em> 3.2 (1935), 107&ndash;115.</li>
+      </ol>
 
     </div>
   </main>
 
   <script>
-    // Reserved for future interactivity.
+    function toggleBibtex(e, id) {
+      e.preventDefault();
+      const el = document.getElementById(id);
+      el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
   </script>
 </body>
 </html>
