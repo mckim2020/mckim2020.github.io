@@ -100,15 +100,18 @@
     }
 
     .page-title {
-      /* Scale down on narrow viewports so "Kinetics" never strands on its own line */
+      /* Scale down on narrow viewports so the title never strands a lone word */
       font-size: clamp(1.9rem, 5.2vw, 2.5rem);
       font-weight: bold;
       margin-bottom: 8px;
       color: #8C1515;
       line-height: 1.18;
-      /* Split evenly across lines rather than dropping a single orphan word */
-      text-wrap: balance;
       overflow-wrap: break-word;
+    }
+    /* Keep each phrase intact so, when the title wraps, it breaks after
+       "Reduction" rather than mid-phrase after "Variance". */
+    .page-title .tline {
+      display: inline-block;
     }
 
     .page-subtitle {
@@ -641,7 +644,7 @@
   </header>
 
   <main class="container">
-    <h1 class="page-title">Agent-Guided Variance Reduction for Protein Kinetics</h1>
+    <h1 class="page-title"><span class="tline">Agent-Guided Variance Reduction</span> <span class="tline">for Protein Kinetics</span></h1>
     <p class="page-subtitle">An agentic method search for importance-sampled alanine dipeptide kinetics</p>
 
     <div class="content">
