@@ -271,6 +271,31 @@
       color: #8C1515;
       margin-right: 5px;
     }
+    .selection-banner .scale-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 28px;
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid #e3cfcf;
+    }
+    .selection-banner .scale-stats .stat {
+      font-family: 'Source Sans 3', Helvetica, sans-serif;
+    }
+    .selection-banner .scale-stats .stat .num {
+      display: block;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #8C1515;
+      line-height: 1.1;
+    }
+    .selection-banner .scale-stats .stat .lbl {
+      display: block;
+      font-size: 0.78rem;
+      color: #666;
+      letter-spacing: 0.02em;
+      margin-top: 2px;
+    }
 
     /* Embedded video */
     figure.fig-video video {
@@ -656,11 +681,19 @@
           I was selected to take part in
           <a href="https://cerebralvalley.ai/e/built-with-claude-life-sciences" target="_blank" rel="noopener noreferrer"><b>Built with Claude: Life Sciences</b></a>,
           a global hackathon hosted by <b>Anthropic</b> in partnership with the
-          <b>Gladstone Institutes</b> and produced by <b>Cerebral Valley</b>. Participants were chosen from a
-          worldwide pool of applicants and given access to Claude Science and Claude Code, Anthropic API
-          credits, and real research datasets, competing for a $100,000 prize pool. The work below is my
-          submission to the <b>Researcher Track</b>.
+          <b>Gladstone Institutes</b> and produced by <b>Cerebral Valley</b>. Roughly
+          <b>500 participants</b> were chosen from nearly <b>6,000 applicants</b> worldwide and given access
+          to Claude Science and Claude Code, Anthropic API credits, and real research datasets, competing for a
+          $100,000 prize pool. Over the week the cohort submitted more than <b>290 projects</b>, pushing over
+          12,000 commits and 3 million lines of code. The work below is my submission to the
+          <b>Researcher Track</b>.
         </p>
+        <div class="scale-stats">
+          <div class="stat"><span class="num">~6,000</span><span class="lbl">applicants worldwide</span></div>
+          <div class="stat"><span class="num">500</span><span class="lbl">participants selected</span></div>
+          <div class="stat"><span class="num">290+</span><span class="lbl">projects submitted</span></div>
+          <div class="stat"><span class="num">$100K</span><span class="lbl">prize pool</span></div>
+        </div>
         <div class="event-meta">
           <span><i class="fa-regular fa-calendar"></i>July 7&ndash;13, 2026</span>
           <span><i class="fa-solid fa-globe"></i>Global &middot; Virtual</span>
