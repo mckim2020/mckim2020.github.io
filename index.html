@@ -253,7 +253,7 @@
 
       .profile-left {
         width: 100%;
-        max-width: 300px;
+        max-width: 360px;
       }
 
       .profile-image {
@@ -267,6 +267,16 @@
 
       .bio-text {
         font-size: 1rem;
+      }
+
+      /* The home section sits outside .container, so give it side padding,
+         and shrink the one-line name so it fits the column. */
+      .profile-wrapper {
+        padding: 0 20px;
+      }
+
+      .profile-name {
+        font-size: clamp(1.3rem, 6.2vw, 1.8rem);
       }
     }
 
