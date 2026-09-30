@@ -160,6 +160,35 @@
       gap: 30px;
     }
 
+    /* Research subsections (Theory / Applications), each a two-card grid */
+    .research-subsection + .research-subsection {
+      margin-top: 44px;
+    }
+
+    .research-subhead {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 0 0 4px;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.65rem;
+      font-weight: 600;
+      color: #8C1515;
+    }
+
+    .research-subhead::after {
+      content: '';
+      flex: 1;
+      height: 2px;
+      background: linear-gradient(to right, rgba(140, 21, 21, 0.35), rgba(140, 21, 21, 0));
+    }
+
+    .research-subhead-note {
+      margin: 0 0 18px;
+      color: #666;
+      font-size: 1rem;
+    }
+
     .research-item {
       background-color: #f8f8f8;
       border-radius: 10px;
@@ -224,44 +253,54 @@
 
   <main class="container">
     <h1 class="page-title">Research</h1>
-    <div class="research-grid">
-      <div class="research-item">
-        <img src="./figs/accel_langevin/system.png" alt="Energy landscape partitioned into two metastable basins, with success and failure transition paths">
-        <div class="research-content">
-          <h2 class="research-title">
-            <a href="research/accel_langevin.html">Accelerated Langevin Dynamics</a>
-          </h2>
-          <p class="research-description">A neural-network importance function biases Langevin dynamics toward rare transitions, and path weights absorb its errors: rates and channel splits match Kramers theory on a two-channel potential and brute force for LJ7, and a revision in preparation extends the method to a Pt adatom and a vacancy in iron.</p>
+    <div class="research-subsection">
+      <h2 class="research-subhead">Theory</h2>
+      <p class="research-subhead-note">Importance sampling that turns biased simulations into estimates of the original transition rates.</p>
+      <div class="research-grid">
+        <div class="research-item">
+          <img src="./figs/accel_langevin/system.png" alt="Energy landscape partitioned into two metastable basins, with success and failure transition paths">
+          <div class="research-content">
+            <h2 class="research-title">
+              <a href="research/accel_langevin.html">Accelerated Langevin Dynamics</a>
+            </h2>
+            <p class="research-description">A neural-network importance function biases Langevin dynamics toward rare transitions, and path weights absorb its errors: rates and channel splits match Kramers theory on a two-channel potential and brute force for LJ7, and a revision in preparation extends the method to a Pt adatom and a vacancy in iron.</p>
+          </div>
+        </div>
+
+        <div class="research-item">
+          <img src="./figs/accel_mcmc/pel_discrete_omega.png" alt="Two-dimensional energy landscape on a grid, with minima A and B, saddle points S1 and S2, and a lattice path from A to B">
+          <div class="research-content">
+            <h2 class="research-title">
+              <a href="research/accel_mcmc.html">Accelerated MCMC</a>
+            </h2>
+            <p class="research-description">A neural network learns a bias potential in log space that steers lattice Monte Carlo through rare transitions, while path reweighting and a branching random walk keep the success-probability estimate unbiased, closely matching exact rates on 2-D and 14-D model landscapes and Kramers theory from 500 to 1000 K.</p>
+          </div>
         </div>
       </div>
+    </div>
 
-      <div class="research-item">
-        <img src="./figs/accel_mcmc/pel_discrete_omega.png" alt="Two-dimensional energy landscape on a grid, with minima A and B, saddle points S1 and S2, and a lattice path from A to B">
-        <div class="research-content">
-          <h2 class="research-title">
-            <a href="research/accel_mcmc.html">Accelerated MCMC</a>
-          </h2>
-          <p class="research-description">A neural network learns a bias potential in log space that steers lattice Monte Carlo through rare transitions, while path reweighting and a branching random walk keep the success-probability estimate unbiased, closely matching exact rates on 2-D and 14-D model landscapes and Kramers theory from 500 to 1000 K.</p>
+    <div class="research-subsection">
+      <h2 class="research-subhead">Applications</h2>
+      <p class="research-subhead-note">The methods at work on atomistic and biomolecular rare events.</p>
+      <div class="research-grid">
+        <div class="research-item">
+          <img src="./figs/accel_atomistic/accel_atomistic_card.jpg" alt="Three panels: accelerated LJ7 transition paths in collective-variable space, sampled Pt adatom paths on the Pt(001) surface, and the bcc iron supercell around a vacancy">
+          <div class="research-content">
+            <h2 class="research-title">
+              <a href="research/accel_atomistic.html">Accelerated Atomistic Simulations</a>
+            </h2>
+            <p class="research-description">Neural-network importance sampling of Langevin dynamics reproduces reference rates and resolves competing channels, including an unanticipated long jump, for the LJ7 cluster and, in a revised manuscript in preparation, a Pt adatom on Pt(001) and a vacancy in bcc iron.</p>
+          </div>
         </div>
-      </div>
 
-      <div class="research-item">
-        <img src="./figs/accel_atomistic/accel_atomistic_card.jpg" alt="Three panels: accelerated LJ7 transition paths in collective-variable space, sampled Pt adatom paths on the Pt(001) surface, and the bcc iron supercell around a vacancy">
-        <div class="research-content">
-          <h2 class="research-title">
-            <a href="research/accel_atomistic.html">Accelerated Atomistic Simulations</a>
-          </h2>
-          <p class="research-description">Neural-network importance sampling of Langevin dynamics reproduces reference rates and resolves competing channels, including an unanticipated long jump, for the LJ7 cluster and, in a revised manuscript in preparation, a Pt adatom on Pt(001) and a vacancy in bcc iron.</p>
-        </div>
-      </div>
-
-      <div class="research-item">
-        <img src="./figs/claude_hackathon/AD_state_A.png" alt="Alanine dipeptide in the beta/C5 metastable conformation">
-        <div class="research-content">
-          <h2 class="research-title">
-            <a href="research/claude_hackathon.html">Agent-Guided Variance Reduction for Protein Kinetics</a>
-          </h2>
-          <p class="research-description">An agentic search driven by Claude Code selects the weight-control scheme that tames path-weight degeneracy, recovering the alanine dipeptide isomerization rate to within 3&ndash;6% of brute-force MD.</p>
+        <div class="research-item">
+          <img src="./figs/claude_hackathon/AD_state_A.png" alt="Alanine dipeptide in the beta/C5 metastable conformation">
+          <div class="research-content">
+            <h2 class="research-title">
+              <a href="research/claude_hackathon.html">Agent-Guided Variance Reduction for Protein Kinetics</a>
+            </h2>
+            <p class="research-description">An agentic search driven by Claude Code selects the weight-control scheme that tames path-weight degeneracy, recovering the alanine dipeptide isomerization rate to within 3&ndash;6% of brute-force MD.</p>
+          </div>
         </div>
       </div>
     </div>
