@@ -1,0 +1,2949 @@
+<!DOCTYPE html>
+<!--
+  Accelerated Atomistic Simulations: a visual showcase of the importance-sampling
+  Langevin framework applied to three atomistic rare events (LJ7, a Pt adatom on
+  Pt(001), a vacancy in bcc Fe).
+
+  Media: ../figs/accel_atomistic/
+    renders  -> JPEG, q82, 1600 + 800 px (stages, thumbnails) or 1400 + 700 px (channel cards)
+    plots    -> 8-bit PNG, at most 1400 px. The results band shows *_arrhenius_dark.png (the
+                paper's plots recolored for the dark band, transparent background); the
+                lightbox opens the paper versions (*_arrhenius.png). The dark versions were
+                made by converting white to transparency and black ink to light gray, keeping
+                every hue; regenerate them if the paper figures change.
+    LJ7 clip -> lj7_trajectory.mp4 (H.264, 640 x 640, no audio) + lj7_trajectory_poster.jpg
+    card     -> accel_atomistic_card.jpg (1272 x 630; research grid thumbnail on index.html and
+                research.html; subjects kept inside the central area so object-fit: cover
+                never clips them at any card width)
+
+  ANIMATION SLOTS (drop a GIF into figs/accel_atomistic/ and it appears; no HTML edit needed)
+    lj7_animation.gif      LJ7 stage         fallback: lj7_trajectory.mp4 (looping video)
+    adatom_animation.gif   Pt adatom stage   fallback: adatom_paths_diagonal_*.jpg (still)
+    vacancy_animation.gif  Fe vacancy stage  fallback: vacancy_supercell_*.jpg (still)
+
+  How a slot works: each figure.stage stacks <img class="slot-gif"> (pointing at the GIF)
+  over its fallback. If the GIF loads, its onload adds .has-gif to the stage: the GIF fades
+  in over the fallback, the LJ7 video is paused (and never downloaded if the GIF answers
+  before it is needed), the stage tag and caption switch to the neutral text in their span.cap-gif (edit
+  the figcaption's span.cap-gif to describe your GIF), the enlarge button opens the GIF, and
+  a pause/play button appears. With prefers-reduced-motion the fallback still or poster shows
+  (and enlarges) until the visitor presses play. If the file is missing, onerror removes the
+  <img> and the fallback stays. Trade-off: a static site cannot know whether a file exists
+  without asking, so each visit logs one expected 404 per missing GIF.
+
+  GIF size: the stages are square, so square GIFs fit best (others are letterboxed on white;
+  on the LJ7 stage white is multiplied into the blue dot grid). Aim for under about 1.5 MB;
+  to shrink a large GIF (or convert a video), for example:
+    ffmpeg -i in.gif -vf "fps=15,scale=640:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128[p];[b][p]paletteuse=dither=bayer:bayer_scale=3" -loop 0 out.gif
+
+  Facts: LJ7 values are in the posted ChemRxiv v2 preprint. Pt adatom and Fe vacancy values
+  come from the revised manuscript in preparation (not in the posted v2).
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Accelerated Atomistic Simulations - Myung Chul Kim</title>
+  <meta name="description" content="Neural-network importance sampling of Langevin dynamics applied to three atomistic rare events: the LJ7 cluster, Pt adatom diffusion on Pt(001), and vacancy migration in bcc iron.">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=EB+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>document.documentElement.className += ' js';</script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Source Serif 4', Georgia, serif;
+      background: #ffffff;
+      color: #333333;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      background: #8C1515;
+      padding: 20px 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 50px;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-weight: 600;
+      font-size: 24px;
+      position: relative;
+      padding: 8px 0;
+      transition: all 0.3s ease;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 3px;
+      background: white;
+      transition: all 0.3s ease;
+      transform: translateX(-50%);
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .nav-links a:hover {
+      transform: translateY(-2px);
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+
+    .nav-links a.active {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 8px 16px;
+      border-radius: 20px;
+    }
+
+    /* On narrow screens the six links no longer fit on one row: wrap them
+       instead of clipping Home and Education off the left edge. */
+    @media (max-width: 820px) {
+      .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 4px 18px;
+      }
+
+      .nav-links a {
+        font-size: 19px;
+      }
+    }
+
+    /* =====================================================================
+       Showcase page (everything below the site header)
+       ===================================================================== */
+    :root {
+      --cardinal: #8C1515;
+      --cardinal-bright: #B1040E;
+      --rose: #ff9d97;
+      --ink: #0c0a0e;
+      --text-strong: #1e1a1f;
+      --muted: #5d575e;
+      --line: #ebe4df;
+      --warm: #faf7f4;
+      --sans: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
+      --serif: 'Source Serif 4', Georgia, serif;
+      --garamond: 'EB Garamond', Georgia, serif;
+      --ease: cubic-bezier(.2, .7, .2, 1);
+      /* per-system accents, as r, g, b */
+      --lj7: 33, 102, 172;
+      --lj7-deep: 29, 88, 150;
+      --pt: 206, 96, 38;
+      --pt-deep: 164, 68, 24;
+      --fe: 150, 96, 76;
+      --fe-deep: 118, 74, 58;
+    }
+
+    html { scroll-behavior: smooth; scroll-padding-top: 64px; }
+    html.lb-open { overflow: hidden; }
+
+    .sc, .sc *, .sc *::before, .sc *::after { box-sizing: border-box; }
+    .sc img { max-width: 100%; }
+    .sc [hidden] { display: none !important; }
+
+    .wrap {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .sr-only {
+      position: absolute !important;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0 0 0 0);
+      white-space: nowrap; border: 0;
+    }
+
+    .sc a:focus-visible,
+    .sc button:focus-visible {
+      outline: 3px solid var(--cardinal);
+      outline-offset: 3px;
+      border-radius: 12px;
+    }
+    .hero a:focus-visible, .hero button:focus-visible,
+    .results a:focus-visible, .results button:focus-visible,
+    .lb button:focus-visible {
+      outline-color: #ffb8b2;
+    }
+
+    .eyebrow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 14px;
+      font: 700 0.78rem/1.2 var(--sans);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--cardinal);
+    }
+
+    .h2 {
+      margin: 0 0 18px;
+      font: 700 clamp(1.9rem, 1.25rem + 2vw, 2.75rem)/1.1 var(--serif);
+      letter-spacing: -0.012em;
+      color: var(--text-strong);
+    }
+
+    .lead {
+      margin: 0;
+      font: 400 1.12rem/1.66 var(--serif);
+      color: #3a353b;
+    }
+
+    /* ------------------------------ Hero ------------------------------ */
+    .hero {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      /* Fill the first screen below the 127 px site header, within sensible bounds. */
+      min-height: clamp(460px, calc(100vh - 127px), 830px);
+      min-height: clamp(460px, calc(100svh - 127px), 830px);
+      color: #ffffff;
+      background:
+        radial-gradient(60% 75% at 88% 16%, rgba(177, 4, 14, 0.52), rgba(177, 4, 14, 0) 70%),
+        radial-gradient(55% 65% at 4% 108%, rgba(140, 21, 21, 0.45), rgba(140, 21, 21, 0) 70%),
+        linear-gradient(180deg, #130d14 0%, var(--ink) 100%);
+    }
+
+    .hero-canvas {
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .hero-shade {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        radial-gradient(420px circle at var(--mx, 70%) var(--my, 40%), rgba(255, 110, 100, 0.10), rgba(255, 110, 100, 0) 70%),
+        linear-gradient(90deg, rgba(12, 10, 14, 0.82) 0%, rgba(12, 10, 14, 0.5) 34%, rgba(12, 10, 14, 0) 66%),
+        linear-gradient(180deg, rgba(12, 10, 14, 0) 72%, rgba(12, 10, 14, 0.75) 100%);
+    }
+
+    .hero-inner {
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      width: 100%;
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 84px 24px 36px;
+    }
+
+    .hero-kicker {
+      margin: 0 0 20px;
+      font: 700 0.8rem/1.3 var(--sans);
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--rose);
+    }
+
+    .hero-title {
+      margin: 0 0 22px;
+      font: 700 clamp(2.6rem, 1.1rem + 5.1vw, 5.2rem)/1.02 var(--serif);
+      letter-spacing: -0.018em;
+      text-shadow: 0 2px 30px rgba(0, 0, 0, 0.45);
+    }
+    .hero-title span { display: block; }
+    .hero-title .t2 {
+      padding-bottom: 0.06em;
+      color: #ff938c;
+      background: linear-gradient(92deg, #ffe1dc 0%, #ff9f98 40%, #ff5f55 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: none;
+    }
+
+    .hero-sub {
+      max-width: 52ch;
+      margin: 0 0 14px;
+      font: 400 clamp(1.25rem, 1.02rem + 0.75vw, 1.62rem)/1.36 var(--garamond);
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    .hero-authors {
+      margin: 0 0 40px;
+      font: 400 0.95rem/1.45 var(--sans);
+      letter-spacing: 0.01em;
+      color: rgba(255, 255, 255, 0.64);
+    }
+
+    .hero-authors a {
+      color: #ffd0cb;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(255, 208, 203, 0.4);
+      white-space: nowrap;
+    }
+    .hero-authors a:hover { border-bottom-color: currentColor; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      max-width: 800px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .stat {
+      position: relative;
+      display: block;
+      height: 100%;
+      padding: 16px 18px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 18px;
+      color: #ffffff;
+      text-decoration: none;
+      background:
+        linear-gradient(160deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.035)),
+        rgba(12, 10, 14, 0.55);
+      transition: transform 0.4s var(--ease), border-color 0.4s, box-shadow 0.4s, background 0.4s;
+    }
+    .stat:hover {
+      transform: translateY(-5px);
+      border-color: rgba(255, 157, 151, 0.6);
+      background:
+        linear-gradient(160deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05)),
+        rgba(12, 10, 14, 0.55);
+      box-shadow: 0 22px 44px -20px rgba(255, 80, 70, 0.55);
+    }
+    .stat-top {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font: 700 0.76rem/1 var(--sans);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.78);
+    }
+    .stat-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: rgb(var(--acc));
+      box-shadow: 0 0 14px rgba(var(--acc), 0.95);
+    }
+    .stat-value {
+      display: block;
+      margin: 14px 0 6px;
+      font: 600 clamp(2.1rem, 1.3rem + 2.1vw, 3rem)/1 var(--sans);
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
+    .stat-d {
+      margin-right: 8px;
+      font: 400 0.46em/1 var(--serif);
+      letter-spacing: 0.02em;
+      color: rgba(255, 255, 255, 0.72);
+      vertical-align: 0.18em;
+    }
+    .stat-d i { font-style: italic; }
+    .stat-label {
+      display: block;
+      font: 400 0.92rem/1.35 var(--sans);
+      color: rgba(255, 255, 255, 0.74);
+    }
+    .stat-go {
+      position: absolute;
+      top: 15px;
+      right: 16px;
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.45);
+      transition: transform 0.3s var(--ease), color 0.3s;
+    }
+    .stat:hover .stat-go { transform: translateY(3px); color: #ffffff; }
+
+    .hero-foot {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px 24px;
+      width: 100%;
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 24px 22px;
+      font: 400 0.8rem/1.4 var(--sans);
+      color: rgba(255, 255, 255, 0.6);
+    }
+    .scroll-cue {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font: 700 0.72rem/1 var(--sans);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.78);
+      text-decoration: none;
+    }
+    .scroll-cue .chev {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      animation: bob 2.4s ease-in-out infinite;
+    }
+    .hero-note {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-align: right;
+    }
+    .hero-toggle {
+      flex: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 999px;
+      font: 700 0.72rem/1 var(--sans);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      transition: background 0.25s;
+    }
+    .hero-toggle:hover { background: rgba(255, 255, 255, 0.16); }
+
+    @keyframes bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(5px); }
+    }
+
+    /* --------------------------- Switcher --------------------------- */
+    .switcher-sentinel { height: 1px; margin-top: -1px; }
+    .switcher {
+      display: block;
+      position: -webkit-sticky;
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      background: rgba(255, 255, 255, 0.88);
+      -webkit-backdrop-filter: saturate(1.4) blur(14px);
+      backdrop-filter: saturate(1.4) blur(14px);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+      transition: box-shadow 0.3s;
+    }
+    .switcher.stuck { box-shadow: 0 12px 30px -20px rgba(0, 0, 0, 0.45); }
+    .switcher-inner {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 10px 24px;
+    }
+    /* Left of the pills: a quiet "On this page" label at rest, the page title once the bar sticks. */
+    .switcher-title {
+      display: grid;
+      align-items: center;
+      min-width: 0;
+      margin-right: auto;
+    }
+    .switcher-title > span {
+      grid-area: 1 / 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      transition: opacity 0.3s, transform 0.3s var(--ease);
+    }
+    .st-rest {
+      font: 700 0.72rem/1.2 var(--sans);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #8a8187;
+    }
+    .st-stuck {
+      font: 600 1.02rem/1.2 var(--serif);
+      color: var(--text-strong);
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    .switcher.stuck .st-rest { opacity: 0; transform: translateY(-6px); }
+    .switcher.stuck .st-stuck { opacity: 1; transform: none; }
+    .pills {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 6px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      font: 600 0.93rem/1 var(--sans);
+      color: #3b3539;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.25s, color 0.25s, box-shadow 0.25s;
+    }
+    .pill:hover { color: var(--cardinal); background: rgba(140, 21, 21, 0.06); }
+    .pill.is-active {
+      color: #ffffff;
+      background: var(--cardinal);
+      box-shadow: 0 8px 18px -10px rgba(140, 21, 21, 0.9);
+    }
+    .pill-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgb(var(--acc));
+    }
+    .pill.is-active .pill-dot { background: #ffffff; }
+
+    /* ----------------------------- Intro ----------------------------- */
+    .intro { padding: 92px 0 84px; background: #ffffff; }
+    .intro-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.3fr);
+      gap: 56px;
+      align-items: start;
+    }
+    .steps {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .step {
+      position: relative;
+      display: grid;
+      grid-template-columns: 46px minmax(0, 1fr);
+      column-gap: 20px;
+      align-items: start;
+      padding: 20px 56px 20px 22px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: linear-gradient(180deg, #ffffff, #fbf8f6);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 20px 44px -32px rgba(140, 21, 21, 0.4);
+      transition: transform 0.4s var(--ease), box-shadow 0.4s;
+    }
+    .step:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 28px 54px -30px rgba(140, 21, 21, 0.5);
+    }
+    .step-icon {
+      grid-row: span 2;
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      border-radius: 13px;
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--cardinal-bright), var(--cardinal));
+      box-shadow: 0 12px 22px -12px rgba(140, 21, 21, 0.95);
+    }
+    .step-n {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font: 700 0.8rem/1 var(--sans);
+      letter-spacing: 0.1em;
+      color: #b9adad;
+    }
+    .step h3 {
+      margin: 1px 0 6px;
+      font: 700 1.18rem/1.2 var(--serif);
+      color: var(--text-strong);
+    }
+    .step p {
+      margin: 0;
+      font: 400 0.95rem/1.55 var(--sans);
+      color: #4a444b;
+    }
+
+    /* ---------------------------- Systems ---------------------------- */
+    .system {
+      position: relative;
+      overflow: hidden;
+      padding: 100px 0 100px;
+      background: #ffffff;
+    }
+    .system.tint { background: var(--warm); }
+    .system.tint::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image: radial-gradient(rgba(140, 21, 21, 0.075) 1.2px, transparent 1.4px);
+      background-size: 22px 22px;
+      -webkit-mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
+      mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
+    }
+    .system .wrap { position: relative; z-index: 1; }
+    .blob {
+      position: absolute;
+      z-index: 0;
+      width: 640px;
+      height: 640px;
+      border-radius: 50%;
+      pointer-events: none;
+      background: radial-gradient(circle, rgba(var(--acc), 0.2), rgba(var(--acc), 0) 66%);
+    }
+
+    .sys-head {
+      display: flex;
+      align-items: flex-end;
+      gap: 26px;
+      margin-bottom: 46px;
+    }
+    .sys-num {
+      flex: none;
+      font: 700 clamp(4.4rem, 2.2rem + 6.4vw, 8rem)/0.8 var(--serif);
+      letter-spacing: -0.04em;
+      color: transparent;
+      -webkit-text-stroke: 1.6px rgba(var(--acc), 0.6);
+      user-select: none;
+    }
+    .sys-title {
+      margin: 0 0 16px;
+      font: 700 clamp(2rem, 1.2rem + 2.7vw, 3.15rem)/1.06 var(--serif);
+      letter-spacing: -0.014em;
+      color: var(--text-strong);
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border: 1px solid #ecd49a;
+      border-radius: 999px;
+      font: 600 0.72rem/1.2 var(--sans);
+      letter-spacing: 0.04em;
+      text-transform: none;
+      color: #5c4a14;
+      background: #fcf3da;
+    }
+    .status.posted { color: #1b5133; background: #e6f4eb; border-color: #bde0c9; }
+    .specs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .specs li {
+      padding: 8px 13px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font: 600 0.86rem/1 var(--sans);
+      color: #463f45;
+      background: #ffffff;
+    }
+    .specs li.key {
+      border-color: transparent;
+      color: #ffffff;
+      background: rgb(var(--acc-deep));
+      box-shadow: 0 8px 18px -10px rgba(var(--acc), 0.9);
+    }
+
+    .sys-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+      gap: 60px;
+      align-items: start;
+    }
+    .system.flip .media { order: 2; }
+
+    /* Stage: the animation slot */
+    .stage { margin: 0; }
+    .stage-box {
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 1 / 1;
+      border-radius: 26px;
+      background: #ffffff;
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.05),
+        0 34px 64px -34px rgba(var(--acc), 0.6),
+        0 50px 90px -56px rgba(0, 0, 0, 0.4);
+    }
+    .stage-box::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      border-radius: inherit;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+      pointer-events: none;
+    }
+    .stage-media {
+      position: absolute;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: transform 1.6s var(--ease);
+    }
+    .stage-video, .stage-poster { background: transparent; mix-blend-mode: multiply; }
+    /* Without JS the clip has no source (it is lazy-loaded), so show its poster as an image
+       instead of a video element with the browser's own controls. */
+    .stage-box img.stage-poster { padding: 0; }
+    .js .stage-poster, html:not(.js) .stage-video { display: none; }
+    .stage[data-system="lj7"] .stage-box {
+      background:
+        radial-gradient(rgba(var(--acc), 0.13) 1.1px, transparent 1.3px) 0 0 / 24px 24px,
+        radial-gradient(circle at 50% 46%, #ffffff 0%, #f6f9fd 55%, #e8eff8 100%);
+    }
+    img.stage-media { padding: 16px; }
+    .stage-box:hover img.stage-media { transform: scale(1.035); }
+    .slot-gif {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #ffffff;
+      opacity: 0;
+      transition: opacity 0.7s var(--ease);
+    }
+    .stage[data-system="lj7"] .slot-gif { background: transparent; mix-blend-mode: multiply; }
+    .stage.has-gif:not(.gif-off) .stage-media { opacity: 0; }
+    .stage.has-gif .slot-gif { opacity: 1; }
+    .stage.has-gif.gif-off .slot-gif { opacity: 0; }
+    .stage-tag {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      max-width: calc(100% - 32px);
+      padding: 8px 13px;
+      border-radius: 999px;
+      font: 600 0.8rem/1.1 var(--sans);
+      color: #2b262c;
+      background: rgba(255, 255, 255, 0.86);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.3);
+    }
+    .live {
+      flex: none;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgb(var(--acc));
+      animation: pulse 2.2s ease-out infinite;
+    }
+    .stage .live { animation: none; opacity: 0.5; }
+    .stage.is-playing .live,
+    .stage.has-gif:not(.gif-off) .live { animation: pulse 2.2s ease-out infinite; opacity: 1; }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(var(--acc), 0.55); }
+      70%, 100% { box-shadow: 0 0 0 9px rgba(var(--acc), 0); }
+    }
+    .stage-tag i.m, .m { font-family: var(--serif); font-style: italic; }
+    .stage-progress {
+      position: absolute;
+      left: 16px;
+      right: 70px;
+      bottom: 22px;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font: 700 0.72rem/1 var(--sans);
+      letter-spacing: 0.08em;
+      color: #5d575e;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+    .stage.is-playing .stage-progress,
+    .stage.was-played .stage-progress { opacity: 1; }
+    .stage.has-gif:not(.gif-off) .stage-progress { opacity: 0; }
+    .sp-track {
+      position: relative;
+      flex: 1;
+      height: 4px;
+      overflow: hidden;
+      border-radius: 4px;
+      background: rgba(var(--acc), 0.16);
+    }
+    .sp-fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0;
+      border-radius: 4px;
+      background: linear-gradient(90deg, rgba(var(--acc), 0.55), rgb(var(--acc)));
+    }
+    .stage-ctrls {
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      z-index: 4;
+      display: flex;
+      gap: 8px;
+    }
+    .stage-btn {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 50%;
+      font-size: 0.9rem;
+      color: #2b262c;
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.88);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 18px -10px rgba(0, 0, 0, 0.45);
+      cursor: pointer;
+      transition: transform 0.2s var(--ease), background 0.2s;
+    }
+    .stage-btn:hover { transform: scale(1.08); background: #ffffff; }
+    .stage figcaption {
+      margin: 16px 2px 0;
+      font: 400 0.9rem/1.5 var(--sans);
+      color: var(--muted);
+    }
+    .stage .cap-gif { display: none; }
+    .stage.has-gif:not(.gif-off) .cap-gif { display: inline; }
+    .stage.has-gif:not(.gif-off) .cap-fallback { display: none; }
+
+    /* Thumbnail strip (opens the lightbox) */
+    .thumbs {
+      display: grid;
+      grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr));
+      gap: 12px;
+      margin: 22px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    .thumb {
+      display: block;
+      color: inherit;
+      text-decoration: none;
+    }
+    .thumb-img {
+      position: relative;
+      display: block;
+      overflow: hidden;
+      aspect-ratio: 1 / 1;
+      border-radius: 15px;
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 12px 26px -18px rgba(0, 0, 0, 0.45);
+      transition: transform 0.4s var(--ease), box-shadow 0.4s;
+    }
+    .thumb-img img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.7s var(--ease);
+    }
+    .thumb-img::after {
+      content: '\f00e';
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font: 900 0.72rem/1 'Font Awesome 6 Free';
+      color: var(--cardinal);
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 4px 10px -4px rgba(0, 0, 0, 0.4);
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 0.3s, transform 0.3s var(--ease);
+    }
+    .thumb:hover .thumb-img,
+    .thumb:focus-visible .thumb-img {
+      transform: translateY(-4px);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 18px 32px -18px rgba(var(--acc), 0.8);
+    }
+    .thumb:hover .thumb-img img { transform: scale(1.07); }
+    .thumb:hover .thumb-img::after,
+    .thumb:focus-visible .thumb-img::after { opacity: 1; transform: none; }
+    .thumb-label {
+      display: block;
+      margin-top: 9px;
+      font: 600 0.8rem/1.3 var(--sans);
+      text-align: center;
+      color: #4b454c;
+    }
+
+    /* Story column */
+    .story { padding-top: 4px; }
+    .beat + .beat { margin-top: 28px; }
+    .beat-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 10px;
+      font: 700 0.76rem/1 var(--sans);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--cardinal);
+    }
+    .beat-label::before {
+      content: '';
+      width: 24px;
+      height: 2px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--cardinal), rgb(var(--acc)));
+    }
+    .beat p {
+      margin: 0;
+      font: 400 1.06rem/1.68 var(--serif);
+      color: #2f2a30;
+    }
+    .chips {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 26px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    .chip {
+      position: relative;
+      overflow: hidden;
+      padding: 15px 14px 14px 17px;
+      border: 1px solid rgba(var(--acc), 0.24);
+      border-radius: 16px;
+      background: #ffffff;
+      box-shadow: 0 16px 30px -26px rgba(var(--acc), 0.95);
+      transition: transform 0.35s var(--ease);
+    }
+    .chip:hover { transform: translateY(-3px); }
+    .chip::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 4px;
+      background: linear-gradient(180deg, rgb(var(--acc)), rgba(var(--acc), 0.45));
+    }
+    .chip b {
+      display: block;
+      margin-bottom: 7px;
+      font: 700 1.6rem/1 var(--sans);
+      letter-spacing: -0.01em;
+      color: var(--text-strong);
+    }
+    .chip span {
+      display: block;
+      font: 400 0.84rem/1.38 var(--sans);
+      color: var(--muted);
+    }
+
+    /* Feature strips: modes, channels, temperatures */
+    .strip { margin-top: 70px; }
+    .strip-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px 24px;
+      margin-bottom: 20px;
+    }
+    .strip-title {
+      margin: 0;
+      font: 700 1.55rem/1.2 var(--serif);
+      color: var(--text-strong);
+    }
+    .strip-note {
+      max-width: 62ch;
+      margin: 0;
+      font: 400 0.9rem/1.5 var(--sans);
+      color: var(--muted);
+    }
+    .strip-aside { max-width: 62ch; }
+    .strip-aside .meter-key { margin-top: 8px; }
+    .strip-foot {
+      margin: 18px 0 0;
+      font: 400 0.92rem/1.55 var(--sans);
+      color: #4c464d;
+    }
+    .strip-foot b { color: var(--text-strong); }
+
+    .cards { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; }
+    .cards.modes { grid-template-columns: minmax(0, 1.25fr) repeat(4, minmax(0, 1fr)); }
+    .cards.channels { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr); }
+    .card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 22px 44px -36px rgba(0, 0, 0, 0.5);
+      transition: transform 0.4s var(--ease), box-shadow 0.4s;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 28px 50px -30px rgba(var(--acc), 0.7);
+    }
+    .card-pics { display: flex; }
+    .card-pic {
+      position: relative;
+      display: block;
+      flex: 1 1 0;
+      min-width: 0;
+      overflow: hidden;
+      aspect-ratio: 4 / 3;
+      background: #ffffff;
+    }
+    .card-pic + .card-pic { border-left: 1px solid var(--line); }
+    .card-pic img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      padding: 12px;
+      transition: transform 0.7s var(--ease);
+    }
+    .channels .card-pic { aspect-ratio: 1 / 0.88; }
+    .channels .card-pic img { object-fit: cover; object-position: 50% 0%; padding: 0; }
+    .card-pic:hover img { transform: scale(1.06); }
+    .card-pic .pic-label {
+      position: absolute;
+      left: 10px;
+      bottom: 10px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font: 700 0.7rem/1 var(--sans);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #2b262c;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 4px 10px -5px rgba(0, 0, 0, 0.35);
+    }
+    .card-body {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      gap: 7px;
+      padding: 15px 17px 17px;
+      border-top: 1px solid var(--line);
+    }
+    .card-title {
+      margin: 0;
+      font: 700 1rem/1.25 var(--sans);
+      color: var(--text-strong);
+    }
+    .card-title small {
+      display: block;
+      margin-bottom: 4px;
+      font: 700 0.7rem/1 var(--sans);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgb(var(--acc-deep));
+    }
+    .card-text {
+      margin: 0;
+      font: 400 0.87rem/1.48 var(--sans);
+      color: #4d474e;
+    }
+    .card-row { display: flex; gap: 14px; }
+    .card-row > p { flex: 1 1 0; }
+    .meter {
+      height: 7px;
+      margin-top: auto;
+      overflow: hidden;
+      border-radius: 4px;
+      background: rgba(var(--acc), 0.14);
+    }
+    .meter > span {
+      display: block;
+      width: calc(var(--v) * 100%);
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, rgba(var(--acc), 0.7), rgb(var(--acc)));
+      transition: width 1.3s var(--ease) 0.25s;
+    }
+    .js .reveal:not(.in) .meter > span { width: 0; }
+    .meter { position: relative; overflow: visible; }
+    .meter > i {
+      position: absolute;
+      top: -4px;
+      bottom: -4px;
+      left: calc(var(--at) * 100%);
+      width: 2px;
+      margin-left: -1px;
+      border-radius: 2px;
+      background: var(--text-strong);
+    }
+    .meter > i.uw { background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0 3px, transparent 3px 5px); border-radius: 0; }
+    .meter-key {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 18px;
+      margin: 12px 0 0;
+      font: 400 0.82rem/1.3 var(--sans);
+      color: var(--muted);
+    }
+    .meter-key span::before {
+      content: '';
+      display: inline-block;
+      width: 2px;
+      height: 12px;
+      margin-right: 7px;
+      vertical-align: -2px;
+      background: var(--text-strong);
+    }
+    .meter-key .k-is::before { width: 14px; height: 7px; border-radius: 4px; vertical-align: 0; background: linear-gradient(90deg, rgba(var(--acc), 0.7), rgb(var(--acc))); }
+    .meter-key .k-uw::before { height: 13px; background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0 3px, transparent 3px 5px); }
+    .meter-text {
+      margin: 0;
+      font: 400 0.84rem/1.4 var(--sans);
+      color: var(--muted);
+    }
+    .meter-text .mt { white-space: nowrap; }
+    .meter-text b {
+      font: 700 1rem/1 var(--sans);
+      color: var(--text-strong);
+    }
+    .badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 2;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font: 700 0.68rem/1 var(--sans);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--cardinal-bright), var(--cardinal));
+      box-shadow: 0 8px 18px -8px rgba(140, 21, 21, 0.9);
+    }
+
+    /* Temperature rail (Fe) */
+    .rail {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin: 0;
+      padding: 28px 0 26px;
+      list-style: none;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 22px 44px -36px rgba(0, 0, 0, 0.5);
+    }
+    .rail::before {
+      content: '';
+      position: absolute;
+      top: 49px;
+      left: 12.5%;
+      right: 12.5%;
+      height: 4px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #d5582b 0%, #c28a6c 40%, #7f9cc0 75%, #2d6db0 100%);
+    }
+    .rail-stop {
+      position: relative;
+      padding: 0 16px;
+      text-align: center;
+    }
+    .rail-node {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      margin: 0 auto 14px;
+      border: 4px solid var(--node);
+      border-radius: 50%;
+      font-size: 0.9rem;
+      color: var(--node);
+      background: #ffffff;
+      box-shadow: 0 10px 20px -12px rgba(0, 0, 0, 0.6);
+    }
+    .rail-t {
+      display: block;
+      font: 700 1.3rem/1 var(--sans);
+      color: var(--text-strong);
+    }
+    .rail-tag {
+      display: inline-block;
+      margin: 9px 0 8px;
+      font: 700 0.7rem/1 var(--sans);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .rail-v {
+      display: block;
+      font: 400 0.9rem/1.45 var(--sans);
+      color: #3f393f;
+    }
+    .rail-v b { color: var(--text-strong); }
+
+    /* ---------------------------- Results ---------------------------- */
+    .results {
+      position: relative;
+      overflow: hidden;
+      padding: 104px 0 96px;
+      color: #ffffff;
+      background:
+        radial-gradient(55% 80% at 12% 0%, rgba(177, 4, 14, 0.38), rgba(177, 4, 14, 0) 70%),
+        radial-gradient(50% 70% at 96% 100%, rgba(140, 21, 21, 0.38), rgba(140, 21, 21, 0) 70%),
+        linear-gradient(180deg, #130d14, var(--ink));
+    }
+    .results::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1.1px, transparent 1.3px);
+      background-size: 26px 26px;
+      -webkit-mask-image: radial-gradient(70% 60% at 50% 40%, #000, transparent);
+      mask-image: radial-gradient(70% 60% at 50% 40%, #000, transparent);
+    }
+    .results .wrap { position: relative; }
+    .results .eyebrow { color: var(--rose); }
+    .results .h2 { color: #ffffff; }
+    .results .lead { max-width: 74ch; color: rgba(255, 255, 255, 0.84); }
+    .plots {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 26px;
+      margin-top: 46px;
+    }
+    .plot {
+      margin: 0;
+      padding: 18px 18px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      border-radius: 24px;
+      background: linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+      transition: transform 0.4s var(--ease), border-color 0.4s;
+    }
+    .plot:hover { transform: translateY(-4px); border-color: rgba(255, 157, 151, 0.45); }
+    .plot-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 2px 4px 14px;
+      font: 700 0.8rem/1.2 var(--sans);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.86);
+    }
+    .plot-head .dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      margin-right: 9px;
+      border-radius: 50%;
+      background: rgb(var(--acc));
+      box-shadow: 0 0 12px rgba(var(--acc), 0.9);
+    }
+    .plot-head .status { letter-spacing: 0.02em; }
+    /* The band shows dark-native versions of the paper's plots (transparent background);
+       the link opens the paper figure itself in the lightbox. */
+    .plot-img {
+      position: relative;
+      display: block;
+      overflow: hidden;
+      padding: 6px 8px 2px 2px;
+      border-radius: 16px;
+      background:
+        radial-gradient(80% 70% at 55% 35%, rgba(var(--acc), 0.1), rgba(var(--acc), 0) 72%),
+        rgba(8, 6, 10, 0.5);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+    }
+    .plot-img img { display: block; width: 100%; height: auto; transition: transform 0.8s var(--ease); }
+    .plot-img:hover img { transform: scale(1.02); }
+    .plot-zoom {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 50%;
+      font-size: 0.74rem;
+      color: #ffffff;
+      background: rgba(12, 10, 14, 0.7);
+      opacity: 0;
+      transform: scale(0.85);
+      transition: opacity 0.3s, transform 0.3s var(--ease);
+    }
+    .plot-img:hover .plot-zoom,
+    .plot-img:focus-visible .plot-zoom { opacity: 1; transform: none; }
+    @media (hover: none) { .plot-zoom { opacity: 0.85; transform: none; } }
+    .plot figcaption {
+      margin: 15px 4px 0;
+      font: 400 0.9rem/1.52 var(--sans);
+      color: rgba(255, 255, 255, 0.76);
+    }
+    .plot figcaption b { color: #ffffff; }
+    .verdicts {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin: 34px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    .verdict {
+      padding: 18px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .verdict b {
+      display: block;
+      margin-bottom: 8px;
+      font: 700 1.9rem/1 var(--sans);
+      color: #ffffff;
+    }
+    .verdict span {
+      display: block;
+      font: 400 0.9rem/1.45 var(--sans);
+      color: rgba(255, 255, 255, 0.74);
+    }
+    .fineprint {
+      max-width: 90ch;
+      margin: 30px 0 0;
+      font: 400 0.84rem/1.55 var(--sans);
+      color: rgba(255, 255, 255, 0.62);
+    }
+
+    /* ---------------------------- Closing ---------------------------- */
+    .closing { padding: 92px 0 104px; background: var(--warm); }
+    .links {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin: 32px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    .link-card {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      height: 100%;
+      padding: 24px 22px 22px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      color: inherit;
+      text-decoration: none;
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 22px 44px -36px rgba(140, 21, 21, 0.45);
+      transition: transform 0.4s var(--ease), box-shadow 0.4s, border-color 0.4s;
+    }
+    .link-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(140, 21, 21, 0.3);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 30px 56px -34px rgba(140, 21, 21, 0.55);
+    }
+    .link-icon {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 13px;
+      color: var(--cardinal);
+      background: rgba(140, 21, 21, 0.08);
+    }
+    .link-card h3 {
+      margin: 4px 0 0;
+      font: 700 1.15rem/1.25 var(--serif);
+      color: var(--cardinal);
+    }
+    .link-card p {
+      margin: 0;
+      font: 400 0.93rem/1.52 var(--sans);
+      color: #4c464d;
+    }
+    .link-go {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 6px;
+      font: 700 0.86rem/1 var(--sans);
+      color: var(--cardinal);
+    }
+    .link-go i { transition: transform 0.3s var(--ease); }
+    .link-card:hover .link-go i { transform: translateX(4px); }
+    .status-box {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      margin-top: 26px;
+      padding: 20px 22px;
+      border: 1px dashed #d8cdc6;
+      border-radius: 18px;
+      background: #ffffff;
+    }
+    .status-box > i { margin-top: 3px; font-size: 1.05rem; color: var(--cardinal); }
+    .status-box p {
+      margin: 0;
+      font: 400 0.95rem/1.58 var(--sans);
+      color: #463f46;
+    }
+    .status-box a {
+      color: var(--cardinal);
+      font-weight: 600;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(140, 21, 21, 0.35);
+    }
+    .status-box a:hover { border-bottom-color: var(--cardinal); }
+
+    .nowrap { white-space: nowrap; }
+    .hero-kicker, .hero-title, .h2, .sys-title, .strip-title, .card-title { text-wrap: balance; }
+    .lead, .beat p, .chip span, .strip-note, .strip-foot, .meter-text, .stage figcaption, .plot figcaption, .rail-v { text-wrap: pretty; }
+
+    /* ---------------------------- Lightbox ---------------------------- */
+    .lb {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 28px 84px;
+    }
+    .lb-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(9, 7, 11, 0.92);
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+    }
+    .lb-figure {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: min(1180px, 100%);
+      margin: 0;
+      animation: lbIn 0.4s var(--ease);
+    }
+    .lb-img {
+      display: block;
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: calc(100vh - 190px);
+      border-radius: 16px;
+      background: #ffffff;
+      box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.85);
+    }
+    .lb-cap {
+      max-width: 82ch;
+      margin: 16px 0 0;
+      font: 400 0.95rem/1.52 var(--sans);
+      text-align: center;
+      color: rgba(255, 255, 255, 0.86);
+    }
+    .lb-count {
+      margin-right: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--rose);
+    }
+    .lb-btn {
+      position: absolute;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      width: 50px;
+      height: 50px;
+      padding: 0;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 50%;
+      font-size: 1.1rem;
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .lb-btn:hover { background: rgba(255, 255, 255, 0.2); }
+    .lb-close { top: 18px; right: 18px; }
+    .lb-prev { top: 50%; left: 18px; transform: translateY(-50%); }
+    .lb-next { top: 50%; right: 18px; transform: translateY(-50%); }
+    @keyframes lbIn {
+      from { opacity: 0; transform: translateY(14px) scale(0.985); }
+      to { opacity: 1; transform: none; }
+    }
+
+    /* ------------------------ Reveal on scroll ------------------------ */
+    .js .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
+    }
+    .js .reveal.in { opacity: 1; transform: none; }
+    .js .reveal.now, .js .reveal.now .meter > span { transition: none !important; }
+    .d1 { transition-delay: 0.08s !important; }
+    .d2 { transition-delay: 0.16s !important; }
+    .d3 { transition-delay: 0.24s !important; }
+
+    /* --------------------------- Responsive --------------------------- */
+    /* Short laptop screens: keep the whole hero, down to the Explore / Pause row, above the fold. */
+    @media (min-width: 561px) and (max-height: 860px) {
+      .hero-inner { padding-top: 48px; padding-bottom: 24px; }
+      .hero-kicker { margin-bottom: 14px; }
+      .hero-title { margin-bottom: 16px; }
+      .hero-authors { margin-bottom: 26px; }
+    }
+    @media (min-width: 561px) and (max-height: 760px) {
+      .hero-inner { padding-top: 26px; padding-bottom: 14px; }
+      .hero-kicker { margin-bottom: 10px; }
+      .hero-title { margin-bottom: 12px; font-size: min(clamp(2.6rem, 1.1rem + 5.1vw, 5.2rem), 10.5vh); }
+      .hero-sub { margin-bottom: 8px; font-size: min(clamp(1.25rem, 1.02rem + 0.75vw, 1.62rem), 3.5vh); }
+      .hero-authors { margin-bottom: 16px; }
+      .stat { padding: 11px 16px 12px; }
+      .stat-value { margin: 9px 0 4px; font-size: min(clamp(2.1rem, 1.3rem + 2.1vw, 3rem), 6.2vh); }
+      .hero-foot { padding-bottom: 12px; }
+    }
+    @media (max-width: 1060px) {
+      .sys-grid { gap: 44px; }
+      .cards.modes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .cards.modes .start { grid-column: span 3; }
+      .cards.modes .start .card-pic { aspect-ratio: 16 / 5; }
+    }
+    @media (max-width: 900px) {
+      .intro-grid { grid-template-columns: 1fr; gap: 36px; }
+      .sys-grid { grid-template-columns: 1fr; gap: 40px; }
+      .system.flip .media { order: 0; }
+      .media { max-width: 620px; }
+      .cards.modes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .cards.modes .start { grid-column: span 2; }
+      .cards.channels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .cards.channels .wide { grid-column: span 2; order: 3; }
+      .plots { grid-template-columns: 1fr; max-width: 640px; }
+      .links { grid-template-columns: 1fr; }
+      .verdicts { grid-template-columns: 1fr; }
+      .switcher-title { display: none; }
+      .switcher-inner { justify-content: center; }
+    }
+    @media (max-width: 700px) {
+      .steps { grid-template-columns: 1fr; }
+      .rail { grid-template-columns: 1fr; gap: 24px; padding: 24px 20px; }
+      .rail::before { top: 48px; bottom: 48px; left: 42px; right: auto; width: 4px; height: auto; background: linear-gradient(180deg, #d5582b 0%, #c28a6c 40%, #7f9cc0 75%, #2d6db0 100%); }
+      .rail-stop { display: grid; grid-template-columns: 46px 1fr; column-gap: 16px; padding: 0; text-align: left; }
+      .rail-node { grid-row: span 3; margin: 0; }
+      .rail-tag { margin: 6px 0 4px; }
+    }
+    @media (max-width: 560px) {
+      .wrap { padding: 0 18px; }
+      .hero { min-height: 0; }
+      .hero-inner { padding: 56px 18px 28px; }
+      .hero-shade {
+        background:
+          linear-gradient(180deg, rgba(12, 10, 14, 0.1) 0%, rgba(12, 10, 14, 0.45) 45%, rgba(12, 10, 14, 0.8) 100%);
+      }
+      .hero-authors { margin-bottom: 28px; }
+      .stats { grid-template-columns: 1fr; gap: 10px; }
+      .stat { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 16px; padding: 13px 16px; }
+      .stat-top { grid-column: 1 / -1; }
+      .stat-value { margin: 10px 0 0; font-size: 2.1rem; }
+      .stat-label { margin-top: 10px; }
+      .hero-foot { flex-direction: column-reverse; align-items: flex-start; padding: 0 18px 20px; }
+      .hero-note { text-align: left; }
+      .switcher-inner { padding: 8px 10px; }
+      .pills { gap: 2px; }
+      .pill { gap: 6px; padding: 8px 10px; font-size: 0.86rem; }
+      .intro { padding: 70px 0 64px; }
+      .system { padding: 76px 0 76px; }
+      .sys-head { flex-direction: column; align-items: flex-start; gap: 6px; margin-bottom: 30px; }
+      .sys-num { font-size: 4.6rem; }
+      .specs li { padding: 7px 11px; font-size: 0.82rem; }
+      .stage-box { border-radius: 20px; }
+      .stage-tag { top: 12px; left: 12px; font-size: 0.74rem; }
+      .thumbs { gap: 9px; }
+      .thumbs.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .thumbs:not(.four) {
+        display: flex;
+        gap: 10px;
+        margin-right: -18px;
+        padding: 4px 18px 6px 0;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+      }
+      .thumbs:not(.four)::-webkit-scrollbar { display: none; }
+      .thumbs:not(.four) > li { flex: 0 0 64%; scroll-snap-align: start; }
+      .chips { grid-template-columns: 1fr; }
+      .chip { display: grid; grid-template-columns: 6.3rem 1fr; align-items: center; column-gap: 12px; }
+      .chip b { margin: 0; font-size: 1.4rem; white-space: nowrap; }
+      .step { padding: 18px 40px 18px 18px; column-gap: 16px; }
+      .step-n { top: 16px; right: 16px; }
+      .strip { margin-top: 54px; }
+      .cards.modes { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .cards.modes .card-body { padding: 12px 13px 14px; }
+      .cards.channels { grid-template-columns: 1fr; }
+      .cards.channels .wide { grid-column: auto; order: 0; }
+      .card-row { flex-direction: column; gap: 6px; }
+      .results { padding: 80px 0 76px; }
+      .plot { padding: 12px 12px 16px; border-radius: 20px; }
+      .closing { padding: 72px 0 80px; }
+      .status-box { padding: 18px; }
+      .lb { padding: 64px 12px 96px; }
+      .lb-img { max-height: calc(100vh - 260px); }
+      .lb-prev, .lb-next { top: auto; bottom: 22px; transform: none; }
+      .lb-prev { left: calc(50% - 62px); }
+      .lb-next { right: calc(50% - 62px); }
+      .lb-close { top: 12px; right: 12px; }
+    }
+    @media (max-width: 380px) {
+      .pill-dot { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .js .reveal { opacity: 1; transform: none; transition: none; }
+      .scroll-cue .chev, .live, .stage .live, .stage.is-playing .live, .stage.has-gif:not(.gif-off) .live { animation: none; }
+      .lb-figure { animation: none; }
+      .sc *, .sc *::before, .sc *::after { transition-duration: 0.01ms !important; }
+    }
+    @media print {
+      .js .reveal { opacity: 1 !important; transform: none !important; }
+      .switcher, .hero-foot, .stage-ctrls { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <nav>
+        <div class="nav-links">
+          <a href="../">Home</a>
+          <a href="../#education">Education</a>
+          <a href="../#publications">Publications</a>
+          <a href="../#research" class="active">Research</a>
+          <a href="../#notes">Notes</a>
+          <a href="../#gallery">Adventures</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <div class="sc">
+
+    <!-- ================================ HERO ================================ -->
+    <section class="hero" aria-labelledby="page-title">
+      <canvas class="hero-canvas" aria-hidden="true"></canvas>
+      <div class="hero-shade" aria-hidden="true"></div>
+
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <p class="hero-kicker">Research &middot; Rare events in 14 to 2055 dimensions</p>
+          <h1 class="hero-title" id="page-title"><span class="t1">Accelerated Atomistic</span> <span class="t2">Simulations</span></h1>
+          <p class="hero-sub">Overdamped Langevin dynamics, guided by a neural-network committor, with path weights that correct its error.</p>
+          <p class="hero-authors">Michael M. Kim and Wei Cai &middot; Department of Mechanical Engineering, Stanford University &middot; <a href="../docs/importance_sampling_langevin.pdf" target="_blank" rel="noopener noreferrer">Posted preprint (PDF)</a> &middot; <a href="https://chemrxiv.org/doi/full/10.26434/chemrxiv.15000772" target="_blank" rel="noopener noreferrer">ChemRxiv</a></p>
+        </div>
+
+        <ul class="stats" aria-label="The three systems">
+          <li>
+            <a class="stat" href="#lj7" style="--acc: 96, 158, 226;" aria-label="LJ7, 14 dimensions: seven Lennard-Jones discs. Jump to the section.">
+              <span class="stat-top"><span class="stat-dot"></span>LJ7</span>
+              <span class="stat-value"><span class="stat-d"><i>d</i> =</span><span class="count" data-to="14">14</span></span>
+              <span class="stat-label">Seven Lennard-Jones discs</span>
+              <i class="fa-solid fa-arrow-down stat-go" aria-hidden="true"></i>
+            </a>
+          </li>
+          <li>
+            <a class="stat" href="#adatom" style="--acc: 240, 128, 62;" aria-label="Pt adatom, 387 dimensions: diffusion on Pt(001). Jump to the section.">
+              <span class="stat-top"><span class="stat-dot"></span>Pt adatom</span>
+              <span class="stat-value"><span class="stat-d"><i>d</i> =</span><span class="count" data-to="387">387</span></span>
+              <span class="stat-label">Diffusion on Pt(001)</span>
+              <i class="fa-solid fa-arrow-down stat-go" aria-hidden="true"></i>
+            </a>
+          </li>
+          <li>
+            <a class="stat" href="#vacancy" style="--acc: 222, 150, 118;" aria-label="Fe vacancy, 2055 dimensions: migration in bcc iron. Jump to the section.">
+              <span class="stat-top"><span class="stat-dot"></span>Fe vacancy</span>
+              <span class="stat-value"><span class="stat-d"><i>d</i> =</span><span class="count" data-to="2055">2055</span></span>
+              <span class="stat-label">Migration in bcc iron</span>
+              <i class="fa-solid fa-arrow-down stat-go" aria-hidden="true"></i>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="hero-foot">
+        <a class="scroll-cue" href="#idea"><span class="chev" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>Explore</a>
+        <div class="hero-note">
+          <span>Illustration: vacancies wandering through a lattice. Most attempted jumps fall back; a few succeed.</span>
+          <button class="hero-toggle" type="button" hidden><i class="fa-solid fa-pause" aria-hidden="true"></i><span>Pause</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ SWITCHER ============================ -->
+    <div class="switcher-sentinel" aria-hidden="true"></div>
+    <nav class="switcher" aria-label="Systems on this page">
+      <div class="switcher-inner">
+        <span class="switcher-title" aria-hidden="true"><span class="st-rest">On this page</span><span class="st-stuck">Accelerated Atomistic Simulations</span></span>
+        <ul class="pills">
+          <li><a class="pill" href="#lj7" data-spy="lj7" style="--acc: var(--lj7);"><span class="pill-dot"></span>LJ7</a></li>
+          <li><a class="pill" href="#adatom" data-spy="adatom" style="--acc: var(--pt);"><span class="pill-dot"></span>Pt adatom</a></li>
+          <li><a class="pill" href="#vacancy" data-spy="vacancy" style="--acc: var(--fe);"><span class="pill-dot"></span>Fe vacancy</a></li>
+          <li><a class="pill" href="#results" data-spy="results" style="--acc: 140, 21, 21;"><span class="pill-dot"></span>Results</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <main>
+
+      <!-- ============================== IDEA ============================== -->
+      <section class="intro" id="idea" aria-labelledby="idea-title">
+        <div class="wrap intro-grid">
+          <div class="reveal">
+            <p class="eyebrow">The idea</p>
+            <h2 class="h2" id="idea-title">Bias the dynamics, keep the kinetics</h2>
+            <p class="lead">Atoms spend almost all of their time rattling inside energy basins, yet the rare escapes between basins decide how a material evolves. Brute-force simulation has to wait for every one of them. Instead, each step is pushed toward the target state, and every path is then reweighted so that the original rates are recovered.</p>
+          </div>
+          <ol class="steps">
+            <li class="step reveal d1">
+              <span class="step-n" aria-hidden="true">01</span>
+              <span class="step-icon" aria-hidden="true"><i class="fa-solid fa-brain"></i></span>
+              <h3>Learn</h3>
+              <p>A graph neural network reads interatomic distances and learns an importance function, <i class="m">I</i>, that approximates the committor. No collective variable or reaction coordinate goes in.</p>
+            </li>
+            <li class="step reveal d2">
+              <span class="step-n" aria-hidden="true">02</span>
+              <span class="step-icon" aria-hidden="true"><i class="fa-solid fa-bolt"></i></span>
+              <h3>Bias</h3>
+              <p>The network tilts every overdamped Langevin step toward the product state, so rare transitions are sampled often.</p>
+            </li>
+            <li class="step reveal d3">
+              <span class="step-n" aria-hidden="true">03</span>
+              <span class="step-icon" aria-hidden="true"><i class="fa-solid fa-scale-balanced"></i></span>
+              <h3>Reweight</h3>
+              <p>A known factor, <i class="m">I</i> at the start of the path over <i class="m">I</i> at its end, undoes the tilt. Path weights built from Monte Carlo normalization factors absorb the network&rsquo;s error, so an imperfect network costs variance, not bias.</p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- =============================== LJ7 =============================== -->
+      <section class="system" id="lj7" aria-labelledby="lj7-title" style="--acc: var(--lj7); --acc-deep: var(--lj7-deep);">
+        <div class="blob" aria-hidden="true" style="left: -200px; top: 180px;"></div>
+        <div class="wrap">
+          <div class="sys-head reveal">
+            <span class="sys-num" aria-hidden="true">01</span>
+            <div>
+              <p class="eyebrow">Benchmark <span class="status posted"><i class="fa-solid fa-circle-check" aria-hidden="true"></i>In the posted preprint</span></p>
+              <h2 class="sys-title" id="lj7-title">Seven <span class="nowrap">Lennard-Jones</span> discs</h2>
+              <ul class="specs">
+                <li class="key"><i>d</i> = 14</li>
+                <li>7 discs in 2D</li>
+                <li>4 competing modes</li>
+                <li>600&nbsp;K, fine-tuned down to 300&nbsp;K</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="sys-grid">
+            <div class="media reveal">
+              <figure class="stage" data-system="lj7">
+                <div class="stage-box">
+                  <img class="stage-media stage-poster" src="../figs/accel_atomistic/lj7_trajectory_poster.jpg" width="640" height="640" loading="lazy" decoding="async"
+                       alt="Seven numbered discs in the C3 arrangement at the start of one accelerated transition path">
+                  <video class="stage-media stage-video" autoplay muted loop playsinline preload="metadata"
+                         poster="../figs/accel_atomistic/lj7_trajectory_poster.jpg"
+                         data-src="../figs/accel_atomistic/lj7_trajectory.mp4"
+                         aria-label="Animation of seven discs rearranging from the C3 state into a C2 state along one accelerated transition path"></video>
+                  <img class="slot-gif" src="../figs/accel_atomistic/lj7_animation.gif" alt="Animation of the LJ7 cluster from our simulations" loading="lazy" decoding="async"
+                       onload="var s=this.closest('.stage');s.classList.add('has-gif');if(window.stageGif)window.stageGif(s);" onerror="this.remove();">
+                  <span class="stage-tag"><span class="live" aria-hidden="true"></span><span class="cap-fallback">Accelerated path &middot; C3 &rarr; C2</span><span class="cap-gif">Animation</span></span>
+                  <div class="stage-progress" aria-hidden="true"><span>C3</span><span class="sp-track"><span class="sp-fill"></span></span><span>C2</span></div>
+                  <div class="stage-ctrls"></div>
+                </div>
+                <figcaption>
+                  <span class="cap-fallback">One transition path from our simulations, generated by the accelerated dynamics during adaptive training (not one of the production runs reported in the paper): the cluster leaves C3 and reaches the C2 arrangement as discs 4 and 7 slide up along the edge of discs 3 and 6 (mode M2).</span>
+                  <span class="cap-gif">LJ7: an animation from our simulations.</span>
+                </figcaption>
+              </figure>
+
+              <ul class="thumbs" style="--n: 3;">
+                <li>
+                  <a class="thumb" href="../figs/accel_atomistic/lj7_unbiased_escapes.png" data-gallery="lj7"
+                     data-caption="Unbiased Langevin dynamics at 600&nbsp;K: 10⁵ escape configurations projected onto the collective variables (μ2, μ3), all near C3. Dots are colored by the learned importance function, from dark purple (low) to yellow (high).">
+                    <span class="thumb-img"><img src="../figs/accel_atomistic/lj7_unbiased_escapes_700.png" width="700" height="700" loading="lazy" decoding="async" alt="Scatter of unbiased escape configurations in the mu2-mu3 plane, clustered around the C3 minimum"></span>
+                    <span class="thumb-label">Unbiased escapes</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="thumb" href="../figs/accel_atomistic/lj7_paths_m1_m2.png" data-gallery="lj7"
+                     data-caption="Configurations along accelerated transition paths through modes M1 and M2 at 600&nbsp;K, colored by the learned importance function from dark purple (low) to yellow (high). Dashed circles mark the C1, C2 and C3 minima.">
+                    <span class="thumb-img"><img src="../figs/accel_atomistic/lj7_paths_m1_m2_700.png" width="700" height="700" loading="lazy" decoding="async" alt="Accelerated path configurations for modes M1 and M2 stretching from C3 to C2 in the mu2-mu3 plane"></span>
+                    <span class="thumb-label">Paths, M1 and M2</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="thumb" href="../figs/accel_atomistic/lj7_paths_m3_m4.png" data-gallery="lj7"
+                     data-caption="Configurations along accelerated transition paths through modes M3 and M4 at 600&nbsp;K, colored by the learned importance function from dark purple (low) to yellow (high). Dashed circles mark the C1, C2 and C3 minima.">
+                    <span class="thumb-img"><img src="../figs/accel_atomistic/lj7_paths_m3_m4_700.png" width="700" height="700" loading="lazy" decoding="async" alt="Accelerated path configurations for modes M3 and M4 stretching from C3 to C2 in the mu2-mu3 plane"></span>
+                    <span class="thumb-label">Paths, M3 and M4</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <div class="story reveal d1">
+              <div class="beat">
+                <h3 class="beat-label">The rare event</h3>
+                <p>Seven discs with a soft-core Lennard-Jones interaction start in the C3 arrangement and rearrange into C2 by four competing modes: in M1 and M2 a pair of discs slides, in M3 and M4 a triplet. The barriers, 0.49 and 0.52&nbsp;eV, are about 10&nbsp;<i>k</i><sub>B</sub><i>T</i> at 600&nbsp;K, so each transition is a rare event.</p>
+              </div>
+              <div class="beat">
+                <h3 class="beat-label">What we found</h3>
+                <p>At 600&nbsp;K the importance-sampled rate is in excellent agreement with brute force, and the split between modes comes out right. Treating the network as the exact committor instead gives a rate about 40% too low, and counting paths without their weights predicts the wrong trend. Fine-tuned down to 300&nbsp;K, where brute force cannot collect enough transitions, the rates track Kramers theory, to within about 1% at 300&nbsp;K.</p>
+                <ul class="chips">
+                  <li class="chip"><b>4 modes</b><span>resolved with their correct shares</span></li>
+                  <li class="chip"><b>&asymp;40%</b><span>committor-only rate too low at 600&nbsp;K</span></li>
+                  <li class="chip"><b>&asymp;1%</b><span>from Kramers theory at 300&nbsp;K</span></li>
+                </ul>
+              </div>
+              <div class="beat">
+                <h3 class="beat-label">Why it matters</h3>
+                <p>LJ7 is the proving ground: small enough that every number can be checked against brute-force Langevin dynamics or Kramers rate theory before moving on to the materials.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="strip reveal">
+            <div class="strip-head">
+              <h3 class="strip-title">Four ways out of C3</h3>
+              <div class="strip-aside">
+                <p class="strip-note">Share of the total rate at 600&nbsp;K for each mode.</p>
+                <p class="meter-key" aria-hidden="true"><span class="k-is">Importance sampling</span><span>Brute force</span><span class="k-uw">Without path weights</span></p>
+              </div>
+            </div>
+            <ul class="cards modes">
+              <li class="card start">
+                <div class="card-pics">
+                  <a class="card-pic" href="../figs/accel_atomistic/lj7_state_c3.png" data-gallery="lj7" data-caption="The C3 starting state: seven discs labeled 1 to 7; gray lines join nearest-neighbor pairs.">
+                    <img src="../figs/accel_atomistic/lj7_state_c3.png" width="1000" height="410" loading="lazy" decoding="async" alt="C3 state: discs 1 to 4 in a bottom row and discs 5 to 7 above, joined by nearest-neighbor lines">
+                  </a>
+                </div>
+                <div class="card-body">
+                  <p class="card-title"><small>Start</small>C3</p>
+                  <p class="card-text">Seven discs, labeled 1 to 7; gray lines join nearest neighbors. Every mode below ends in a C2 state.</p>
+                </div>
+              </li>
+              <li class="card">
+                <div class="card-pics">
+                  <a class="card-pic" href="../figs/accel_atomistic/lj7_state_m1.png" data-gallery="lj7" data-caption="Mode M1: discs 1 and 5 slide upward along the edge formed by discs 2 and 6 (red arrow; the dotted line separates the migrating discs from the rest). Barrier 0.49&nbsp;eV.">
+                    <img src="../figs/accel_atomistic/lj7_state_m1.png" width="900" height="675" loading="lazy" decoding="async" alt="C2 state reached by mode M1: discs 1 and 5, set off from the rest by a dotted line, have slid up along the edge of discs 2 and 6 (red arrow)">
+                  </a>
+                </div>
+                <div class="card-body">
+                  <p class="card-title"><small>M1 &middot; pair slide</small>Discs 1 and 5 slide up</p>
+                  <p class="card-text">Along the edge of discs 2 and 6. Barrier 0.49&nbsp;eV.</p>
+                  <div class="meter" aria-hidden="true"><span style="--v: 0.3178;"></span><i style="--at: 0.3192;"></i><i class="uw" style="--at: 0.2273;"></i></div>
+                  <p class="meter-text"><b>0.3178</b> <span class="mt">&middot; brute&nbsp;force&nbsp;0.3192</span> <span class="mt">&middot; unweighted&nbsp;0.2273</span></p>
+                </div>
+              </li>
+              <li class="card">
+                <div class="card-pics">
+                  <a class="card-pic" href="../figs/accel_atomistic/lj7_state_m2.png" data-gallery="lj7" data-caption="Mode M2, the mirror image of M1: discs 4 and 7 slide upward along the edge formed by discs 3 and 6. Barrier 0.49&nbsp;eV.">
+                    <img src="../figs/accel_atomistic/lj7_state_m2.png" width="900" height="675" loading="lazy" decoding="async" alt="C2 state reached by mode M2: discs 4 and 7, set off from the rest by a dotted line, have slid up along the edge of discs 3 and 6 (red arrow)">
+                  </a>
+                </div>
+                <div class="card-body">
+                  <p class="card-title"><small>M2 &middot; mirror of M1</small>Discs 4 and 7 slide up</p>
+                  <p class="card-text">Along the edge of discs 3 and 6. Barrier 0.49&nbsp;eV.</p>
+                  <div class="meter" aria-hidden="true"><span style="--v: 0.3213;"></span><i style="--at: 0.3170;"></i><i class="uw" style="--at: 0.2263;"></i></div>
+                  <p class="meter-text"><b>0.3213</b> <span class="mt">&middot; brute&nbsp;force&nbsp;0.3170</span> <span class="mt">&middot; unweighted&nbsp;0.2263</span></p>
+                </div>
+              </li>
+              <li class="card">
+                <div class="card-pics">
+                  <a class="card-pic" href="../figs/accel_atomistic/lj7_state_m3.png" data-gallery="lj7" data-caption="Mode M3: discs 1, 2 and 5 slide downward along the edge formed by discs 3 and 6. Barrier 0.52&nbsp;eV.">
+                    <img src="../figs/accel_atomistic/lj7_state_m3.png" width="900" height="692" loading="lazy" decoding="async" alt="C2 state reached by mode M3: discs 1, 2 and 5, set off from the rest by a dotted line, have slid down along the edge of discs 3 and 6 (red arrow)">
+                  </a>
+                </div>
+                <div class="card-body">
+                  <p class="card-title"><small>M3 &middot; triplet slide</small>Discs 1, 2 and 5 slide down</p>
+                  <p class="card-text">Along the edge of discs 3 and 6. Barrier 0.52&nbsp;eV.</p>
+                  <div class="meter" aria-hidden="true"><span style="--v: 0.1811;"></span><i style="--at: 0.1838;"></i><i class="uw" style="--at: 0.2736;"></i></div>
+                  <p class="meter-text"><b>0.1811</b> <span class="mt">&middot; brute&nbsp;force&nbsp;0.1838</span> <span class="mt">&middot; unweighted&nbsp;0.2736</span></p>
+                </div>
+              </li>
+              <li class="card">
+                <div class="card-pics">
+                  <a class="card-pic" href="../figs/accel_atomistic/lj7_state_m4.png" data-gallery="lj7" data-caption="Mode M4, the mirror image of M3: discs 3, 4 and 7 slide downward along the edge formed by discs 2 and 6. Barrier 0.52&nbsp;eV.">
+                    <img src="../figs/accel_atomistic/lj7_state_m4.png" width="900" height="692" loading="lazy" decoding="async" alt="C2 state reached by mode M4: discs 3, 4 and 7, set off from the rest by a dotted line, have slid down along the edge of discs 2 and 6 (red arrow)">
+                  </a>
+                </div>
+                <div class="card-body">
+                  <p class="card-title"><small>M4 &middot; mirror of M3</small>Discs 3, 4 and 7 slide down</p>
+                  <p class="card-text">Along the edge of discs 2 and 6. Barrier 0.52&nbsp;eV.</p>
+                  <div class="meter" aria-hidden="true"><span style="--v: 0.1797;"></span><i style="--at: 0.1795;"></i><i class="uw" style="--at: 0.2721;"></i></div>
+                  <p class="meter-text"><b>0.1797</b> <span class="mt">&middot; brute&nbsp;force&nbsp;0.1795</span> <span class="mt">&middot; unweighted&nbsp;0.2721</span></p>
+                </div>
+              </li>
+            </ul>
+            <p class="strip-foot">Counted without their path weights (dashed ticks), the same sampled paths would wrongly put the <b>triplet slides ahead of the pair slides</b>.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ Pt ADATOM ============================ -->
+      <section class="system tint flip" id="adatom" aria-labelledby="adatom-title" style="--acc: var(--pt); --acc-deep: var(--pt-deep);">
+        <div class="blob" aria-hidden="true" style="right: -220px; top: 140px;"></div>
+        <div class="wrap">
+          <div class="sys-head reveal">
+            <span class="sys-num" aria-hidden="true">02</span>
+            <div>
+              <p class="eyebrow">Surface diffusion <span class="status"><i class="fa-solid fa-pen-nib" aria-hidden="true"></i>Revised manuscript in preparation</span></p>
+              <h2 class="sys-title" id="adatom-title">A platinum adatom on Pt(001)</h2>
+              <ul class="specs">
+                <li class="key"><i>d</i> = 387</li>
+                <li>129 mobile atoms, EAM</li>
+                <li>64 adatom sites</li>
+                <li>1000&nbsp;K, reused at 900 to 700&nbsp;K</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="sys-grid">
+            <div class="media reveal">
+              <figure class="stage" data-system="adatom">
+                <div class="stage-box">
+                  <img class="stage-media" src="../figs/accel_atomistic/adatom_paths_diagonal_800.jpg"
+                       srcset="../figs/accel_atomistic/adatom_paths_diagonal_800.jpg 800w, ../figs/accel_atomistic/adatom_paths_diagonal_1600.jpg 1600w"
+                       sizes="(max-width: 900px) 92vw, 560px" width="800" height="800" loading="lazy" decoding="async"
+                       alt="Top view of the Pt(001) surface with four clouds of sampled configurations reaching from the adatom toward the four diagonal sites, colored blue to red by the learned importance function">
+                  <img class="slot-gif" src="../figs/accel_atomistic/adatom_animation.gif" alt="Animation of Pt adatom diffusion on Pt(001) from our simulations" loading="lazy" decoding="async"
+                       onload="var s=this.closest('.stage');s.classList.add('has-gif');if(window.stageGif)window.stageGif(s);" onerror="this.remove();">
+                  <span class="stage-tag"><span class="live" aria-hidden="true"></span><span class="cap-fallback">Sampled paths, colored by <i class="m">I</i></span><span class="cap-gif">Animation</span></span>
+                  <div class="stage-ctrls">
+                    <a class="stage-btn stage-expand" href="../figs/accel_atomistic/adatom_paths_diagonal_1600.jpg" data-gallery="adatom"
+                       data-alt="Sampled configurations on the Pt(001) surface, colored by the learned importance function"
+                       data-caption="Configurations along accelerated transition paths that end on the four diagonal sites at 1000&nbsp;K, seen from above and colored by the learned importance function I, from blue (0) through white (1/2) to red (1). The orange dot marks the initial adatom position."
+                       aria-label="Enlarge: sampled Pt adatom paths"><i class="fa-solid fa-expand" aria-hidden="true"></i></a>
+                  </div>
+                </div>
+                <figcaption>
+                  <span class="cap-fallback">Configurations along accelerated transition paths that end on the four diagonal sites at 1000&nbsp;K, seen from above and colored by the learned importance function <i>I</i>, from blue (0) through white (1/2) to red (1). The orange dot marks the initial adatom position.</span>
+                  <span class="cap-gif">Pt adatom on Pt(001): an animation from our simulations.</span>
+                </figcaption>
+              </figure>
+
+              <ul class="thumbs four" style="--n: 4;">
+                <li>
+                  <a class="thumb" href="../figs/accel_atomistic/adatom_slab_1600.jpg" data-gallery="adatom"
+                     data-caption="The Pt(001) slab: the adatom (orange), the mobile substrate atoms (light gray) and the frozen bottom layers (dark gray). The dashed box is the simulation cell, periodic in x and y.">
+                    <span class="thumb-img"><img src="../figs/accel_atomistic/adatom_slab_800.jpg" width="800" height="800" loading="lazy" decoding="async" alt="Three-dimensional view of the Pt slab with one orange adatom on top"></span>
+                    <span class="thumb-label">The slab</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="thumb" href="../figs/accel_atomistic/adatom_sites_1600.jpg" data-gallery="adatom"
+                     data-caption="Top view: the adatom and the 64 available adatom sites (dark blue diamonds). The target region is any of the 63 empty sites, whatever the mechanism.">
+                    <span class="thumb-img"><img src="../figs/accel_atomistic/adatom_sites_800.jpg" width="800" height="800" loading="lazy" decoding="async" alt="Top view of the surface with the adatom and a grid of 64 dark blue diamonds marking adatom sites"></span>
+                    <span class="thumb-label">64 sites</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="thumb" href="../figs/accel_atomistic/adatom_cluster26_1600.jpg" data-gallery="adatom"
+                     data-caption="What the network reads: a fixed cluster of 26 atoms, the adatom (orange), 16 top-layer atoms (red) and 9 second-layer atoms (dark red). The remaining substrate atoms are drawn transparent.">
+                    <span class="thumb-img"><img src="../figs/accel_atomistic/adatom_cluster26_800.jpg" width="800" height="800" loading="lazy" decoding="async" alt="Slab drawn transparent except for a highlighted 26-atom cluster around the adatom"></span>
+                    <span class="thumb-label">Network input</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="thumb" href="../figs/accel_atomistic/adatom_paths_crucifix_1600.jpg" data-gallery="adatom"
+                     data-caption="Configurations along accelerated transition paths that end on a crucifix site, by exchange or by hopping, at 1000&nbsp;K, colored by the learned importance function I from blue (0) through white (1/2) to red (1).">
+                    <span class="thumb-img"><img src="../figs/accel_atomistic/adatom_paths_crucifix_800.jpg" width="800" height="800" loading="lazy" decoding="async" alt="Top view with sampled configurations reaching toward the four nearest-neighbor sites along the surface axes"></span>
+                    <span class="thumb-label">Crucifix paths</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <div class="story reveal d1">
+              <div class="beat">
+                <h3 class="beat-label">The rare event</h3>
+                <p>A single Pt adatom sits on a Pt(001) slab: 129 mobile atoms above two frozen layers, with an embedded-atom potential. It diffuses among 64 adatom sites, mostly by exchange, taking the place of a top-layer atom that is ejected onto a neighboring site. The target is any of the 63 empty sites, so it favors no mechanism.</p>
+              </div>
+              <div class="beat">
+                <h3 class="beat-label">What we found</h3>
+                <p>At 1000&nbsp;K the rate falls inside the brute-force 95% confidence interval, while the committor-only estimate is more than a factor of two too low. The paths also turned up a channel the study was not set up for: a long jump of two sites, carrying about 9% of the rate, which brute force confirms. Reused without retraining down to 700&nbsp;K, the rates stay within 4% of the brute-force intervals through a more than sevenfold drop.</p>
+                <ul class="chips">
+                  <li class="chip"><b>12 modes</b><span>each within 0.007 of brute force</span></li>
+                  <li class="chip"><b>9.3%</b><span>long-jump share of the rate (brute force 8.9%)</span></li>
+                  <li class="chip"><b>&gt;2&times;</b><span>committor-only rate too low at 1000&nbsp;K</span></li>
+                </ul>
+              </div>
+              <div class="beat">
+                <h3 class="beat-label">Why it matters</h3>
+                <p>Adatom diffusion is an elementary step of mass transport with several competing mechanisms; exchange onto a diagonal site is the established self-diffusion mechanism of Pt on Pt(001).</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="strip reveal">
+            <div class="strip-head">
+              <h3 class="strip-title">Three channels, twelve modes</h3>
+              <div class="strip-aside">
+                <p class="strip-note">Share of the total rate at 1000&nbsp;K for each channel. Barriers from minimum-energy paths.</p>
+                <p class="meter-key" aria-hidden="true"><span class="k-is">Importance sampling</span><span>Brute force</span><span class="k-uw">Without path weights</span></p>
+              </div>
+            </div>
+            <ul class="cards channels">
+              <li class="card">
+                <div class="card-pics">
+                  <a class="card-pic" href="../figs/accel_atomistic/adatom_channel_diagonal_1400.jpg" data-gallery="adatom"
+                     data-caption="Diagonal channel, by exchange: the adatom (orange) takes the place of a top-layer atom, which is ejected (blue) onto a diagonally adjacent adatom site. White arrows show the motion; translucent spheres mark final positions.">
+                    <img src="../figs/accel_atomistic/adatom_channel_diagonal_700.jpg" width="700" height="700" loading="lazy" decoding="async" alt="Orange adatom and blue ejected atom on the gray surface, with arrows toward a diagonal site">
+                  </a>
+                </div>
+                <div class="card-body">
+                  <p class="card-title"><small>Diagonal &middot; by exchange</small>Swap onto a diagonal site</p>
+                  <p class="card-text">The adatom takes the place of a top-layer atom, which is ejected onto a diagonal site. Barrier 0.38&nbsp;eV.</p>
+                  <div class="meter" aria-hidden="true"><span style="--v: 0.7142;"></span><i style="--at: 0.7166;"></i><i class="uw" style="--at: 0.8245;"></i></div>
+                  <p class="meter-text"><b>0.7142</b> <span class="mt">&middot; brute&nbsp;force&nbsp;0.7166</span> <span class="mt">&middot; unweighted&nbsp;0.8245</span></p>
+                </div>
+              </li>
+              <li class="card wide">
+                <div class="card-pics">
+                  <a class="card-pic" href="../figs/accel_atomistic/adatom_channel_crucifix_exchange_1400.jpg" data-gallery="adatom"
+                     data-caption="Crucifix channel, by exchange: the adatom (orange) takes the place of a top-layer atom, which is ejected (blue) onto a nearest-neighbor adatom site.">
+                    <img src="../figs/accel_atomistic/adatom_channel_crucifix_exchange_700.jpg" width="700" height="700" loading="lazy" decoding="async" alt="Orange adatom and blue ejected atom, with arrows toward a nearest-neighbor site">
+                    <span class="pic-label">Exchange</span>
+                  </a>
+                  <a class="card-pic" href="../figs/accel_atomistic/adatom_channel_crucifix_hop_1400.jpg" data-gallery="adatom"
+                     data-caption="Crucifix channel, by hopping: the adatom (orange) itself moves onto a nearest-neighbor adatom site without displacing a top-layer atom.">
+                    <img src="../figs/accel_atomistic/adatom_channel_crucifix_hop_700.jpg" width="700" height="700" loading="lazy" decoding="async" alt="Orange adatom with an arrow to a translucent copy on the neighboring site">
+                    <span class="pic-label">Hop</span>
+                  </a>
+                </div>
+                <div class="card-body">
+                  <p class="card-title"><small>Crucifix &middot; by exchange or by hopping</small>Onto a nearest-neighbor site</p>
+                  <div class="card-row">
+                    <p class="card-text"><b>Exchange:</b> the ejected atom lands on a nearest-neighbor site. Barrier 0.80&nbsp;eV.</p>
+                    <p class="card-text"><b>Hop:</b> the adatom itself moves over. Barrier 1.07&nbsp;eV.</p>
+                  </div>
+                  <div class="meter" aria-hidden="true"><span style="--v: 0.1140;"></span><i style="--at: 0.1142;"></i><i class="uw" style="--at: 0.0719;"></i></div>
+                  <p class="meter-text"><b>0.1140</b> (both routes together) <span class="mt">&middot; brute&nbsp;force&nbsp;0.1142</span> <span class="mt">&middot; unweighted&nbsp;0.0719</span></p>
+                </div>
+              </li>
+              <li class="card">
+                <span class="badge">Unanticipated</span>
+                <div class="card-pics">
+                  <a class="card-pic" href="../figs/accel_atomistic/adatom_channel_long_jump_1400.jpg" data-gallery="adatom"
+                     data-caption="Long-jump channel: the adatom (orange) sinks into the top layer and pushes an adjacent top-layer atom (green), which in turn pushes out its neighbor (blue); that neighbor rises onto the surface as the new adatom, two sites from the original one.">
+                    <img src="../figs/accel_atomistic/adatom_channel_long_jump_700.jpg" width="700" height="700" loading="lazy" decoding="async" alt="Orange adatom pushing a green atom, which pushes a blue atom up two sites away">
+                  </a>
+                </div>
+                <div class="card-body">
+                  <p class="card-title"><small>Long jump</small>A new adatom two sites away</p>
+                  <p class="card-text">The adatom sinks in and pushes a neighbor, which pushes the next atom up onto the surface.</p>
+                  <div class="meter" aria-hidden="true"><span style="--v: 0.0930;"></span><i style="--at: 0.0891;"></i><i class="uw" style="--at: 0.0520;"></i></div>
+                  <p class="meter-text"><b>0.0930</b> <span class="mt">&middot; brute&nbsp;force&nbsp;0.0891</span> <span class="mt">&middot; unweighted&nbsp;0.0520</span></p>
+                </div>
+              </li>
+            </ul>
+            <p class="strip-foot">The other 51 sites share the remaining 8% of the rate. Without the weights, the diagonal-to-crucifix ratio comes out <b>11.4641</b> instead of <b>6.2665</b> (brute force 6.2750).</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ Fe VACANCY ============================ -->
+      <section class="system" id="vacancy" aria-labelledby="vacancy-title" style="--acc: var(--fe); --acc-deep: var(--fe-deep);">
+        <div class="blob" aria-hidden="true" style="left: -220px; top: 160px;"></div>
+        <div class="wrap">
+          <div class="sys-head reveal">
+            <span class="sys-num" aria-hidden="true">03</span>
+            <div>
+              <p class="eyebrow">Bulk diffusion <span class="status"><i class="fa-solid fa-pen-nib" aria-hidden="true"></i>Revised manuscript in preparation</span></p>
+              <h2 class="sys-title" id="vacancy-title">A vacancy in bcc iron</h2>
+              <ul class="specs">
+                <li class="key"><i>d</i> = 2055</li>
+                <li>685 atoms, none fixed</li>
+                <li>Fully periodic, EAM</li>
+                <li>800&nbsp;K, reused at 700 to 500&nbsp;K</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="sys-grid">
+            <div class="media reveal">
+              <figure class="stage" data-system="vacancy">
+                <div class="stage-box">
+                  <img class="stage-media" src="../figs/accel_atomistic/vacancy_supercell_800.jpg"
+                       srcset="../figs/accel_atomistic/vacancy_supercell_800.jpg 800w, ../figs/accel_atomistic/vacancy_supercell_1600.jpg 1600w"
+                       sizes="(max-width: 900px) 92vw, 560px" width="800" height="800" loading="lazy" decoding="async"
+                       alt="Cube of brown Fe atoms with the vacant site at the center, marked by an open circle and surrounded by eight orange neighbors">
+                  <img class="slot-gif" src="../figs/accel_atomistic/vacancy_animation.gif" alt="Animation of vacancy migration in bcc iron from our simulations" loading="lazy" decoding="async"
+                       onload="var s=this.closest('.stage');s.classList.add('has-gif');if(window.stageGif)window.stageGif(s);" onerror="this.remove();">
+                  <span class="stage-tag"><span class="live" aria-hidden="true"></span><span class="cap-fallback">685 atoms, all mobile</span><span class="cap-gif">Animation</span></span>
+                  <div class="stage-ctrls">
+                    <a class="stage-btn stage-expand" href="../figs/accel_atomistic/vacancy_supercell_1600.jpg" data-gallery="vacancy"
+                       data-alt="The periodic bcc Fe supercell with one vacant site"
+                       data-caption="The periodic bcc Fe supercell: 685 atoms around one vacant site (open circle), whose eight nearest neighbors are shown in orange. The dashed box is the periodic cell."
+                       aria-label="Enlarge: the bcc Fe supercell"><i class="fa-solid fa-expand" aria-hidden="true"></i></a>
+                  </div>
+                </div>
+                <figcaption>
+                  <span class="cap-fallback">The periodic bcc Fe supercell: 685 atoms around one vacant site (open circle), whose eight nearest neighbors are shown in orange. The dashed box is the periodic cell.</span>
+                  <span class="cap-gif">Vacancy in bcc iron: an animation from our simulations.</span>
+                </figcaption>
+              </figure>
+
+              <ul class="thumbs" style="--n: 3;">
+                <li>
+                  <a class="thumb" href="../figs/accel_atomistic/vacancy_jump_1600.jpg" data-gallery="vacancy"
+                     data-caption="One jump, close up: the migrating atom (blue) moves into the vacant site (white arrow), and the vacancy moves the other way (orange arrow), from its initial site (dashed circle) to the original site of the migrating atom (solid circle). The other seven nearest neighbors are orange.">
+                    <span class="thumb-img"><img src="../figs/accel_atomistic/vacancy_jump_800.jpg" width="800" height="800" loading="lazy" decoding="async" alt="Close-up of a blue atom moving into the vacant site among orange neighbors"></span>
+                    <span class="thumb-label">One jump</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="thumb" href="../figs/accel_atomistic/vacancy_cluster50_1600.jpg" data-gallery="vacancy"
+                     data-caption="What the network reads: the 50 atoms in the four nearest neighbor shells of the vacant site (8 + 6 + 12 + 24), shaded from light to dark red. The biased dynamics and the path weights still involve all 2055 coordinates.">
+                    <span class="thumb-img"><img src="../figs/accel_atomistic/vacancy_cluster50_800.jpg" width="800" height="800" loading="lazy" decoding="async" alt="Transparent crystal with a highlighted red cluster of 50 atoms around the vacancy"></span>
+                    <span class="thumb-label">Network input</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="thumb" href="../figs/accel_atomistic/vacancy_mep.png" data-gallery="vacancy"
+                     data-caption="Energy U (blue, left axis) and learned importance function I (red, right axis, log scale) along the minimum-energy path of one jump: a symmetric double hump. I passes 1/2 between the two saddles (dashed line) but is only of order 10⁻² at the saddle nearer the start, where a one-dimensional estimate gives about 1/4; the path weights absorb that error.">
+                    <span class="thumb-img"><img src="../figs/accel_atomistic/vacancy_mep_700.png" width="700" height="700" loading="lazy" decoding="async" alt="Plot of a double-hump energy barrier with the importance function rising from about ten to the minus five to one"></span>
+                    <span class="thumb-label">The barrier</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <div class="story reveal d1">
+              <div class="beat">
+                <h3 class="beat-label">The rare event</h3>
+                <p>One site is empty in a 7&nbsp;&times;&nbsp;7&nbsp;&times;&nbsp;7 bcc &alpha;-Fe supercell of 685 atoms, periodic in every direction, with no atom held fixed. A transition happens when one of the eight nearest neighbors jumps into the vacant site along &lang;111&rang;. At 800&nbsp;K the barrier is about 9.7&nbsp;<i>k</i><sub>B</sub><i>T</i>.</p>
+              </div>
+              <div class="beat">
+                <h3 class="beat-label">What we found</h3>
+                <p>At 800&nbsp;K the rate agrees with brute force to within 2.1%; the committor-only estimate is about 44% too low. The barrier was too high to train on directly at 800&nbsp;K, so the network was trained at 1600&nbsp;K and then refined. Reused without retraining, it stays within 3% of brute force at 700 and 600&nbsp;K, and at 500&nbsp;K, where no brute-force result exists, within 2% of the Arrhenius extrapolation of the brute-force rates.</p>
+                <ul class="chips">
+                  <li class="chip"><b>2.1%</b><span>gap to brute force at 800&nbsp;K</span></li>
+                  <li class="chip"><b>189&times;</b><span>rate drop to 500&nbsp;K, same network</span></li>
+                  <li class="chip"><b>44%</b><span>committor-only rate too low at 800&nbsp;K</span></li>
+                </ul>
+              </div>
+              <div class="beat">
+                <h3 class="beat-label">Why it matters</h3>
+                <p>Vacancy migration is the elementary process that controls self-diffusion and solute transport in bcc metals.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="strip reveal">
+            <div class="strip-head">
+              <h3 class="strip-title">One network, four temperatures</h3>
+              <p class="strip-note">Trained at 800&nbsp;K and reused unchanged at 700, 600 and 500&nbsp;K.</p>
+            </div>
+            <ol class="rail">
+              <li class="rail-stop" style="--node: #d5582b;">
+                <span class="rail-node" aria-hidden="true"><i class="fa-solid fa-temperature-high"></i></span>
+                <span class="rail-t">800&nbsp;K</span>
+                <span class="rail-tag">Trained here</span>
+                <span class="rail-v"><b>2.1%</b> from brute force</span>
+              </li>
+              <li class="rail-stop" style="--node: #c28a6c;">
+                <span class="rail-node" aria-hidden="true"><i class="fa-solid fa-rotate"></i></span>
+                <span class="rail-t">700&nbsp;K</span>
+                <span class="rail-tag">Reused</span>
+                <span class="rail-v">within <b>3%</b> of brute force</span>
+              </li>
+              <li class="rail-stop" style="--node: #7f9cc0;">
+                <span class="rail-node" aria-hidden="true"><i class="fa-solid fa-rotate"></i></span>
+                <span class="rail-t">600&nbsp;K</span>
+                <span class="rail-tag">Reused</span>
+                <span class="rail-v">within <b>3%</b> of brute force</span>
+              </li>
+              <li class="rail-stop" style="--node: #2d6db0;">
+                <span class="rail-node" aria-hidden="true"><i class="fa-solid fa-temperature-low"></i></span>
+                <span class="rail-t">500&nbsp;K</span>
+                <span class="rail-tag">Reused</span>
+                <span class="rail-v">no brute force; within <b>2%</b> of the Arrhenius extrapolation</span>
+              </li>
+            </ol>
+            <p class="strip-foot">The price of reuse is precision, not accuracy: at the same number of paths, the relative uncertainty grows from <b>0.8% at 800&nbsp;K</b> to <b>3.5% at 500&nbsp;K</b>.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================== RESULTS ============================== -->
+      <section class="results" id="results" aria-labelledby="results-title">
+        <div class="wrap">
+          <div class="reveal">
+            <p class="eyebrow">Reuse across temperature</p>
+            <h2 class="h2" id="results-title">Trained once, reused colder</h2>
+            <p class="lead">Each materials network was trained at the top of its temperature range (for Fe, after an initial training stage at 1600&nbsp;K) and then reused, unchanged, at the lower temperatures. With the path weights, the importance-sampled rates (red) follow the brute-force line. The committor-only estimate (gray) changes far too slowly with temperature; for Pt its error even changes sign.</p>
+          </div>
+
+          <div class="plots">
+            <figure class="plot reveal" style="--acc: 240, 128, 62;">
+              <div class="plot-head"><span><span class="dot" aria-hidden="true"></span>Pt adatom &middot; trained at 1000&nbsp;K</span></div>
+              <a class="plot-img" href="../figs/accel_atomistic/adatom_arrhenius.png" data-gallery="results"
+                 data-caption="Pt adatom: transition rate against 1/T with the 1000&nbsp;K network reused at 900, 800 and 700&nbsp;K. Red circles: importance sampling (s.e.m. smaller than the symbols). Dotted line with bars: brute force, 95% confidence intervals. Gray diamonds: committor-only estimate (No Sampling), labeled No Reweighting in the legend.">
+                <img src="../figs/accel_atomistic/adatom_arrhenius_dark.png" width="1400" height="1400" loading="lazy" decoding="async" alt="Arrhenius plot for the Pt adatom: red importance-sampling points on the brute-force line from 1000 to 700&nbsp;K, gray committor-only points nearly flat">
+                <span class="plot-zoom" aria-hidden="true"><i class="fa-solid fa-magnifying-glass-plus"></i></span>
+              </a>
+              <figcaption><b>Red:</b> importance sampling (s.e.m. smaller than the symbols). <b>Dotted line and bars:</b> brute force with 95% confidence intervals. <b>Gray:</b> committor-only estimate (No Sampling; the legend says No Reweighting). The rate falls more than sevenfold from 1000 to 700&nbsp;K.</figcaption>
+            </figure>
+            <figure class="plot reveal d1" style="--acc: 222, 150, 118;">
+              <div class="plot-head"><span><span class="dot" aria-hidden="true"></span>Fe vacancy &middot; trained at 800&nbsp;K</span></div>
+              <a class="plot-img" href="../figs/accel_atomistic/vacancy_arrhenius.png" data-gallery="results"
+                 data-caption="Fe vacancy: transition rate against 1/T with the 800&nbsp;K network reused at 700, 600 and 500&nbsp;K. Red circles: importance sampling (s.e.m. smaller than the symbols). Black triangles: brute force (not available at 500&nbsp;K). Gray diamonds: committor-only estimate (No Sampling). Dashed line: Arrhenius fit to the brute-force rates.">
+                <img src="../figs/accel_atomistic/vacancy_arrhenius_dark.png" width="1399" height="1400" loading="lazy" decoding="async" alt="Arrhenius plot for the Fe vacancy: red importance-sampling points on the brute-force triangles and the dashed Arrhenius fit from 800 to 500&nbsp;K, gray points below and then above">
+                <span class="plot-zoom" aria-hidden="true"><i class="fa-solid fa-magnifying-glass-plus"></i></span>
+              </a>
+              <figcaption><b>Red:</b> importance sampling (s.e.m. smaller than the symbols). <b>White triangles:</b> brute force, not available at 500&nbsp;K. <b>Gray:</b> committor-only estimate (No Sampling). <b>Dashed:</b> Arrhenius fit to the brute-force rates, which the 500&nbsp;K estimate matches to within 2%.</figcaption>
+            </figure>
+          </div>
+
+          <ul class="verdicts">
+            <li class="verdict reveal"><b>&gt;7&times;</b><span>drop in the Pt rate from 1000 to 700&nbsp;K, tracked with no retraining</span></li>
+            <li class="verdict reveal d1"><b>&le;3%</b><span>gap to brute force for the Fe vacancy from 800 down to 600&nbsp;K, one network throughout</span></li>
+            <li class="verdict reveal d2"><b>3.6&times;</b><span>committor-only overestimate for Pt at 700&nbsp;K, after underestimating by more than 2&times; at 1000&nbsp;K</span></li>
+          </ul>
+
+          <p class="fineprint">All rates here are for overdamped Langevin dynamics with friction &gamma;&nbsp;=&nbsp;10&nbsp;ps<sup>&minus;1</sup>, used for both importance sampling and brute force. Their prefactors differ from those of inertial molecular dynamics, so they are not experimental diffusion rates.</p>
+        </div>
+      </section>
+
+      <!-- ============================== CLOSING ============================== -->
+      <section class="closing" aria-labelledby="closing-title">
+        <div class="wrap">
+          <div class="reveal">
+            <p class="eyebrow">Keep exploring</p>
+            <h2 class="h2" id="closing-title">The methods behind the pictures</h2>
+          </div>
+          <ul class="links">
+            <li class="reveal">
+              <a class="link-card" href="accel_langevin.html">
+                <span class="link-icon" aria-hidden="true"><i class="fa-solid fa-route"></i></span>
+                <h3>Accelerated Langevin Dynamics</h3>
+                <p>The method in depth: how a learned importance function biases each Langevin step, and how path weights recover the original rates.</p>
+                <span class="link-go">Read the method <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+              </a>
+            </li>
+            <li class="reveal d1">
+              <a class="link-card" href="accel_mcmc.html">
+                <span class="link-icon" aria-hidden="true"><i class="fa-solid fa-dice"></i></span>
+                <h3>Accelerated Markov Chain Monte Carlo</h3>
+                <p>The same idea for Markov chain Monte Carlo: a neural network learns the bias potential in log-space, and reweighting each biased path recovers unbiased rates.</p>
+                <span class="link-go">See the MCMC work <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+              </a>
+            </li>
+            <li class="reveal d2">
+              <a class="link-card" href="claude_hackathon.html">
+                <span class="link-icon" aria-hidden="true"><i class="fa-solid fa-robot"></i></span>
+                <h3>Agent-Guided Variance Reduction</h3>
+                <p>An agentic search driven by Claude Code selects the weight-control scheme that tames path-weight degeneracy for alanine dipeptide.</p>
+                <span class="link-go">See the hackathon project <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+              </a>
+            </li>
+          </ul>
+
+          <div class="status-box reveal">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            <p><b>Where these results appear.</b> The LJ7 results are in the posted preprint, Kim &amp; Cai, ChemRxiv (2026): <a href="../docs/importance_sampling_langevin.pdf" target="_blank" rel="noopener noreferrer">PDF</a> &middot; <a href="https://chemrxiv.org/doi/full/10.26434/chemrxiv.15000772" target="_blank" rel="noopener noreferrer">ChemRxiv</a>. The Pt adatom and Fe vacancy results come from a revised manuscript in preparation and are not in the posted version.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ============================== LIGHTBOX ============================== -->
+    <div class="lb" id="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer" hidden>
+      <div class="lb-backdrop" data-lb-close></div>
+      <figure class="lb-figure">
+        <img class="lb-img" alt="">
+        <figcaption class="lb-cap"><span class="lb-count"></span><span class="lb-text"></span></figcaption>
+      </figure>
+      <button class="lb-btn lb-close" type="button" aria-label="Close (Esc)"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      <button class="lb-btn lb-prev" type="button" aria-label="Previous image"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+      <button class="lb-btn lb-next" type="button" aria-label="Next image"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+    </div>
+
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var doc = document;
+    var root = doc.documentElement;
+    var motionMQ = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+    var hasIO = 'IntersectionObserver' in window;
+    function reduced() { return !!(motionMQ && motionMQ.matches); }
+    function each(list, fn) { Array.prototype.forEach.call(list, fn); }
+
+    /* ---------------------------- 1. Reveal ---------------------------- */
+    var reveals = doc.querySelectorAll('.reveal');
+    if (!hasIO || reduced()) {
+      each(reveals, function (el) { el.classList.add('in'); });
+    } else {
+      var firstBatch = true;
+      var revealIO = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) {
+            // Already on screen when the page opens: show at once, no fade.
+            if (firstBatch) e.target.classList.add('now');
+            e.target.classList.add('in');
+            revealIO.unobserve(e.target);
+          }
+        });
+        firstBatch = false;
+      }, { rootMargin: '0px 0px -6% 0px', threshold: 0.08 });
+      each(reveals, function (el) { revealIO.observe(el); });
+    }
+
+    /* ------------------------ 2. Stat counters ------------------------ */
+    if (!reduced() && window.requestAnimationFrame) {
+      each(doc.querySelectorAll('.count[data-to]'), function (el, k) {
+        var to = parseInt(el.getAttribute('data-to'), 10);
+        var dur = 1500 + 250 * k;
+        var t0 = null, done = false, delay = 250 + 120 * k;
+        el.textContent = '0';
+        function step(now) {
+          if (done) return;
+          if (t0 === null) t0 = now;
+          var u = Math.min(1, (now - t0) / dur);
+          var e = 1 - Math.pow(1 - u, 4);
+          el.textContent = String(Math.round(to * e));
+          if (u < 1) requestAnimationFrame(step); else done = true;
+        }
+        setTimeout(function () { requestAnimationFrame(step); }, delay);
+        // Never leave a half-counted number behind (e.g. when frames are throttled).
+        setTimeout(function () { done = true; el.textContent = String(to); }, delay + dur + 600);
+      });
+    }
+
+    /* --------------------- 3. Switcher and scroll-spy --------------------- */
+    var switcher = doc.querySelector('.switcher');
+    var sentinel = doc.querySelector('.switcher-sentinel');
+    var pills = doc.querySelectorAll('.pill[data-spy]');
+    function setActive(id) {
+      each(pills, function (p) {
+        var on = p.getAttribute('data-spy') === id;
+        p.classList.toggle('is-active', on);
+        if (on) p.setAttribute('aria-current', 'true'); else p.removeAttribute('aria-current');
+      });
+    }
+    if (hasIO && switcher && sentinel) {
+      // The root reaches far below the viewport, so the sentinel counts as intersecting
+      // whenever it is below the top edge and a jump straight past it still flips the state.
+      // The top check keeps the bar unstuck where rootMargin is ignored (cross-origin frames).
+      new IntersectionObserver(function (entries) {
+        var e = entries[0];
+        switcher.classList.toggle('stuck', !e.isIntersecting && e.boundingClientRect.top < 1);
+      }, { rootMargin: '0px 0px 100000px 0px' }).observe(sentinel);
+
+      var spyIO = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) setActive(e.target.id === 'idea' ? '' : e.target.id);
+        });
+      }, { rootMargin: '-42% 0px -52% 0px' });
+      ['idea', 'lj7', 'adatom', 'vacancy', 'results'].forEach(function (id) {
+        var s = doc.getElementById(id);
+        if (s) spyIO.observe(s);
+      });
+    }
+
+    /* ------------------ 4. Stages: GIF slots and the LJ7 video ------------------ */
+    function makeToggle(stage) {
+      var box = stage.querySelector('.stage-ctrls');
+      var btn = stage.querySelector('.stage-toggle');
+      if (btn || !box) return btn;
+      btn = doc.createElement('button');
+      btn.type = 'button';
+      btn.className = 'stage-btn stage-toggle';
+      btn.innerHTML = '<i class="fa-solid fa-pause" aria-hidden="true"></i>';
+      box.insertBefore(btn, box.firstChild);
+      return btn;
+    }
+    function setToggle(btn, playing) {
+      btn.setAttribute('aria-label', playing ? 'Pause animation' : 'Play animation');
+      btn.innerHTML = '<i class="fa-solid ' + (playing ? 'fa-pause' : 'fa-play') + '" aria-hidden="true"></i>';
+    }
+
+    function onGif(stage) {
+      if (stage._gif) return;
+      stage._gif = true;
+      var gif = stage.querySelector('.slot-gif');
+      var video = stage.querySelector('video');
+      if (video) { try { video.pause(); } catch (err) { /* ignore */ } }
+      var expand = stage.querySelector('.stage-expand');
+      var capGif = stage.querySelector('figcaption .cap-gif');
+      var still = expand ? { href: expand.getAttribute('href'), alt: expand.getAttribute('data-alt'), cap: expand.getAttribute('data-caption'), label: expand.getAttribute('aria-label') } : null;
+      // Enlarge opens whatever the stage shows: the GIF, or the still while the GIF is off.
+      function syncExpand() {
+        if (!expand || !gif) return;
+        var on = !stage.classList.contains('gif-off');
+        expand.setAttribute('href', on ? (gif.currentSrc || gif.src) : still.href);
+        expand.setAttribute('data-alt', on ? gif.alt : still.alt);
+        expand.setAttribute('data-caption', on && capGif ? capGif.textContent : still.cap);
+        expand.setAttribute('aria-label', on ? 'Enlarge the animation' : still.label);
+      }
+      if (reduced()) stage.classList.add('gif-off');
+      syncExpand();
+      var btn = makeToggle(stage);
+      if (!btn) return;
+      setToggle(btn, !stage.classList.contains('gif-off'));
+      btn.onclick = function () {
+        var off = stage.classList.toggle('gif-off');
+        setToggle(btn, !off);
+        syncExpand();
+      };
+    }
+    window.stageGif = onGif;
+
+    function setupVideo(stage, video) {
+      var clip = video.getAttribute('data-src');
+      if (!clip) return;
+      var loaded = false;
+      var userPaused = reduced();
+      var inView = false;
+      if (reduced()) video.removeAttribute('autoplay');
+
+      var btn = makeToggle(stage);
+      var fill = stage.querySelector('.sp-fill');
+      var spRaf = 0;
+      function sync() { if (btn && !stage._gif) setToggle(btn, !video.paused); }
+      function tick() {
+        spRaf = 0;
+        if (fill && video.duration) fill.style.width = (100 * video.currentTime / video.duration).toFixed(2) + '%';
+        if (!video.paused) spRaf = requestAnimationFrame(tick);
+      }
+      video.addEventListener('play', function () {
+        if (!inView && hasIO) { video.pause(); return; }
+        sync();
+        stage.classList.add('is-playing', 'was-played');
+        if (!spRaf) spRaf = requestAnimationFrame(tick);
+      });
+      video.addEventListener('pause', function () {
+        sync();
+        stage.classList.remove('is-playing');
+      });
+      if (btn) {
+        setToggle(btn, !userPaused);
+        btn.onclick = function () {
+          if (stage._gif) return;
+          if (!loaded) { userPaused = false; load(true); return; }
+          if (video.paused) { userPaused = false; play(); } else { userPaused = true; video.pause(); }
+        };
+      }
+      function play() {
+        var p = video.play();
+        if (p && p.catch) p.catch(function () { sync(); });
+      }
+      function load(force) {
+        if (loaded || stage._gif) return;
+        var gif = stage.querySelector('.slot-gif');
+        if (gif && !gif.complete && !force) {
+          // Wait for the GIF probe; a missing GIF removes itself, a present one wins.
+          gif.addEventListener('error', function () { setTimeout(function () { load(); }, 0); }, { once: true });
+          setTimeout(function () { load(true); }, 4000);
+          return;
+        }
+        loaded = true;
+        video.removeAttribute('data-src');
+        video.src = clip;
+        if (!userPaused && (inView || force)) play();
+      }
+      if (!hasIO) { inView = true; load(); return; }
+      new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting) load();
+      }, { rootMargin: '400px 0px' }).observe(stage);
+      new IntersectionObserver(function (entries) {
+        inView = entries[0].isIntersecting;
+        if (!loaded || stage._gif) return;
+        if (inView && !userPaused) play();
+        else if (!inView && !video.paused) video.pause();
+      }, { threshold: 0.2 }).observe(stage);
+    }
+
+    each(doc.querySelectorAll('.stage'), function (stage) {
+      var video = stage.querySelector('video');
+      if (video) setupVideo(stage, video);
+      if (stage.classList.contains('has-gif')) onGif(stage);
+    });
+
+    /* ---------------------------- 5. Lightbox ---------------------------- */
+    var lb = doc.getElementById('lightbox');
+    var lbImg = lb.querySelector('.lb-img');
+    var lbText = lb.querySelector('.lb-text');
+    var lbCount = lb.querySelector('.lb-count');
+    var lbClose = lb.querySelector('.lb-close');
+    var lbPrev = lb.querySelector('.lb-prev');
+    var lbNext = lb.querySelector('.lb-next');
+    var group = [], index = 0, opener = null;
+
+    function itemAlt(a) {
+      var img = a.querySelector('img');
+      return a.getAttribute('data-alt') || (img ? img.getAttribute('alt') : '') || '';
+    }
+    function show() {
+      var a = group[index];
+      lbImg.src = a.getAttribute('href');
+      lbImg.alt = itemAlt(a);
+      lbText.textContent = a.getAttribute('data-caption') || itemAlt(a);
+      lbCount.textContent = group.length > 1 ? (index + 1) + ' / ' + group.length : '';
+      lbPrev.hidden = lbNext.hidden = group.length < 2;
+      [index - 1, index + 1].forEach(function (k) {
+        var n = group[(k + group.length) % group.length];
+        if (n) { var im = new Image(); im.src = n.getAttribute('href'); }
+      });
+    }
+    function open(a) {
+      var name = a.getAttribute('data-gallery');
+      group = Array.prototype.slice.call(doc.querySelectorAll('a[data-gallery="' + name + '"]'));
+      index = Math.max(0, group.indexOf(a));
+      opener = a;
+      show();
+      lb.hidden = false;
+      root.classList.add('lb-open');
+      lbClose.focus();
+    }
+    function close() {
+      if (lb.hidden) return;
+      lb.hidden = true;
+      root.classList.remove('lb-open');
+      lbImg.removeAttribute('src');
+      if (opener && opener.focus) opener.focus();
+    }
+    function go(step) {
+      if (group.length < 2) return;
+      index = (index + step + group.length) % group.length;
+      show();
+    }
+    doc.addEventListener('click', function (e) {
+      var a = e.target.closest ? e.target.closest('a[data-gallery]') : null;
+      if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      open(a);
+    });
+    lbClose.addEventListener('click', close);
+    lbPrev.addEventListener('click', function () { go(-1); });
+    lbNext.addEventListener('click', function () { go(1); });
+    lb.querySelector('[data-lb-close]').addEventListener('click', close);
+    lb.addEventListener('click', function (e) { if (e.target === lb) close(); });
+    doc.addEventListener('keydown', function (e) {
+      if (lb.hidden) return;
+      if (e.key === 'Escape' || e.key === 'Esc') { e.preventDefault(); close(); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); go(1); }
+      else if (e.key === 'Tab') {
+        var f = [lbClose, lbPrev, lbNext].filter(function (b) { return !b.hidden; });
+        var i = f.indexOf(doc.activeElement);
+        e.preventDefault();
+        var n = e.shiftKey ? (i <= 0 ? f.length - 1 : i - 1) : (i === f.length - 1 ? 0 : i + 1);
+        f[n].focus();
+      }
+    });
+    var touchX = null;
+    lb.addEventListener('touchstart', function (e) { touchX = e.touches[0].clientX; }, { passive: true });
+    lb.addEventListener('touchend', function (e) {
+      if (touchX === null) return;
+      var dx = e.changedTouches[0].clientX - touchX;
+      touchX = null;
+      if (Math.abs(dx) > 45) go(dx < 0 ? 1 : -1);
+    });
+
+    /* ------------------------ 6. Hero lattice canvas ------------------------ */
+    (function heroLattice() {
+      var hero = doc.querySelector('.hero');
+      var canvas = hero && hero.querySelector('.hero-canvas');
+      if (!canvas || !canvas.getContext) return;
+      var ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      var toggle = hero.querySelector('.hero-toggle');
+      var shade = hero.querySelector('.hero-shade');
+
+      var W = 0, H = 0, dpr = 1, a = 36, TH = -0.36, C = Math.cos(TH), S = Math.sin(TH), cx = 0, cy = 0;
+      var atoms = [], grid = {}, vacs = [], flashes = [];
+      var sprAtom = null, sprHot = null, sprVac = null, rA = 0, rH = 0, rV = 0;
+      var running = false, userPaused = false, allowMotion = !reduced(), onScreen = true, raf = 0, last = 0, clock = 0;
+      var avoid = [];
+
+      function key(i, j) { return i + ',' + j; }
+      function sitePos(i, j) { return [cx + a * (i * C - j * S), cy + a * (i * S + j * C)]; }
+      function smooth(e0, e1, x) { var t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); }
+      function rnd(lo, hi) { return lo + Math.random() * (hi - lo); }
+
+      function sprite(r, stops) {
+        var c = doc.createElement('canvas');
+        var s = Math.max(2, Math.ceil(2 * r * dpr));
+        c.width = c.height = s;
+        var g = c.getContext('2d');
+        var grd = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+        stops.forEach(function (st) { grd.addColorStop(st[0], st[1]); });
+        g.fillStyle = grd;
+        g.fillRect(0, 0, s, s);
+        return c;
+      }
+
+      function textRects() {
+        var hr = hero.getBoundingClientRect();
+        var out = [];
+        each(hero.querySelectorAll('.hero-copy, .stats'), function (el) {
+          var r = el.getBoundingClientRect();
+          out.push([r.left - hr.left, r.top - hr.top, r.right - hr.left, r.bottom - hr.top]);
+        });
+        return out;
+      }
+      function mask(x, y) {
+        var edge = smooth(0, H * 0.12, y) * smooth(H, H * 0.8, y) * smooth(0, W * 0.05, x) * smooth(W, W * 0.95, x);
+        var m = W < 700 ? 0.75 : 0.2 + 0.8 * smooth(W * 0.22, W * 0.7, x);
+        for (var k = 0; W >= 700 && k < avoid.length; k++) {
+          var r = avoid[k];
+          var dx = Math.max(r[0] - x, 0, x - r[2]);
+          var dy = Math.max(r[1] - y, 0, y - r[3]);
+          var d = Math.sqrt(dx * dx + dy * dy);
+          m *= 0.3 + 0.7 * smooth(0, 70, d);
+        }
+        return Math.max(0, Math.min(1, m * (0.25 + 0.75 * edge)));
+      }
+
+      function build() {
+        W = Math.max(1, Math.round(hero.clientWidth));
+        H = Math.max(1, Math.round(hero.clientHeight));
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(W * dpr);
+        canvas.height = Math.round(H * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        a = W < 700 ? 30 : 36;
+        cx = W * 0.64; cy = H * 0.46;
+        rA = a * 0.36; rH = a * 1.0; rV = a * 0.75;
+        sprAtom = sprite(rA, [[0, 'rgba(255,240,236,0.95)'], [0.2, 'rgba(255,214,208,0.72)'], [0.5, 'rgba(255,150,140,0.14)'], [1, 'rgba(255,120,110,0)']]);
+        sprHot = sprite(rH, [[0, 'rgba(255,255,255,1)'], [0.1, 'rgba(255,205,190,0.95)'], [0.3, 'rgba(255,95,85,0.5)'], [1, 'rgba(177,4,14,0)']]);
+        sprVac = sprite(rV, [[0, 'rgba(255,80,72,0.30)'], [0.55, 'rgba(177,4,14,0.12)'], [1, 'rgba(177,4,14,0)']]);
+        avoid = textRects();
+        atoms = []; grid = {}; vacs = []; flashes = [];
+
+        var imin = 1e9, imax = -1e9, jmin = 1e9, jmax = -1e9;
+        [[0, 0], [W, 0], [0, H], [W, H]].forEach(function (p) {
+          var dx = p[0] - cx, dy = p[1] - cy;
+          var u = (dx * C + dy * S) / a, v = (-dx * S + dy * C) / a;
+          imin = Math.min(imin, u); imax = Math.max(imax, u);
+          jmin = Math.min(jmin, v); jmax = Math.max(jmax, v);
+        });
+        for (var i = Math.floor(imin) - 1; i <= Math.ceil(imax) + 1; i++) {
+          for (var j = Math.floor(jmin) - 1; j <= Math.ceil(jmax) + 1; j++) {
+            var p = sitePos(i, j);
+            if (p[0] < -a || p[0] > W + a || p[1] < -a || p[1] > H + a) continue;
+            grid[key(i, j)] = atoms.length;
+            atoms.push({ i: i, j: j, x0: p[0], y0: p[1], m: mask(p[0], p[1]),
+              p1: rnd(0, 6.283), p2: rnd(0, 6.283), p3: rnd(0, 6.283), p4: rnd(0, 6.283),
+              w1: rnd(1.2, 2.4), w2: rnd(1.0, 2.6), gone: false });
+          }
+        }
+        var want = W < 700 ? 2 : 4, tries = 0;
+        while (vacs.length < want && tries++ < 400) {
+          var at = atoms[Math.floor(Math.random() * atoms.length)];
+          if (!at || at.gone || at.m < 0.6) continue;
+          var ok = true;
+          for (var q = 0; q < vacs.length; q++) {
+            if (Math.abs(vacs[q].i - at.i) + Math.abs(vacs[q].j - at.j) < 5) ok = false;
+          }
+          if (!ok) continue;
+          at.gone = true;
+          grid[key(at.i, at.j)] = -1;
+          vacs.push({ i: at.i, j: at.j, trail: [[at.x0, at.y0]], mode: 'idle', wait: rnd(0.2, 1.4), mover: -1, t: 0, dur: 1, peak: 0, win: false });
+        }
+      }
+
+      function nbrs(v) {
+        var list = [];
+        [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) {
+          var idx = grid[key(v.i + d[0], v.j + d[1])];
+          if (idx === undefined || idx < 0) return;
+          var at = atoms[idx];
+          if (at.busy || at.m < 0.35) return;
+          list.push(idx);
+        });
+        return list;
+      }
+
+      function update(dt) {
+        clock += dt;
+        for (var k = 0; k < vacs.length; k++) {
+          var v = vacs[k];
+          if (v.mode === 'idle') {
+            v.wait -= dt;
+            if (v.wait > 0) continue;
+            var ns = nbrs(v);
+            if (!ns.length) { v.wait = rnd(0.4, 1); continue; }
+            v.mover = ns[Math.floor(Math.random() * ns.length)];
+            atoms[v.mover].busy = true;
+            v.win = Math.random() < 0.24;
+            v.dur = v.win ? rnd(0.85, 1.05) : rnd(0.5, 0.85);
+            v.peak = rnd(0.22, 0.46);
+            v.t = 0;
+            v.mode = 'try';
+          } else {
+            v.t += dt;
+            if (v.t < v.dur) continue;
+            var m = atoms[v.mover];
+            m.busy = false;
+            if (v.win) {
+              var oi = m.i, oj = m.j;
+              var vp = sitePos(v.i, v.j);
+              grid[key(v.i, v.j)] = v.mover;
+              grid[key(oi, oj)] = -1;
+              m.i = v.i; m.j = v.j; m.x0 = vp[0]; m.y0 = vp[1]; m.m = mask(vp[0], vp[1]);
+              v.i = oi; v.j = oj;
+              var np = sitePos(oi, oj);
+              v.trail.push([np[0], np[1]]);
+              if (v.trail.length > 36) v.trail.shift();
+              flashes.push({ x: np[0], y: np[1], t: 0, m: mask(np[0], np[1]) });
+            }
+            v.mover = -1;
+            v.mode = 'idle';
+            v.wait = v.win ? rnd(0.6, 1.6) : rnd(0.25, 1.1);
+          }
+        }
+        for (var f = flashes.length - 1; f >= 0; f--) {
+          flashes[f].t += dt;
+          if (flashes[f].t > 1.1) flashes.splice(f, 1);
+        }
+      }
+
+      function moverOffset(v) {
+        var u = Math.min(1, v.t / v.dur);
+        var s = v.win ? (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2) : v.peak * Math.sin(Math.PI * u);
+        return s;
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+        var J = a * 0.055, t = clock, k, v, n, p;
+
+        // vacancy trails
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        for (k = 0; k < vacs.length; k++) {
+          v = vacs[k];
+          n = v.trail.length;
+          for (var s = 1; s < n; s++) {
+            var p0 = v.trail[s - 1], p1 = v.trail[s];
+            var age = (s / n);
+            var mm = mask((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2);
+            ctx.strokeStyle = 'rgba(177,4,14,' + (0.22 * age * mm).toFixed(3) + ')';
+            ctx.lineWidth = 7;
+            ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
+            ctx.strokeStyle = 'rgba(255,120,110,' + (0.7 * age * mm).toFixed(3) + ')';
+            ctx.lineWidth = 1.6;
+            ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
+          }
+        }
+
+        // vacancies: a soft glow and a ring
+        for (k = 0; k < vacs.length; k++) {
+          v = vacs[k];
+          p = sitePos(v.i, v.j);
+          var vm = mask(p[0], p[1]);
+          ctx.globalAlpha = vm;
+          ctx.drawImage(sprVac, p[0] - rV, p[1] - rV, 2 * rV, 2 * rV);
+          ctx.globalAlpha = 1;
+          ctx.strokeStyle = 'rgba(255,140,130,' + (0.55 * vm).toFixed(3) + ')';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath(); ctx.arc(p[0], p[1], a * 0.2, 0, 6.2832); ctx.stroke();
+        }
+
+        // atoms
+        for (k = 0; k < atoms.length; k++) {
+          var at = atoms[k];
+          if (at.gone || at.busy) continue;
+          var x = at.x0 + J * (Math.sin(at.w1 * t + at.p1) + 0.5 * Math.sin(1.7 * at.w2 * t + at.p2));
+          var y = at.y0 + J * (Math.sin(at.w2 * t + at.p3) + 0.5 * Math.sin(1.9 * at.w1 * t + at.p4));
+          ctx.globalAlpha = 0.9 * at.m;
+          ctx.drawImage(sprAtom, x - rA, y - rA, 2 * rA, 2 * rA);
+        }
+
+        // atoms caught mid-attempt
+        for (k = 0; k < vacs.length; k++) {
+          v = vacs[k];
+          if (v.mode !== 'try' || v.mover < 0) continue;
+          var mv = atoms[v.mover];
+          var target = sitePos(v.i, v.j);
+          var sft = moverOffset(v);
+          var mx = mv.x0 + (target[0] - mv.x0) * sft, my = mv.y0 + (target[1] - mv.y0) * sft;
+          var glow = v.win ? 1 : Math.min(1, 0.35 + sft / v.peak * 0.65);
+          ctx.globalAlpha = Math.max(mv.m, 0.35) * glow;
+          ctx.drawImage(sprHot, mx - rH, my - rH, 2 * rH, 2 * rH);
+          ctx.globalAlpha = 0.95 * Math.max(mv.m, 0.35);
+          ctx.drawImage(sprAtom, mx - rA, my - rA, 2 * rA, 2 * rA);
+        }
+        ctx.globalAlpha = 1;
+
+        // success flashes
+        for (k = 0; k < flashes.length; k++) {
+          var fl = flashes[k];
+          var u = fl.t / 1.1;
+          ctx.strokeStyle = 'rgba(255,150,140,' + (0.6 * (1 - u) * fl.m).toFixed(3) + ')';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.arc(fl.x, fl.y, a * (0.2 + 1.1 * u), 0, 6.2832); ctx.stroke();
+        }
+      }
+
+      function frame(ts) {
+        raf = 0;
+        if (!running) return;
+        // Narrow screens: about 30 frames per second is plenty for this slow ambient motion.
+        if (W < 700 && ts - last < 30) { raf = requestAnimationFrame(frame); return; }
+        var dt = Math.min(0.05, Math.max(0, (ts - last) / 1000));
+        last = ts;
+        update(dt);
+        draw();
+        raf = requestAnimationFrame(frame);
+      }
+      function start() {
+        if (running || userPaused || !allowMotion || !onScreen || doc.hidden) return;
+        running = true;
+        last = performance.now();
+        raf = requestAnimationFrame(frame);
+      }
+      function stop() {
+        running = false;
+        if (raf) cancelAnimationFrame(raf);
+        raf = 0;
+      }
+      function warm() {
+        // Open mid-story: let the vacancies wander for a while so their trails already show.
+        for (var n = 0; n < 700; n++) update(0.05);
+        flashes = [];
+      }
+      function still() {
+        // A static frame for reduced motion: let the vacancies wander, then draw once.
+        for (var n = 0; n < 900; n++) update(0.05);
+        each(vacs, function (v) {
+          if (v.mode === 'try') { atoms[v.mover].busy = false; v.mode = 'idle'; v.mover = -1; }
+        });
+        flashes = [];
+        draw();
+      }
+      function syncToggle() {
+        if (!toggle) return;
+        var playing = allowMotion && !userPaused;
+        toggle.innerHTML = '<i class="fa-solid ' + (playing ? 'fa-pause' : 'fa-play') + '" aria-hidden="true"></i><span>' + (playing ? 'Pause' : 'Play') + '</span>';
+        toggle.setAttribute('aria-label', playing ? 'Pause background animation' : 'Play background animation');
+      }
+
+      build();
+      if (allowMotion) { warm(); draw(); start(); } else { still(); }
+      // Web fonts can shift the text block after the initial build: re-measure the dimmed zone.
+      if (doc.fonts && doc.fonts.ready) {
+        doc.fonts.ready.then(function () {
+          avoid = textRects();
+          each(atoms, function (at) { at.m = mask(at.x0, at.y0); });
+          if (!running) draw();
+        });
+      }
+      if (toggle) {
+        toggle.hidden = false;
+        syncToggle();
+        toggle.addEventListener('click', function () {
+          if (!allowMotion) { allowMotion = true; userPaused = false; }
+          else userPaused = !userPaused;
+          syncToggle();
+          if (userPaused) stop(); else start();
+        });
+      }
+      if (hasIO) {
+        new IntersectionObserver(function (entries) {
+          onScreen = entries[0].isIntersecting;
+          if (onScreen) start(); else stop();
+        }).observe(hero);
+      }
+      doc.addEventListener('visibilitychange', function () {
+        if (doc.hidden) stop(); else start();
+      });
+      var rt = 0;
+      window.addEventListener('resize', function () {
+        clearTimeout(rt);
+        rt = setTimeout(function () {
+          if (Math.abs(hero.clientWidth - W) < 2 && Math.abs(hero.clientHeight - H) < 60) return;
+          build();
+          if (allowMotion) { warm(); draw(); } else still();
+        }, 180);
+      });
+      if (shade && window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
+        var pend = false, px = 0, py = 0;
+        hero.addEventListener('pointermove', function (e) {
+          var r = hero.getBoundingClientRect();
+          px = e.clientX - r.left; py = e.clientY - r.top;
+          if (pend) return;
+          pend = true;
+          requestAnimationFrame(function () {
+            pend = false;
+            shade.style.setProperty('--mx', px + 'px');
+            shade.style.setProperty('--my', py + 'px');
+          });
+        });
+      }
+    })();
+  })();
+  </script>
+</body>
+</html>
