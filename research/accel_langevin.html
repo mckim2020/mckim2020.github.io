@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   Image paths used: ../figs/accel_langevin/<figure>.png
-  Only images that exist on disk are referenced.
+  system.png is the paper's original (also the research-card thumbnail); *_web.png are resized copies of the paper's figures.
 -->
 <html lang="en">
 <head>
@@ -101,25 +101,50 @@
       border-radius: 20px;
     }
 
+    /* On narrow screens the six links no longer fit on one row: wrap them
+       instead of clipping Home and Education off the left edge. */
+    @media (max-width: 820px) {
+      .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 4px 18px;
+      }
+
+      .nav-links a {
+        font-size: 19px;
+      }
+    }
+
     main {
       padding-top: 40px;
       padding-bottom: 60px;
     }
 
     .page-title {
-      font-size: 2.3rem;
+      /* Scale down on narrow viewports so the title never strands a lone word */
+      font-size: clamp(1.9rem, 5.2vw, 2.5rem);
       font-weight: bold;
       margin-bottom: 8px;
       color: #8C1515;
-      line-height: 1.2;
+      line-height: 1.18;
+      overflow-wrap: break-word;
+    }
+    /* Keep each phrase intact so the title breaks only between phrases. */
+    .page-title .tline {
+      display: inline-block;
+    }
+    /* Narrowest phones (360 px): one step smaller, so no title phrase wraps inside itself */
+    @media (max-width: 370px) {
+      .page-title { font-size: 1.75rem; }
     }
 
     .page-subtitle {
       font-family: 'EB Garamond', Georgia, serif;
-      font-size: 1.3rem;
+      font-size: 1.35rem;
+      font-style: italic;
       color: #555;
       margin-top: 0;
-      margin-bottom: 26px;
+      margin-bottom: 30px;
     }
 
     .content {
@@ -160,35 +185,6 @@
       border-bottom-color: #8C1515;
     }
 
-    /* Inline citation links */
-    a.cite {
-      border-bottom: none;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    /* Abstract block */
-    .abstract {
-      font-size: 1.0rem;
-      line-height: 1.62;
-      margin: 6px 0 12px 0;
-      padding: 18px 30px;
-      background: #faf8f6;
-      border: 1px solid #ecdede;
-      border-radius: 4px;
-    }
-    .abstract .abstract-label {
-      display: block;
-      text-align: center;
-      font-family: 'EB Garamond', Georgia, serif;
-      font-weight: 600;
-      font-size: 1.15rem;
-      color: #8C1515;
-      margin-bottom: 8px;
-      letter-spacing: 0.02em;
-    }
-    .abstract p { margin: 0; }
-
     /* Paper info card */
     .paper-card {
       background: #faf6f6;
@@ -201,6 +197,7 @@
       font-family: 'EB Garamond', Georgia, serif;
       font-size: 1.15rem;
       margin-bottom: 4px;
+      line-height: 1.4;
     }
     .paper-card .venue {
       color: #666;
@@ -208,7 +205,7 @@
       font-size: 0.95rem;
     }
     .paper-card .links {
-      margin-top: 10px;
+      margin-top: 12px;
     }
     .paper-card .links a {
       display: inline-block;
@@ -219,6 +216,28 @@
     }
     .paper-card .links a i {
       margin-right: 4px;
+    }
+
+    /* Key ideas list */
+    .contributions {
+      padding-left: 0;
+      list-style: none;
+    }
+    .contributions li {
+      position: relative;
+      padding: 8px 0 8px 32px;
+      border-bottom: 1px dashed #e0e0e0;
+    }
+    .contributions li:last-child { border-bottom: none; }
+    .contributions li::before {
+      content: '\f192'; /* fontawesome dot-circle */
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      color: #8C1515;
+      position: absolute;
+      left: 4px;
+      top: 11px;
+      font-size: 0.9em;
     }
 
     /* Figures */
@@ -242,13 +261,19 @@
       flex-wrap: wrap;
     }
     figure.fig-pair img { max-width: 48%; }
-    figure.fig-quad {
+    figure.fig-triple {
       display: flex;
       gap: 12px;
       justify-content: center;
+      align-items: center;
       flex-wrap: wrap;
     }
-    figure.fig-quad img { max-width: 47%; }
+    figure.fig-triple img {
+      max-width: 32%;
+      min-width: 190px;
+    }
+    figure.fig-pair,
+    figure.fig-quad { align-items: center; }
     figcaption {
       font-size: 0.9rem;
       color: #555;
@@ -258,6 +283,10 @@
       padding: 0 6px;
     }
     figcaption b { color: #333; }
+    /* In the flex figures, give the caption its own full-width row */
+    figure.fig-pair figcaption,
+    figure.fig-quad figcaption,
+    figure.fig-triple figcaption { flex-basis: 100%; }
 
     /* Equations / display math wrapper.
        No overflow-x scrolling: equations are re-flowed to fit the column,
@@ -277,32 +306,6 @@
       .eq-block { overflow-x: auto; }
     }
 
-    /* Algorithm box */
-    .algo-box {
-      border: 1px solid #d9cccc;
-      border-top: 3px solid #8C1515;
-      border-radius: 5px;
-      background: #fbf9f9;
-      padding: 14px 20px;
-      margin: 22px 0;
-      font-family: 'Source Sans 3', Helvetica, sans-serif;
-      font-size: 0.92rem;
-      line-height: 1.5;
-    }
-    .algo-box .algo-title {
-      font-weight: 700;
-      color: #8C1515;
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: 1.1rem;
-      margin-bottom: 6px;
-    }
-    .algo-box .algo-io { font-size: 0.86rem; color: #555; margin-bottom: 6px; }
-    .algo-box ol { margin: 6px 0 0 0; padding-left: 1.4em; }
-    .algo-box ol li { margin-bottom: 3px; }
-    .algo-box .algo-phase {
-      font-weight: 700; color: #8C1515; margin-top: 8px;
-    }
-
     /* Highlight box for key takeaway */
     .takeaway {
       background: #fff8e6;
@@ -310,13 +313,6 @@
       padding: 14px 20px;
       margin: 24px 0;
       font-size: 1.0rem;
-    }
-
-    code {
-      background: #f3f0ec;
-      padding: 1px 5px;
-      border-radius: 3px;
-      font-size: 0.92em;
     }
 
     /* ---- Data tables ---- */
@@ -330,14 +326,6 @@
       font-family: 'Source Sans 3', Helvetica, sans-serif;
       font-size: 0.92rem;
       min-width: 460px;
-    }
-    table.data-table caption {
-      caption-side: top;
-      text-align: left;
-      font-weight: 600;
-      color: #8C1515;
-      padding: 0 0 6px 0;
-      font-size: 0.9rem;
     }
     table.data-table thead th {
       background: #8C1515;
@@ -363,6 +351,14 @@
     table.data-table tr.row-best td:first-child {
       box-shadow: inset 3px 0 0 #8C1515;
     }
+    table.data-table tr.row-ref td {
+      font-style: italic;
+      color: #444;
+      background: #ffffff;
+    }
+    table.data-table tr.row-ref:first-of-type td {
+      border-top: 2px solid #8C1515;
+    }
     .table-note {
       font-size: 0.84rem;
       color: #666;
@@ -372,22 +368,21 @@
     }
     .table-note .caption-lead { color: #333; font-weight: 700; }
 
-    /* ---- References ---- */
-    ol.references {
-      font-size: 0.86rem;
-      line-height: 1.5;
-      color: #444;
-      padding-left: 2.4em;
+    /* Phones: figures at full column width; ragged-right text without
+       automatic hyphenation (justified text leaves wide gaps in a narrow
+       column); tables wrap inside their cells instead of scrolling sideways. */
+    @media (max-width: 640px) {
+      figure.fig-narrow img,
+      figure.fig-medium img,
+      figure.fig-pair img,
+      figure.fig-quad img,
+      figure.fig-triple img { max-width: 100%; }
+      .content p,
+      figcaption { text-align: left; hyphens: manual; }
+      table.data-table { min-width: 0; font-size: 0.84rem; }
+      table.data-table thead th,
+      table.data-table td { white-space: normal; padding: 7px 6px; }
     }
-    ol.references li {
-      margin-bottom: 6px;
-      padding-left: 4px;
-    }
-    ol.references li:target {
-      background: #fff8e6;
-      border-radius: 3px;
-    }
-    ol.references li a { border-bottom: none; }
   </style>
 </head>
 <body>
@@ -407,8 +402,8 @@
   </header>
 
   <main class="container">
-    <h1 class="page-title">Accelerated Langevin Dynamics Simulation via Neural Network&ndash;Driven Importance Sampling</h1>
-    <p class="page-subtitle">Michael M. Kim and Wei Cai &middot; Department of Mechanical Engineering, Stanford University</p>
+    <h1 class="page-title"><span class="tline">Accelerated Langevin</span> <span class="tline">Dynamics</span></h1>
+    <p class="page-subtitle">A learned importance function steers Langevin dynamics toward rare transitions; path weights recover the original rates.</p>
 
     <div class="content">
 
@@ -431,956 +426,314 @@
 }</pre>
       </div>
 
-      <!-- ============ ABSTRACT ============ -->
-      <div class="abstract">
-        <span class="abstract-label">Abstract</span>
-        <p>
-          Atomistic simulations are often restricted by timescale limitations when systems become trapped in
-          metastable energy basins. The transitions between these metastable states are rare events and they
-          dictate the long-term evolution of the system. We present an importance sampling framework to
-          accelerate the time scale of Langevin dynamics simulations. The framework uses a neural network
-          parameterized importance function to bias the dynamics, enhancing the efficiency of rare-transition
-          sampling while preserving relative probabilities between transition paths. We provide a rigorous
-          mathematical formulation to recover the original transition rates between metastable states from the
-          biased dynamics, and use a branching random walk algorithm to control the statistical variance of the
-          estimated rates. We validate the framework on a two-dimensional problem, as well as the system of
-          7 Lennard-Jones discs as a benchmark atomistic model. The framework provides a scalable foundation for
-          accelerating the simulation of rare events in atomistic systems.
-        </p>
-      </div>
-
-      <!-- ============ 1. INTRODUCTION ============ -->
-      <h2>1. Introduction</h2>
+      <!-- ============ OVERVIEW ============ -->
+      <h2>Overview</h2>
       <p>
-        Atomistic simulations<a class="cite" href="#ref-1">[1]</a>&ndash;<a class="cite" href="#ref-3">[3]</a>
-        are powerful tools to elucidate the fundamental mechanisms of physical processes at the molecular scale.
-        However, their applicability is fundamentally constrained by the time scales accessible to brute-force
-        simulation. This limitation stems from the fact that atomistic systems typically remain confined in
-        energy basins, corresponding to metastable states, for long durations. Escaping to a neighboring basin
-        occurs very rarely, yet it is precisely these rare events that determine the long-term evolution of the
-        system. Using brute-force simulation to predict long-term evolution can therefore be prohibitively
-        expensive. This is known as the <em>rare event problem</em> or the <em>timescale
-        problem</em><a class="cite" href="#ref-4">[4]</a>&ndash;<a class="cite" href="#ref-6">[6]</a>.
+        Rare transitions between metastable basins set the long-term evolution of atomistic systems. This
+        work biases overdamped Langevin dynamics toward them with a neural-network importance function, then
+        reweights the sampled paths to recover the original rate. For seven Lennard-Jones discs (LJ7) at
+        600&nbsp;K, the weighted rate,
+        (4.3215&nbsp;&plusmn;&nbsp;0.0098)&nbsp;&times;&nbsp;10<sup>&minus;4</sup>&nbsp;fs<sup>&minus;1</sup> in model
+        units, is close to the brute-force 4.4110&nbsp;&times;&nbsp;10<sup>&minus;4</sup>&nbsp;fs<sup>&minus;1</sup>.
       </p>
       <p>
-        Various computational methods have been developed to address it. Steered molecular dynamics
-        (SMD)<a class="cite" href="#ref-7">[7]</a>, metadynamics
-        (MTD)<a class="cite" href="#ref-8">[8]</a>&ndash;<a class="cite" href="#ref-11">[11]</a>, and
-        hyperdynamics (HD)<a class="cite" href="#ref-12">[12]</a><a class="cite" href="#ref-13">,[13]</a>
-        introduce external biasing potentials to accelerate transitions. Trajectory-based methods such as
-        forward flux sampling (FFS)<a class="cite" href="#ref-14">[14]</a> and the weighted ensemble (WE)
-        method<a class="cite" href="#ref-15">[15]</a><a class="cite" href="#ref-16">,[16]</a> decompose the
-        configuration space into interfaces or bins and sample short trajectories between them. Transition path
-        theory<a class="cite" href="#ref-17">[17]</a>&ndash;<a class="cite" href="#ref-26">[26]</a> establishes
-        a mathematical framework to characterize the statistical ensemble of reactive trajectories. Importance
-        sampling<a class="cite" href="#ref-27">[27]</a>&ndash;<a class="cite" href="#ref-30">[30]</a>
-        constitutes another fundamental approach for efficiently sampling reaction pathways and quantifying the
-        kinetics of rare events. This paper focuses on applying importance sampling to Langevin dynamics
-        simulations to extend their timescales.
-      </p>
-      <p>
-        The proposed framework addresses two objectives. First, it enhances the efficiency of sampling rare
-        transition paths while rigorously preserving the relative probabilities of competing transition
-        channels. Second, it yields an unbiased estimator for the original transition rates by reweighting the
-        ensemble of transition paths generated by the accelerated dynamics. These goals are achieved by
-        modifying the system kinetics via an importance function that biases the transition probability kernels
-        to preferentially sample successful transition paths. The normalization condition of this modified
-        kernel imposes a unique condition that defines the optimal importance function.
-      </p>
-      <p>
-        Applying this framework to high-dimensional systems presents challenges. Obtaining the optimal
-        importance function is generally intractable, as it requires solving a high-dimensional partial
-        differential equation over a complex energy landscape. Moreover, the accuracy of the transition rate
-        estimator is highly sensitive to the quality of this importance function; even minor approximation
-        errors can induce large fluctuations in the estimated rates and alter the relative probability of
-        competing pathways. To obtain a suitable importance function in high dimensions we parameterize it with
-        a neural network and optimize it via adaptive training. To tolerate the unavoidable approximation error,
-        we construct an unbiased estimator for the transition rate even when the importance function is not
-        strictly optimal, by assigning statistical weights to the sampled transition paths. Finally, to increase
-        efficiency and reduce variance, we use a branching random walk (BRW)
-        algorithm<a class="cite" href="#ref-31">[31]</a> to regulate the weights of the sampled paths.
+        The ideal importance function, the committor (the probability of reaching the product before
+        returning to the start), is intractable in high dimensions, and treating a learned one as exact carries
+        its errors into the rate. Here those errors go into path weights, costing variance, not bias, in the
+        success-probability estimate. No collective variable enters the importance function.
       </p>
 
-      <!-- ============ 2. PROBLEM STATEMENT ============ -->
-      <h2>2. Problem Statement</h2>
-      <p>
-        Consider a system specified by a position vector $\mathbf{x}$ that exists in a domain $\Omega$, on which
-        a potential energy $U(\mathbf{x})$ is defined, as shown in Figure 1. The energy landscape is
-        characterized by two deep basins corresponding to two metastable states, $\Omega_{\rm A}$ and
-        $\Omega_{\rm B}$. Each metastable state is the collection of all microscopic states that lead to the
-        same local energy minimum under a steepest-descent trajectory of $U(\mathbf{x})$. The time evolution of
-        the system at temperature $T$ is governed by the overdamped Langevin
-        dynamics<a class="cite" href="#ref-32">[32]</a>,
-      </p>
-      <div class="eq-block">
-        $$ d\mathbf{x}(t) = -\gamma^{-1}\,\nabla U(\mathbf{x}(t))\,dt + \sqrt{2\gamma^{-1}\beta^{-1}}\, d\mathbf{W}(t), \tag{1} $$
-      </div>
-      <p>
-        where $\beta = 1/(k_{\rm B} T)$, $k_{\rm B}$ is the Boltzmann constant, $\gamma$ is the friction
-        coefficient, and $\mathbf{W}(t)$ is the standard Wiener process. Although Fig. 1 depicts a
-        two-dimensional domain, the target is systems of arbitrary dimension $d$, in which both $\mathbf{x}$ and
-        $\mathbf{W}$ are $d$-dimensional vectors. The stochastic process described by Eq. (1) has a stationary
-        distribution given by the Gibbs&ndash;Boltzmann distribution<a class="cite" href="#ref-33">[33]</a>,
-      </p>
-      <div class="eq-block">
-        $$ \rho_{\rm eq}(\mathbf{x}) = Z(\beta)^{-1}\, e^{-\beta U(\mathbf{x})}, \tag{2} $$
-      </div>
-      <div class="eq-block">
-        $$ Z(\beta) = \int_\Omega d\mathbf{x}\, e^{-\beta U(\mathbf{x})}. \tag{3} $$
-      </div>
-      <p>
-        Because $\rho_{\rm eq}(\mathbf{x})$ is heavily concentrated around the local minima of the basins, a
-        system initialized in $\Omega_{\rm A}$ tends to stay within $\Omega_{\rm A}$ for a long time before
-        making a rare transition into $\Omega_{\rm B}$.
-      </p>
+      <ul class="contributions">
+        <li>
+          <b>Bias each step, not the potential.</b> Each step resamples short unbiased trajectories by the
+          importance function; no bias force is needed.
+        </li>
+        <li>
+          <b>Channels come with the rate.</b> The same weighted paths resolve competing channels.
+        </li>
+        <li>
+          <b>From models to metals.</b> A revision in preparation adds a Pt adatom and an iron vacancy (387 and
+          2055 coordinates).
+        </li>
+      </ul>
 
-      <figure class="fig-narrow">
-        <img src="../figs/accel_langevin/system.png" alt="Schematic of the configuration space partitioned into two metastable basins with saddle points">
-        <figcaption>
-          <b>Figure 1.</b> Schematic representation of the configuration space $\Omega$ with positions
-          $\mathbf{x}$. The energy landscape $U(\mathbf{x})$ partitions the domain into two basins
-          $\Omega_{\rm A}$ and $\Omega_{\rm B}$, corresponding to two metastable states. The boundary between
-          them passes through the saddle points $S_1$ and $S_2$. Two small regions A and B (circles) are defined
-          around the local energy minima. Arrowed lines depict a failure path that returns to A before reaching
-          B and a success path that reaches B before returning to A.
-        </figcaption>
-      </figure>
-
+      <!-- ============ PROBLEM ============ -->
+      <h2>The Rare-Event Problem</h2>
       <p>
-        We define two small regions A and B around the local minima of $\Omega_{\rm A}$ and $\Omega_{\rm B}$.
-        A trajectory initialized in $\Omega_{\rm A}$ visits region A repeatedly, for a long time, before it ever
-        visits region B. This lets us break a long-time trajectory into many short trajectories (called
-        <em>paths</em>), as illustrated in Figure 2. Paths that leave region A and return to A before visiting B
-        are called <em>failure</em> paths; those that leave A and visit B before returning are called
-        <em>success</em> paths. Our first objective is to enhance the probability of sampling success paths
-        <em>uniformly</em>, so that the relative probability of escaping $\Omega_{\rm A}$ via different channels
-        (e.g. near $S_1$ or $S_2$) remains unchanged. The second is to know exactly by how much this probability
-        has been enhanced, so that we can recover the escape rate of the original system.
-      </p>
-
-      <figure class="fig-medium">
-        <img src="../figs/accel_langevin/transition_process.png" alt="Decomposition of a long trajectory into failure and success paths">
-        <figcaption>
-          <b>Figure 2.</b> Decomposition of a long-time trajectory into short paths. The shaded areas are
-          regions A and B. Failure paths (red) leave region A and return before visiting B; the success path
-          (blue) leaves A and visits B before returning. Under the original dynamics, the rare event problem is
-          equivalent to sampling a very large number of failure paths before a single success path is observed.
-        </figcaption>
-      </figure>
-
-      <p>
-        The transition rate $r_{\rm AB}$ from $\Omega_{\rm A}$ to $\Omega_{\rm B}$ is obtained from the mean
-        first passage time $t_{\rm FPT}$ from region A to region B,
+        A configuration $\mathbf{x}$ with $d$ coordinates, in a domain $\Omega$, follows overdamped Langevin
+        dynamics at temperature $T$:
       </p>
       <div class="eq-block">
-        $$ r_{\rm AB} = \langle t_{\rm FPT}\rangle^{-1}. \tag{4} $$
+        $$ \begin{aligned}
+             \mathrm{d}\mathbf{x}(t) &amp;= -\gamma^{-1}\,\nabla U(\mathbf{x}(t))\,\mathrm{d}t \\
+             &amp;\quad {}+ \sqrt{2\gamma^{-1}\beta^{-1}}\;\mathrm{d}\boldsymbol{W}(t),
+           \end{aligned} $$
       </div>
       <p>
-        Since the system repeatedly visits region A before reaching B, the mean first passage time takes the form
+        where $U$ is the potential energy, $\gamma$ the friction coefficient, ${\beta = 1/(k_{\rm B}T)}$ with
+        $k_{\rm B}$ Boltzmann's constant, and $\boldsymbol{W}$ a Wiener process. A long trajectory splits into
+        short paths that leave a small region A in basin $\Omega_{\rm A}$ and either return to A (failure) or
+        reach region B in basin $\Omega_{\rm B}$ (success); failures dominate (Figure&nbsp;1).
+        The rate, the inverse mean first-passage time, follows from the Hill relation
       </p>
       <div class="eq-block">
-        $$ \langle t_{\rm FPT}\rangle = \langle N_{\rm AA}\rangle\,\langle t_{\rm AA}\rangle + \langle t_{\rm AB}\rangle, \tag{5} $$
+        $$ r_{\rm AB} \approx J_{\rm A}\,P_{\rm AB}, \qquad J_{\rm A} = \langle t_{\rm AA} \rangle^{-1}, $$
       </div>
       <p>
-        where $\langle N_{\rm AA}\rangle$ is the average number of failure paths sampled before a success path,
-        $\langle t_{\rm AA}\rangle$ is the mean time interval between successive escapes from A, and
-        $\langle t_{\rm AB}\rangle$ is the average time of a success path. The average number of failed attempts
-        follows from a geometric sum,
-      </p>
-      <div class="eq-block">
-        $$ \langle N_{\rm AA}\rangle = \sum_{n=0}^{\infty} n\,(1-P_{\rm AB})^n\, P_{\rm AB} = P_{\rm AB}^{-1} - 1, \tag{6} $$
-      </div>
-      <p>
-        where $P_{\rm AB}$ is the probability of sampling a success path from A (the <em>success probability</em>).
-        When the system exhibits a rare-event problem, $P_{\rm AB} \ll 1$, and
-      </p>
-      <div class="eq-block">
-        $$ \langle t_{\rm FPT}\rangle \approx P_{\rm AB}^{-1}\,\langle t_{\rm AA}\rangle. \tag{7} $$
-      </div>
-      <p>
-        This yields the transition rate
-      </p>
-      <div class="eq-block">
-        $$ r_{\rm AB} = \langle t_{\rm FPT}\rangle^{-1} \approx P_{\rm AB}\,\langle t_{\rm AA}\rangle^{-1} = J_{\rm A}\, P_{\rm AB}. \tag{8} $$
-      </div>
-      <p>
-        The inverse of $\langle t_{\rm AA}\rangle$ is the flux $J_{\rm A}$ out of A, known as the Hill
-        relation<a class="cite" href="#ref-34">[34]</a>&ndash;<a class="cite" href="#ref-37">[37]</a>. The mean
-        time between escapes can be estimated cheaply from unbiased equilibrium simulations near A (Section 3.6).
-        Since $P_{\rm AB}$ is vanishingly small, computing it by brute force is very inefficient. Our goal is to
-        modify the kinetics so that $P_{\rm AB}$ is enhanced while the relative probability of different success
-        paths remains unchanged.
-      </p>
-
-      <!-- ============ 3. METHODS ============ -->
-      <h2>3. Methods</h2>
-
-      <h3>3.1 Langevin Dynamics and Path Sampling</h3>
-      <p>
-        The overdamped Langevin dynamics of Eq. (1) is simulated with a time step $\Delta t$ using the
-        Euler&ndash;Maruyama scheme<a class="cite" href="#ref-38">[38]</a>,
-      </p>
-      <div class="eq-block">
-        $$ \mathbf{x}(t+\Delta t) = \mathbf{x}(t) - \gamma^{-1}\nabla U(\mathbf{x}(t))\,\Delta t + \sqrt{2\gamma^{-1}\beta^{-1}\Delta t}\,\boldsymbol{\xi}, \tag{9} $$
-      </div>
-      <p>
-        where $\boldsymbol{\xi}$ is a vector of independent standard Gaussian random variables. A <em>path</em>
-        is a sequence of microscopic states visited along the trajectory,
-      </p>
-      <div class="eq-block">
-        $$ \Gamma = \{\mathbf{x}_1, \mathbf{x}_2, \cdots, \mathbf{x}_N\}. \tag{10} $$
-      </div>
-      <p>
-        A path is initiated (at $\mathbf{x}_1$) whenever the trajectory leaves region A, and terminated whenever
-        it enters region A or region B, i.e. $\mathbf{x}_N \in \mathrm{A}\cup\mathrm{B}$. Paths terminating in A
-        ($\Gamma_{\rm AA}$) are failure paths; those terminating in B ($\Gamma_{\rm AB}$) are success paths. To
-        coarse-grain time, successive stored states are separated by a period $\tau = k\Delta t$ with $k$ a
-        positive integer, except that the final step may be shorter if the system enters A or B first.
-      </p>
-
-      <h3>3.2 Importance Sampling of Transition Paths</h3>
-      <p>
-        Let $\mathcal{K}_\tau(\mathbf{y}\,|\,\mathbf{x})$ be the probability density kernel of visiting
-        $\mathbf{y}$ as the next microscopic state on a path given the current state $\mathbf{x}$, where the time
-        separation equals $\tau$ or the first passage time $\tau_{\rm A\cup B}$ to region A or B, whichever is
-        smaller,
-      </p>
-      <div class="eq-block">
-        $$ \mathcal{K}_\tau(\mathbf{y}\,|\,\mathbf{x}) = \mathbb{E}\!\left[\,\delta\!\left(\mathbf{y} - \mathbf{x}(\tau \wedge \tau_{\rm A\cup B})\right)\,\middle|\,\mathbf{x}(0) = \mathbf{x}\right], \tag{11} $$
-      </div>
-      <p>
-        with $\delta(\cdot)$ the $d$-dimensional Dirac delta and $\wedge$ the minimum. The probability density of
-        sampling a success path is
-      </p>
-      <div class="eq-block">
-        $$ p(\Gamma_{\rm AB}) = \rho_{\rm A}(\mathbf{x}_1) \prod_{i=1}^{N-1} \mathcal{K}_\tau(\mathbf{x}_{i+1}\,|\,\mathbf{x}_i), \tag{12} $$
-      </div>
-      <p>
-        where $\rho_{\rm A}(\mathbf{x}_1)$ is the density of the initial state at the moment of exiting A
-        (Section 3.6). The success probability is the integral over all success paths,
-      </p>
-      <div class="eq-block">
-        $$ P_{\rm AB} = \int_{\Gamma \in \{\Gamma_{\rm AB}\}} p(\Gamma)\, d\Gamma. \tag{13} $$
-      </div>
-      <p>
-        To alter the kinetics we modify the kernel with an importance function
-        $I(\mathbf{x})$<a class="cite" href="#ref-28">[28]</a><a class="cite" href="#ref-29">,[29]</a>,
-      </p>
-      <div class="eq-block">
-        $$ \mathcal{K}'_\tau(\mathbf{y}\,|\,\mathbf{x}) = \frac{I(\mathbf{y})}{I(\mathbf{x})}\, \mathcal{K}_\tau(\mathbf{y}\,|\,\mathbf{x}). \tag{14} $$
-      </div>
-      <p>
-        The modified kernel must satisfy the normalization condition
-        $\int_{\mathbf{y}\in\Omega} d\mathbf{y}\, \mathcal{K}'_\tau(\mathbf{y}\,|\,\mathbf{x}) = 1$ (Eq. 15). We
-        define the importance function that satisfies this everywhere as the <em>optimal</em> importance
-        function $I_{\rm opt}(\mathbf{x})$. When $I(\mathbf{x}) \neq I_{\rm opt}(\mathbf{x})$, the kernel must be
-        renormalized by a factor $Z_\tau(\mathbf{x})$,
-      </p>
-      <div class="eq-block">
-        $$ \mathcal{K}'_\tau(\mathbf{y}\,|\,\mathbf{x}) = Z_\tau^{-1}(\mathbf{x})\,\frac{I(\mathbf{y})}{I(\mathbf{x})}\,\mathcal{K}_\tau(\mathbf{y}\,|\,\mathbf{x}), \tag{16} $$
-      </div>
-      <div class="eq-block">
-        $$ Z_\tau(\mathbf{x}) = \int_{\mathbf{y}\in\Omega} d\mathbf{y}\, \frac{I(\mathbf{y})}{I(\mathbf{x})}\,\mathcal{K}_\tau(\mathbf{y}\,|\,\mathbf{x}). \tag{17} $$
-      </div>
-      <p>
-        The biased path density $p'(\Gamma_{\rm AB}) = \rho_{\rm A}(\mathbf{x}_1)\prod_{i=1}^{N-1}\mathcal{K}'_\tau(\mathbf{x}_{i+1}\,|\,\mathbf{x}_i)$
-        (Eq. 18) can be rewritten by inserting Eq. (16),
-      </p>
-      <div class="eq-block">
-        $$ p'(\Gamma_{\rm AB}) = \frac{I(\mathbf{x}_N)}{I(\mathbf{x}_1)}\left[\prod_{i=1}^{N-1} Z_\tau^{-1}(\mathbf{x}_i)\right] p(\Gamma_{\rm AB}). \tag{19} $$
-      </div>
-      <p>
-        If the importance function is optimal, all normalization factors equal unity and this simplifies to
-      </p>
-      <div class="eq-block">
-        $$ p'(\Gamma_{\rm AB}) = \frac{I_{\rm opt}(\mathbf{x}_N)}{I_{\rm opt}(\mathbf{x}_1)}\, p(\Gamma_{\rm AB}). \tag{20} $$
-      </div>
-      <p>
-        The enhancement factor $I_{\rm opt}(\mathbf{x}_N)/I_{\rm opt}(\mathbf{x}_1)$ is independent of the
-        intermediate positions and is explicitly known, so the unbiased path density can be reconstructed from
-        the biased dynamics. In practice $I_{\rm opt}(\mathbf{x})$ is generally unknown; the normalization
-        condition provides an optimality target,
-      </p>
-      <div class="eq-block">
-        $$ \int_{\mathbf{y}\in\Omega} d\mathbf{y}\, I(\mathbf{y})\, \mathcal{K}_\tau(\mathbf{y}\,|\,\mathbf{x}) = I(\mathbf{x}). \tag{21} $$
-      </div>
-      <p>
-        Setting $I(\mathbf{x}) = 0$ for $\mathbf{x}\in\mathrm{A}$ and $I(\mathbf{x}) = 1$ for
-        $\mathbf{x}\in\mathrm{B}$, the optimal importance function quantifies the probability of reaching B
-        before returning to A, i.e. the <em>committor</em> function<a class="cite" href="#ref-17">[17]</a>. The
-        evolution under $\mathcal{K}'_\tau$ is equivalent to overdamped Langevin dynamics with an added bias
-        potential,
-      </p>
-      <div class="eq-block">
-        $$ d\mathbf{x}(t) = -\gamma^{-1}\nabla\!\left[U(\mathbf{x}(t)) + U_{\rm bias}(\mathbf{x}(t))\right] dt + \sqrt{2\gamma^{-1}\beta^{-1}}\, d\mathbf{W}(t), \tag{22} $$
-      </div>
-      <div class="eq-block">
-        $$ U_{\rm bias}(\mathbf{x}) = -2\beta^{-1}\ln I(\mathbf{x}). \tag{23} $$
-      </div>
-      <p>
-        This bias potential is the &ldquo;optimal
-        controller&rdquo;<a class="cite" href="#ref-39">[39]</a>&ndash;<a class="cite" href="#ref-41">[41]</a>,
-        derived from the Doob $h$-transform<a class="cite" href="#ref-42">[42]</a> or the Girsanov
-        theorem<a class="cite" href="#ref-43">[43]</a>&ndash;<a class="cite" href="#ref-45">[45]</a>.
-      </p>
-
-      <h3>3.3 Success Probability Estimation</h3>
-      <p>
-        Defining a reward function $R(\Gamma) = 1$ if $\Gamma \in \{\Gamma_{\rm AB}\}$ and $0$ otherwise
-        (Eq. 24), the success probability is the expectation of $R$ over all paths sampled with $\mathcal{K}_\tau$,
-        $P_{\rm AB} = \mathbb{E}_\Gamma[R(\Gamma)]$ (Eqs. 25&ndash;26). This is intractable under rare-event
-        conditions because almost all sampled paths have zero reward. Sampling instead under the biased kernel
-        $\mathcal{K}'_\tau$ and reweighting with Eq. (19) gives
-      </p>
-      <div class="eq-block">
-        $$ P_{\rm AB} = \int_\Gamma R(\Gamma)\,\frac{I(\mathbf{x}_1)}{I(\mathbf{x}_N)}\left[\prod_{i=1}^{N-1} Z_\tau(\mathbf{x}_i)\right] p'(\Gamma)\, d\Gamma. \tag{27} $$
-      </div>
-      <p>
-        Defining the path weight
-      </p>
-      <div class="eq-block">
-        $$ W(\Gamma) = \prod_{i=1}^{N-1} Z_\tau(\mathbf{x}_i), \tag{28} $$
-      </div>
-      <p>
-        the success probability becomes an expectation over paths sampled with $\mathcal{K}'_\tau$,
-      </p>
-      <div class="eq-block">
-        $$ P_{\rm AB} = \mathbb{E}'_\Gamma\!\left[R(\Gamma)\,W(\Gamma)\,\frac{I(\mathbf{x}_1)}{I(\mathbf{x}_N)}\right]. \tag{30} $$
-      </div>
-      <p>
-        The advantage is that $\mathcal{K}'_\tau$ preferentially samples successful paths with non-zero reward.
-        In the ideal limit $I(\mathbf{x}) = I_{\rm opt}(\mathbf{x})$ this reduces to the &ldquo;reactive
-        probability&rdquo;<a class="cite" href="#ref-37">[37]</a><a class="cite" href="#ref-46">,[46]</a>,
-      </p>
-      <div class="eq-block">
-        $$ P_{\rm AB} = \int_{\mathbf{x}_1\in\Omega} \rho_{\rm A}(\mathbf{x}_1)\, I_{\rm opt}(\mathbf{x}_1)\, d\mathbf{x}_1. \tag{31} $$
-      </div>
-      <p>
-        Replacing $I_{\rm opt}$ by its approximation $I$ in Eq. (31) would introduce uncontrolled error, as
-        demonstrated in Section 4. The full weighted average in Eq. (30) is required for an unbiased estimate.
-      </p>
-
-      <h3>3.4 Branching Random Walk</h3>
-      <p>
-        Although Eq. (30) is unbiased, its statistical convergence depends on the quality of $I(\mathbf{x})$:
-        the closer $I$ is to $I_{\rm opt}$, the smaller the variance of the path weights $W(\Gamma)$. Even a
-        small deviation can produce large weight fluctuations. We combine a branching random walk
-        (BRW)<a class="cite" href="#ref-31">[31]</a> with the biased path sampling. Each walker starts with
-        state $\mathbf{x}_1 \sim \rho_{\rm A}$ and unit weight; at each step its weight is multiplied by the
-        current normalization factor. If the weight stays within a predefined range $[W_{\min}, W_{\max}]$ the
-        walker continues; otherwise it branches into $\mathcal{R}(W)$ walkers using stochastic rounding,
-      </p>
-      <div class="eq-block">
-        $$ \mathcal{R}(W) = \begin{cases} \lfloor W\rfloor + 1, & \text{with probability } W - \lfloor W\rfloor, \\ \lfloor W\rfloor, & \text{otherwise,}\end{cases} \tag{32} $$
-      </div>
-      <p>
-        with branched walkers reset to unit weight to preserve the total weight. There are three cases:
-        $\mathcal{R}(W) = 0$ terminates the walker; $\mathcal{R}(W) = 1$ continues it with weight reset to unity;
-        $\mathcal{R}(W) > 1$ branches it into multiple unit-weight walkers. Each &ldquo;success&rdquo; walker
-        then receives a reward equal to its weight times $I(\mathbf{x}_1)/I(\mathbf{x}_N)$, and the success
-        probability is estimated by averaging rewards following Eq. (29). By regulating the walker weights, the
-        BRW controls the variance of the estimator.
-      </p>
-
-      <h3>3.5 Optimization of Importance Function</h3>
-      <p>
-        In high dimensions the configuration volume grows exponentially, so we approximate the importance
-        function with a neural network $I(\mathbf{x};\theta)$, where $\theta$ are the trainable
-        parameters<a class="cite" href="#ref-37">[37]</a><a class="cite" href="#ref-50">,[50]</a><a class="cite" href="#ref-51">,[51]</a>.
-        We optimize it by minimizing the loss<a class="cite" href="#ref-37">[37]</a><a class="cite" href="#ref-52">,[52]</a>
-      </p>
-      <div class="eq-block">
-        $$ L(\theta) = \int_\Omega \mathcal{L}(\mathbf{x},\theta)\, g(\mathbf{x})\, d\mathbf{x}, \tag{33} $$
-      </div>
-      <div class="eq-block">
-        $$
-        \begin{split}
-        \mathcal{L}(\mathbf{x},\theta) ={}& \left(\ln\!\int_\Omega d\mathbf{y}\, I(\mathbf{y};\theta)\,\mathcal{K}_\tau(\mathbf{y}\,|\,\mathbf{x}) - \ln I(\mathbf{x};\theta)\right)^2 \\
-        &+ \left(\ln\!\left[1 - \int_\Omega d\mathbf{y}\, I(\mathbf{y};\theta)\,\mathcal{K}_\tau(\mathbf{y}\,|\,\mathbf{x})\right] - \ln\!\left[1 - I(\mathbf{x};\theta)\right]\right)^2,
-        \end{split}
-        \tag{34}
-        $$
-      </div>
-      <p>
-        where $g(\mathbf{x}) > 0$ is a distribution function. The loss reaches its global minimum of $0$ when
-        $I(\mathbf{x};\theta) = I_{\rm opt}(\mathbf{x})$. Because evaluating the loss over all of $\Omega$ is
-        intractable, we evaluate it only on microscopic states $\mathbf{x}$ sampled by the importance sampling
-        procedure itself, giving an <em>adaptive training</em> scheme (Algorithm 1).
-      </p>
-
-      <div class="algo-box">
-        <div class="algo-title">Algorithm 1 &mdash; Adaptive Training of the Importance Function</div>
-        <div class="algo-io">
-          <b>Input:</b> potential $U(\mathbf{x})$, regions A and B, loss density $\mathcal{L}(\mathbf{x},\theta)$.
-          &nbsp;<b>Output:</b> optimized importance function $I(\mathbf{x};\theta)$.
-        </div>
-        <ol>
-          <li>Initialize neural network parameters $\theta$; initialize replay library $\mathcal{M} \leftarrow \emptyset$.</li>
-          <li>Initialize $n$ walkers near the boundary of A according to $\rho_{\rm A}(\mathbf{x})$.</li>
-          <li><b>while</b> not converged <b>do</b>:
-            <div class="algo-phase">1. Sampling stage</div>
-            <ol type="a">
-              <li>Propagate walkers using the biased kernel $\mathcal{K}_\tau$ driven by the current $I(\mathbf{x};\theta)$; collect newly visited states $\mathcal{S}_{\rm new}$.</li>
-              <li>If a walker reaches region B (success path), append its states to the library $\mathcal{M}$.</li>
-            </ol>
-            <div class="algo-phase">2. Training stage</div>
-            <ol type="a">
-              <li>Sample a new batch $\mathcal{B}_{\rm new}$ from $\mathcal{S}_{\rm new}$ and a historical batch $\mathcal{B}_{\rm lib}$ from $\mathcal{M}$.</li>
-              <li>Update $\theta \leftarrow \theta - \eta\,\nabla_\theta \sum_{\mathbf{x}\in\mathcal{B}} \mathcal{L}(\mathbf{x},\theta)$ over $\mathcal{B} = \mathcal{B}_{\rm new}\cup\mathcal{B}_{\rm lib}$.</li>
-            </ol>
-          </li>
-        </ol>
-      </div>
-
-      <h3>3.6 Sampling Initial States of Paths</h3>
-      <p>
-        Escaping region A is not a rare event, so the mean time $\langle t_{\rm AA}\rangle$ between successive
-        escapes can be computed from a standard unbiased Langevin simulation initialized in A. Recording the
-        sequence of escape times $\{t_1, t_2, \ldots, t_L\}$ (Eq. 35), the mean interval is
-      </p>
-      <div class="eq-block">
-        $$ \langle t_{\rm AA}\rangle = \frac{1}{L-1}\sum_{i=1}^{L-1}(t_{i+1} - t_i) = \frac{t_L - t_1}{L-1}. \tag{36} $$
-      </div>
-
-      <h3>3.7 Computing the Normalization Factor</h3>
-      <p>
-        Computing $Z_\tau(\mathbf{x})$ by quadrature is infeasible in high dimensions, but an unbiased Monte
-        Carlo estimate is available. We generate $M$ independent trajectories initiated at $\mathbf{x}$, each
-        propagated under $\mathcal{K}_\tau$ for $\tau \wedge \tau_{\rm A\cup B}$, record their terminal positions
-        $\{\mathbf{y}_i\}_{i=1}^{M}$, and evaluate
-      </p>
-      <div class="eq-block">
-        $$ \widehat{Z}_\tau(\mathbf{x}) = \frac{1}{M}\sum_{i=1}^{M} \frac{I(\mathbf{y}_i)}{I(\mathbf{x})}. \tag{37} $$
-      </div>
-      <p>
-        This estimator converges to $Z_\tau(\mathbf{x})$ as $M$ increases. In this work we choose $M = 100$.
-      </p>
-
-      <h3>3.8 Biased Transition Path Sampling</h3>
-      <p>
-        We reuse the same ensemble of $M$ trajectories from Section 3.7 via sequential importance
-        resampling<a class="cite" href="#ref-57">[57]</a>&ndash;<a class="cite" href="#ref-59">[59]</a>.
-        Given terminal positions $\{\mathbf{y}_i\}$ and their importance values $I(\mathbf{y}_i)$, the next state
-        of the importance-sampled path is selected from the ensemble with probability
-      </p>
-      <div class="eq-block">
-        $$ p_i = \frac{I(\mathbf{y}_i)}{\sum_{j=1}^{M} I(\mathbf{y}_j)}. \tag{38} $$
-      </div>
-      <p>
-        This avoids computing any gradient of the importance function.
-      </p>
-
-      <h3>3.9 Reverse Path Sampling</h3>
-      <p>
-        For the reverse process ($\Omega_{\rm B}\to\Omega_{\rm A}$), the optimal biased kernel is simply
-      </p>
-      <div class="eq-block">
-        $$ \mathcal{K}'_\tau(\mathbf{y}\,|\,\mathbf{x}) = \mathcal{K}_\tau(\mathbf{y}\,|\,\mathbf{x})\,\frac{1 - I_{\rm opt}(\mathbf{y})}{1 - I_{\rm opt}(\mathbf{x})}, \tag{39} $$
-      </div>
-      <p>
-        because if $I_{\rm opt}$ is optimal for A$\to$B, then $1 - I_{\rm opt}$ is optimal for B$\to$A. The
-        numerical procedure is unchanged apart from replacing $I$ by $1-I$ in Eqs. (37)&ndash;(38). Training is
-        modified accordingly by initiating trajectories near the boundaries of both A and B simultaneously, so a
-        single network learns to sample both forward and backward transitions.
-      </p>
-
-      <!-- ============ 4. RESULTS ============ -->
-      <h2>4. Results</h2>
-      <p>
-        We validate the framework on a two-dimensional system and the Lennard-Jones 7 (LJ7) benchmark,
-        demonstrating its robustness and scalability.
-      </p>
-
-      <h3>4.1 Two-Dimensional Potential with Two Reaction Channels</h3>
-      <p>
-        The first benchmark is a two-dimensional potential with two distinct reaction
-        channels<a class="cite" href="#ref-25">[25]</a><a class="cite" href="#ref-28">,[28]</a><a class="cite" href="#ref-29">,[29]</a><a class="cite" href="#ref-56">,[56]</a>.
-        The potential energy (in eV) is
-      </p>
-      <div class="eq-block">
-        $$
-        \begin{aligned}
-        U_{\rm TC}(\mathbf{x}) &= \mathbf{c}^{\top}\mathbf{x} - \tfrac{1}{3} + \tfrac{1}{6}\sum_{i=1}^{4} w_i\left(\mathbf{x}^{\top}\mathbf{Q}_i\mathbf{x} - b_i\right)^2, \\[2pt]
-        \mathbf{c} &= [\,0,\ 0.02\,]^{\top}, \quad \{w_i\} = \{4,2,1,1\}, \quad \{b_i\} = \{1,2,1,1\}, \\[2pt]
-        \{\mathbf{Q}_i\} &= \left\{ \begin{pmatrix}1&0\\0&1\end{pmatrix}, \begin{pmatrix}1&0\\0&0\end{pmatrix}, \begin{pmatrix}1&1\\1&1\end{pmatrix}, \begin{pmatrix}1&-1\\-1&1\end{pmatrix} \right\},
-        \end{aligned}
-        \tag{40}
-        $$
-      </div>
-      <p>
-        where $\mathbf{x} = [x_1, x_2]^{\top}$ (in nm). The system has minima at
-        $\mathbf{x}_{\rm A} = [-1.1, 0]^{\top}$ nm and $\mathbf{x}_{\rm B} = [1.1, 0]^{\top}$ nm, and saddle
-        points at $\mathbf{x}_{S_1} = [0, 1]^{\top}$ nm and $\mathbf{x}_{S_2} = [0, -1]^{\top}$ nm. The energy
-        barriers are <b>1.02 eV</b> at $S_1$ and <b>0.98 eV</b> at $S_2$. Regions A and B are circles of radius
-        $0.1$ nm centered at $\mathbf{x}_{\rm A}$ and $\mathbf{x}_{\rm B}$. Simulations use friction
-        $\gamma = 1$ eV nm$^{-2}$ fs and time step $\Delta t = 10^{-2}$ fs.
-      </p>
-      <p>
-        The importance function is the logistic sigmoid of a scalar potential $h(\mathbf{x};\theta)$,
-      </p>
-      <div class="eq-block">
-        $$ I(\mathbf{x};\theta) = \sigma\!\left(h(\mathbf{x};\theta)\right) = \frac{1}{1 + e^{-h(\mathbf{x};\theta)}}, \tag{41} $$
-      </div>
-      <div class="eq-block">
-        $$ h(\mathbf{x};\theta) = A\exp\!\left[-\sum_{i=1}^{2} a_i (x_i - c_i)^2\right] + \mathrm{MLP}(\mathbf{x};\theta), \tag{42} $$
-      </div>
-      <p>
-        with fixed Gaussian parameters $A = 3$, $(a_1, a_2) = (1, 1)$, $(c_1, c_2) = (-1.1, 0)$. The MLP has two
-        hidden layers of 50 neurons each with $\tanh$ activations. A single walker is initialized at $T = 500$ K
-        and training proceeds for 1,000 iterations with the ADAM optimizer<a class="cite" href="#ref-60">[60]</a>
-        at learning rate $5\times10^{-3}$; the exact optimal importance function used for comparison is obtained
-        by the finite element method (FEM)<a class="cite" href="#ref-61">[61]</a>.
-      </p>
-
-      <figure class="fig-medium">
-        <img src="../figs/accel_langevin/nn_TC_1.0mu_23.2beta_0.01000dt_5stride_100swarm_1000escapes__3d.png"
-             alt="Neural network importance function on the 2D two-channel domain">
-        <figcaption>
-          <b>Figure 3.</b> Neural network parameterized importance function $I(\mathbf{x};\theta)$ trained by
-          adaptive training on the two-dimensional two-channel system, shown over the domain. Against the exact
-          optimal importance function (committor) obtained by FEM, the largest errors arise in sparsely sampled
-          regions remote from the dominant transition pathways.
-        </figcaption>
-      </figure>
-
-      <p>
-        The trained importance function accelerates the transition at $T = 500$ K, sampling paths with the BRW
-        algorithm over 1,000 independent trials of 1,000 paths each and branching weight thresholds
-        $[1.0, 2.0]$. The estimated success probability is
-        $P_{\rm AB} = (9.0067 \pm 0.0558)\times 10^{-13}$. Direct evaluation from Eq. (31), assuming the network
-        is optimal, gives a significantly biased $P_{\rm AB}^{\rm NS} = 3.2028\times 10^{-13}$ (no sampling). The
-        flux out of A is estimated from $10^5$ escape configurations as $J_{\rm A} = 8.0736$ fs$^{-1}$, yielding
-        the transition rate $r_{\rm AB} = (7.2717 \pm 0.0450)\times 10^{-12}$ fs$^{-1}$, in good agreement with
-        Kramers rate theory<a class="cite" href="#ref-56">[56]</a>,
-        $r_{\rm AB}^{\rm Kr} = 7.1755\times 10^{-12}$ fs$^{-1}$. Without path sampling the rate is
-        $r_{\rm AB}^{\rm NS} = 2.5858\times 10^{-12}$ fs$^{-1}$, very different from the correct value. The
-        framework also recovers the fraction of transitions through $S_1$: importance sampling gives
-        $0.2972 \pm 0.0023$, close to the Kramers value $0.2938$, whereas direct counting without reweighting
-        gives an inaccurate $0.4483$ (Table 1).
-      </p>
-
-      <div class="table-wrap">
-        <table class="data-table">
-          <caption>(a) Transition rates (in $10^{-12}$ fs$^{-1}$)</caption>
-          <thead>
-            <tr><th>Method</th><th>$r_{\rm AB}$</th></tr>
-          </thead>
-          <tbody>
-            <tr class="row-best"><td>Importance Sampling</td><td>7.2717 &plusmn; 0.0450</td></tr>
-            <tr><td>Kramers</td><td>7.1755</td></tr>
-            <tr><td>No Sampling</td><td>2.5858</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="table-wrap">
-        <table class="data-table">
-          <caption>(b) Transition rate fraction through $S_1$</caption>
-          <thead>
-            <tr><th>Method</th><th>$r_{\rm AB}(S_1)/r_{\rm AB}$</th></tr>
-          </thead>
-          <tbody>
-            <tr class="row-best"><td>Importance Sampling</td><td>0.2972 &plusmn; 0.0023</td></tr>
-            <tr><td>Kramers</td><td>0.2938</td></tr>
-            <tr><td>No Reweighting</td><td>0.4483</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="table-note">
-        <span class="caption-lead">Table 1.</span> Results for the 2-dimensional system at 500 K. (a) Transition
-        rates from importance sampling, Kramers rate theory, and no sampling (Eq. 31 assuming
-        $I \approx I_{\rm opt}$). (b) Transition rate fraction through $S_1$ from importance sampling, Kramers
-        theory, and direct counting without reweighting.
-      </p>
-      <p>
-        Repeating the estimation from $500$ K to $1000$ K, the importance sampling rates and $S_1$ fractions
-        agree with Kramers rate theory across temperatures, whereas estimates without path sampling show
-        significant errors, especially at low temperature.
-      </p>
-
-      <h3>4.2 Sampling Bidirectional Transitions</h3>
-      <p>
-        Using the reverse-sampling scheme of Section 3.9, a single network boosts both forward
-        ($\Omega_{\rm A}\to\Omega_{\rm B}$) and backward ($\Omega_{\rm B}\to\Omega_{\rm A}$) transitions. Here
-        the importance function is the sigmoid of an MLP with no Gaussian term,
-      </p>
-      <div class="eq-block">
-        $$ I(\mathbf{x};\theta) = \sigma\!\left(\mathrm{MLP}(\mathbf{x};\theta)\right). \tag{43} $$
-      </div>
-      <p>
-        For the 2D system the MLP has two hidden layers of 50 neurons ($\tanh$), trained for 2,000 epochs
-        (ADAM, learning rate $5\times10^{-3}$). Sampling both directions during training yields a more accurate
-        importance function after the same number of epochs than sampling only escapes from $\Omega_{\rm A}$, and
-        it removes the need to select a Gaussian term. As summarized in Table 2, the importance-sampling
-        rates $r_{\rm AB}$ and $r_{\rm BA}$ and their $S_1$ fractions agree closely with Kramers theory in both
-        directions, while direct evaluation without reweighting yields significantly biased rates and incorrect
-        fractions.
-      </p>
-
-      <div class="table-wrap">
-        <table class="data-table">
-          <caption>(a) Transition rates (in $10^{-12}$ fs$^{-1}$)</caption>
-          <thead>
-            <tr><th>Method</th><th>$r_{\rm AB}$</th><th>$r_{\rm BA}$</th></tr>
-          </thead>
-          <tbody>
-            <tr class="row-best"><td>Importance Sampling</td><td>7.2093 &plusmn; 0.0472</td><td>7.3635 &plusmn; 0.0528</td></tr>
-            <tr><td>Kramers</td><td>7.1755</td><td>7.1755</td></tr>
-            <tr><td>No Sampling</td><td>21.6420</td><td>25.3386</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="table-wrap">
-        <table class="data-table">
-          <caption>(b) Transition rate fractions through $S_1$</caption>
-          <thead>
-            <tr><th>Method</th><th>$r_{\rm AB}(S_1)/r_{\rm AB}$</th><th>$r_{\rm BA}(S_1)/r_{\rm BA}$</th></tr>
-          </thead>
-          <tbody>
-            <tr class="row-best"><td>Importance Sampling</td><td>0.2963 &plusmn; 0.0030</td><td>0.2866 &plusmn; 0.0033</td></tr>
-            <tr><td>Kramers</td><td>0.2938</td><td>0.2938</td></tr>
-            <tr><td>No Reweighting</td><td>0.4602</td><td>0.4619</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="table-note">
-        <span class="caption-lead">Table 2.</span> Bidirectional results for the 2-dimensional system at 500 K.
-      </p>
-
-      <h3>4.3 Lennard&ndash;Jones 7 (LJ7) System</h3>
-      <p>
-        The most demanding benchmark is the system of 7 Lennard-Jones discs (LJ7), a 14-degree-of-freedom
-        atomistic model<a class="cite" href="#ref-26">[26]</a><a class="cite" href="#ref-41">,[41]</a><a class="cite" href="#ref-62">,[62]</a>.
-        The soft-core potential is
-      </p>
-      <div class="eq-block">
-        $$ U_{\rm LJ7}^{\rm soft}(\{\mathbf{x}_i\}) = 4\varepsilon \sum_{i&lt;j}\left[s_{ij}^{-2} - s_{ij}^{-1}\right], \qquad s_{ij} = \alpha + \left(\frac{r_{ij}}{\varsigma}\right)^6, \tag{44} $$
-      </div>
-      <p>
-        where $r_{ij} = \|\mathbf{x}_i - \mathbf{x}_j\|$, and we choose $\varepsilon = 1.0$ eV, $\alpha = 0.5$,
-        $\varsigma = 1.0$ nm, with time step $\Delta t = 10^{-3}$ fs. The parameter $\alpha > 0$ regularizes the
-        $r_{ij}\to 0$ singularity, replacing the divergent $r_{ij}^{-12}$ repulsion with a large but finite core
-        (Figure 4a), avoiding divergent forces during sampling.
-      </p>
-      <p>
-        Relaxing all configurations partitions the space into metastable states, each associated with a local
-        energy minimum. After quotienting out continuous (translational and rotational) symmetries, the minima
-        related by discrete symmetries still incur energy barriers and remain distinct. We label collections of
-        such states using a coordination number $c_i$ for each atom,
-      </p>
-      <div class="eq-block">
-        $$ c_i = \sum_{i \neq j} \frac{1 - \left(\frac{2 r_{ij}}{3\varsigma}\right)^{8}}{1 - \left(\frac{2 r_{ij}}{3\varsigma}\right)^{16}}, \tag{45} $$
-      </div>
-      <p>
-        and the second and third central moments of the coordination
-        numbers<a class="cite" href="#ref-11">[11]</a><a class="cite" href="#ref-63">,[63]</a>&ndash;<a class="cite" href="#ref-65">[65]</a>,
-      </p>
-      <div class="eq-block">
-        $$ \mu_2 = \frac{1}{7}\sum_{i=1}^{7} (c_i - \bar c)^2, \quad \mu_3 = \frac{1}{7}\sum_{i=1}^{7} (c_i - \bar c)^3, \quad \bar c = \frac{1}{7}\sum_{j=1}^{7} c_j. \tag{46} $$
-      </div>
-      <p>
-        All local minima group into four collections $C_0, C_1, C_2, C_3$ in $(\mu_2, \mu_3)$ space (Figure 4b).
+        valid when the success probability $P_{\rm AB}$, the chance that a path leaving A reaches B, is
+        small ${(P_{\rm AB} \ll 1)}$. The flux $J_{\rm A}$, the inverse mean time between escapes from A, is cheap;
+        the tiny $P_{\rm AB}$ is not: importance sampling gives
+        (9.0067&nbsp;&plusmn;&nbsp;0.0558)&nbsp;&times;&nbsp;10<sup>&minus;13</sup> for Figure&nbsp;1a's potential
+        at 500&nbsp;K.
       </p>
 
       <figure class="fig-pair">
-        <img src="../figs/accel_langevin/LJ7_potential.png" alt="Soft Lennard-Jones pair potential regularized at short range">
-        <img src="../figs/accel_langevin/LJ7_map_and_clusters.png" alt="Four collections of LJ7 local minima in the mu2-mu3 collective variable space">
+        <img src="../figs/accel_langevin/system.png" alt="Color map of a two-dimensional energy landscape divided by a dotted line into basins Omega A and Omega B, with small circular regions A and B at the minima, saddles S1 and S2 on the dividing line, a failure path that loops back to A, and a success path that crosses near S1 into B">
+        <img src="../figs/accel_langevin/transition_process_1_web.png" alt="Schematic of a long trajectory at the edge of region A: a string of red failure excursions separated by escape intervals, followed by one blue success path that reaches region B">
         <figcaption>
-          <b>Figure 4.</b> <em>(a)</em> The soft-core LJ pair potential $U_{\rm LJ7}^{\rm soft}(r)$ versus
-          interatomic distance $r$; the energy is bounded at $r = 0$ to prevent large forces. <em>(b)</em> The
-          four groups of local energy minima $C_0, C_1, C_2, C_3$ with representative configurations, projected
-          onto the collective-variable space $(\mu_2, \mu_3)$.
+          <b>Figure 1.</b> <em>(a)</em> Two-channel model potential $U(\mathbf{x})$: basins $\Omega_{\rm A}$
+          and $\Omega_{\rm B}$, saddles S<sub>1</sub> and S<sub>2</sub> on the dotted boundary, regions A and B,
+          failure and success paths. <em>(b)</em> Failure paths (red), escape intervals
+          $t_{\rm AA}^{(k)}$, and a success path (blue) lasting $t_{\rm AB}$.
         </figcaption>
       </figure>
 
+      <!-- ============ METHOD ============ -->
+      <h2>Method</h2>
+
+      <h3>Biasing Each Step with an Importance Function</h3>
       <p>
-        We focus on transitions out of a particular $C_3$ state (region A) into the $C_2$ collection
-        (region B); at low temperatures nearly all transitions out of a $C_3$ state enter a $C_2$
-        state<a class="cite" href="#ref-24">[24]</a><a class="cite" href="#ref-26">,[26]</a><a class="cite" href="#ref-66">,[66]</a>.
-        There are four distinct transition mechanisms $M_1$&ndash;$M_4$, each a coordinated rearrangement of a
-        subset of atoms. Modes $M_1$ and $M_2$ are related by a mirror symmetry of the $C_3$ state, as are
-        $M_3$ and $M_4$. Using the string method<a class="cite" href="#ref-66">[66]</a><a class="cite" href="#ref-67">,[67]</a>,
-        the energy barrier heights are <b>0.49 eV</b> for modes $M_1$ and $M_2$, and <b>0.52 eV</b> for modes
-        $M_3$ and $M_4$. At $T = 600$ K ($\beta U_{\rm b} \sim 10$) these transitions are rare events.
-      </p>
-      <p>
-        Region A is defined by a nearest-neighbor distance criterion over the 11 nearest-neighbor pairs
-        $\mathcal{N}_{11}$ at the $C_3$ minimum,
+        A path stores states ${\Gamma = \{\mathbf{x}_1, \dots, \mathbf{x}_N\}}$ a lag $\tau$ apart, and
+        ${\mathcal{K}_\tau(\mathbf{y}\,|\,\mathbf{x})}$ is the density of the next state $\mathbf{y}$ given
+        the current one, $\mathbf{x}$. As in earlier rare-event importance sampling (Cai et al., 2002; de
+        Koning et al., 2005), each step is tilted by the ratio ${I(\mathbf{y})/I(\mathbf{x})}$ of an importance
+        function $I$; since the tilted kernel is generally not normalized, it is divided by $Z_\tau$:
       </p>
       <div class="eq-block">
-        $$ \mathrm{A} = \left\{\{\mathbf{x}_i\}\ \middle|\ \max_{(i,j)\in\mathcal{N}_{11}} \left|r_{ij} - r^*_{ij}\right| &lt; \delta_{\rm A}\right\}, \tag{47} $$
+        $$ \begin{aligned}
+             \mathcal{K}'_\tau(\mathbf{y}\,|\,\mathbf{x}) &amp;= \frac{I(\mathbf{y})\,\mathcal{K}_\tau(\mathbf{y}\,|\,\mathbf{x})}{Z_\tau(\mathbf{x})\, I(\mathbf{x})}, \\
+             Z_\tau(\mathbf{x}) &amp;= \int_{\Omega} \mathrm{d}\mathbf{y}\,
+               \frac{I(\mathbf{y})}{I(\mathbf{x})}\,\mathcal{K}_\tau(\mathbf{y}\,|\,\mathbf{x}).
+           \end{aligned} $$
       </div>
       <p>
-        with $\delta_{\rm A} = 0.1\,\varsigma$; region B is a circular region in $(\mu_2, \mu_3)$ space about the
-        $C_2$ minimum,
-      </p>
-      <div class="eq-block">
-        $$ \mathrm{B} = \left\{\{\mathbf{x}_i\}\ \middle|\ \left(\mu_2 - \mu_2(C_2)\right)^2 + \left(\mu_3 - \mu_3(C_2)\right)^2 &lt; \delta_{\rm B}^2\right\}, \tag{48} $$
-      </div>
-      <p>
-        where $(\mu_2(C_2), \mu_3(C_2)) = (0.7736, 0.3520)$ and $\delta_{\rm B} = 10^{-2}$. Region B encompasses
-        all four transition modes, since the $C_2$ states are permutationally distinct but share the same
-        $(\mu_2, \mu_3)$.
-      </p>
-      <p>
-        The importance function is a lightweight SchNet-style graph neural
-        network<a class="cite" href="#ref-68">[68]</a> acting on pairwise distances $r_{ij}$, invariant under
-        translations, rotations, and permutations of identical atoms. Distances are expanded in a radial basis,
-      </p>
-      <div class="eq-block">
-        $$ e_k(r_{ij}) = \exp\!\left(-\gamma\,(r_{ij} - \mu_k)^2\right), \quad k = 1, \ldots, n_{\rm rbf}, \tag{49} $$
-      </div>
-      <p>
-        atom features are updated through $L$ interaction layers with continuous filters,
-      </p>
-      <div class="eq-block">
-        $$ \mathbf{h}_i^{(\ell+1)} = \mathbf{h}_i^{(\ell)} + \sum_{j\neq i} \mathbf{W}^{(\ell)}\mathbf{h}_j^{(\ell)} \odot \boldsymbol{\phi}^{(\ell)}\!\left(\mathbf{e}(r_{ij})\right), \tag{50} $$
-      </div>
-      <p>
-        and a per-atom readout followed by summation and a sigmoid gives the importance function,
-      </p>
-      <div class="eq-block">
-        $$ f_{\rm RO}(\mathbf{h}) = \mathbf{w}_2^{\top}\,\mathrm{SiLU}(\mathbf{W}_1\mathbf{h} + \mathbf{b}_1) + b_2, \tag{51} $$
-      </div>
-      <div class="eq-block">
-        $$ I(\{\mathbf{x}_i\};\theta) = \sigma\!\left[\sum_{i=1}^{N} f_{\rm RO}\!\left(\mathbf{h}_i^{(L)}\right)\right]. \tag{52} $$
-      </div>
-      <p>
-        We use $n_{\rm f} = 64$ features, $n_{\rm rbf} = 50$ radial basis functions, and $L = 3$ interaction
-        layers ($\approx 6\times 10^4$ parameters). Training targets the $C_3 \to C_2$ transition at $T = 600$ K
-        for 11,000 epochs (ADAM, learning rate $5\times 10^{-4}$); the final model averages checkpoints saved
-        every 200 epochs over the last 1,000 epochs<a class="cite" href="#ref-69">[69]</a>. Along the minimum
-        energy paths<a class="cite" href="#ref-66">[66]</a>, the learned importance function increases
-        monotonically from $I \sim 10^{-8}$ near $C_3$ to $I \approx 1$ near $C_2$, reaching $I \approx 0.5$ at
-        the transition state.
+        The optimal $I$, the committor (0 in A, 1 in B), needs no renormalization:
+        ${Z_\tau \equiv 1}$. For a learned $I$, the deviation of $Z_\tau$ from 1 measures its error.
       </p>
 
-      <figure class="fig-pair">
-        <img src="../figs/accel_langevin/LJ7_trajectories_M1_M2.png" alt="Sampled transition paths for modes M1 and M2 in collective-variable space">
-        <img src="../figs/accel_langevin/LJ7_trajectories_M3_M4.png" alt="Sampled transition paths for modes M3 and M4 in collective-variable space">
-        <figcaption>
-          <b>Figure 5.</b> Configurations along the transition paths sampled by the accelerated dynamics at
-          $T = 600$ K, projected onto the $(\mu_2, \mu_3)$ collective variable space, for modes $M_1, M_2$
-          <em>(a)</em> and $M_3, M_4$ <em>(b)</em>. All configurations are colored by the neural network
-          importance function value $I(\{\mathbf{x}_i\};\theta)$.
-        </figcaption>
-      </figure>
-
+      <h3>Path Weights and an Unbiased Estimator</h3>
       <p>
-        Sampling with the BRW algorithm over 1,000 trials of 1,000 paths each (weights $[1.0, 2.0]$, repeated
-        10 times with different seeds) gives $P_{\rm AB} = (8.6491 \pm 0.0196)\times 10^{-6}$, versus
-        $P_{\rm AB}^{\rm NS} = (5.2284 \pm 0.0571)\times 10^{-6}$ without path sampling. With flux
-        $J_{\rm A} = (4.9969 \pm 0.0122)\times 10^{1}$ fs$^{-1}$, the rate is
-        $r_{\rm AB} = (4.3215 \pm 0.0098)\times 10^{-4}$ fs$^{-1}$, in excellent agreement with the brute-force
-        value $r_{\rm AB}^{\rm BF} = 4.4110\times 10^{-4}$ fs$^{-1}$. Without path sampling,
-        $r_{\rm AB}^{\rm NS} = (2.6123 \pm 0.0026)\times 10^{-4}$ fs$^{-1}$, an underestimate of about 40%. The
-        framework also resolves the four mechanisms: modes $M_1$ and $M_2$ each carry $\approx 32\%$ of the rate
-        and modes $M_3$ and $M_4$ each $\approx 18\%$, an asymmetry consistent with the higher $0.52$ eV barrier
-        of $M_3, M_4$ versus $0.49$ eV for $M_1, M_2$. The no-reweighting estimate incorrectly predicts a nearly
-        uniform split (Table 3).
+        Chaining biased steps relates the biased density $p'$ of a success path $\Gamma_{\rm AB}$ exactly to
+        its original density $p$:
+      </p>
+      <div class="eq-block">
+        $$ \frac{p'(\Gamma_{\rm AB})}{p(\Gamma_{\rm AB})} = \frac{I(\mathbf{x}_N)}{I(\mathbf{x}_1)}
+           \prod_{i=1}^{N-1} Z_\tau^{-1}(\mathbf{x}_i). $$
+      </div>
+      <p>
+        For the committor, all success paths from a start $\mathbf{x}_1$ gain the same factor, preserving
+        channel ratios; otherwise the factors $Z_\tau$ form a path weight $W$, and $P_{\rm AB}$ becomes a
+        weighted average over biased paths:
+      </p>
+      <div class="eq-block">
+        $$ \begin{aligned}
+             P_{\rm AB} &amp;= \mathbb{E}'_{\Gamma}\!\left[ R(\Gamma)\, W(\Gamma)\,
+               \frac{I(\mathbf{x}_1)}{I(\mathbf{x}_N)} \right], \\
+             W(\Gamma) &amp;= \prod_{i=1}^{N-1} Z_\tau(\mathbf{x}_i),
+           \end{aligned} $$
+      </div>
+      <p>
+        where $R(\Gamma)$ is 1 for success and 0 otherwise, and $\mathbb{E}'$ averages over
+        ${\mathcal{K}'_\tau}$ paths starting from $\rho_{\rm A}$, the distribution of states leaving A. The
+        estimate is unbiased for any positive $I$; a poorer $I$ only spreads the weights. Restricting $R$ to
+        one channel gives its share; the rate follows from the Hill relation. The committor-only estimate
+        instead plugs the network into ${\int \rho_{\rm A}\, I \,\mathrm{d}\mathbf{x}_1}$, the
+        &ldquo;reactive probability&rdquo; of earlier work (Mitchell and Rotskoff, 2024; Lorpaiboon et al.,
+        2025), exact only for the committor.
+      </p>
+      <p>
+        Each $Z_\tau(\mathbf{x})$ is estimated without bias as the mean of ${I(\mathbf{y}_i)/I(\mathbf{x})}$
+        over the end points $\mathbf{y}_i$ of 100 short unbiased trajectories from $\mathbf{x}$; one end
+        point, drawn in proportion to $I(\mathbf{y}_i)$, becomes the next state. A branching random walk curbs
+        weight spread: as in Monte Carlo particle transport, a path whose weight leaves a set window becomes a
+        random number of unit-weight copies, possibly none, preserving its weight on average.
       </p>
 
+      <h3>Learning the Importance Function</h3>
+      <p>
+        The network ${I(\mathbf{x};\theta)}$, with parameters $\theta$, is trained on the normalization
+        condition for $I$ and for the reverse-transition importance function ${1 - I}$, using a loss from
+        earlier committor-learning work (Mitchell and Rotskoff, 2024; Trizio et al., 2025):
+      </p>
+      <div class="eq-block">
+        $$ \mathcal{L}(\mathbf{x};\theta) = \big[ \ln Z_\tau(\mathbf{x}) \big]^2
+           + \big[ \ln \bar{Z}_\tau(\mathbf{x}) \big]^2 , $$
+      </div>
+      <p>
+        where $\bar{Z}_\tau$ is $Z_\tau$ with ${1 - I}$ in place of $I$; the loss vanishes for the committor.
+        For LJ7 and the metals, $I$ is a SchNet-style graph network on interatomic distances. A
+        descriptor-free graph-network committor was learned before (Kang et al., 2026), but without the
+        path-weight correction.
+      </p>
+
+      <!-- ============ RESULTS ============ -->
+      <h2>Results</h2>
       <div class="table-wrap">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Method</th>
-              <th>$r_{\rm AB}(M_1)/r_{\rm AB}$</th>
-              <th>$r_{\rm AB}(M_2)/r_{\rm AB}$</th>
-              <th>$r_{\rm AB}(M_3)/r_{\rm AB}$</th>
-              <th>$r_{\rm AB}(M_4)/r_{\rm AB}$</th>
-              <th>$r_{\rm AB}$</th>
+              <th>System</th>
+              <th><i>d</i></th>
+              <th>Importance sampling</th>
+              <th>Reference</th>
             </tr>
           </thead>
           <tbody>
-            <tr class="row-best">
-              <td>Importance Sampling</td>
-              <td>0.3178</td><td>0.3213</td><td>0.1811</td><td>0.1797</td>
-              <td>4.3215 &plusmn; 0.0098</td>
+            <tr>
+              <td>2-D potential, 500&nbsp;K</td>
+              <td>2</td>
+              <td>(7.2717&nbsp;&plusmn;&nbsp;0.0450) &times;&nbsp;10<sup>&minus;12</sup>&nbsp;fs<sup>&minus;1</sup></td>
+              <td>7.1755 &times;&nbsp;10<sup>&minus;12</sup>&nbsp;fs<sup>&minus;1</sup><br><em>Kramers theory</em></td>
             </tr>
             <tr>
-              <td>Brute Force</td>
-              <td>0.3192</td><td>0.3170</td><td>0.1838</td><td>0.1795</td>
-              <td>4.4110</td>
+              <td>LJ7, 600&nbsp;K</td>
+              <td>14</td>
+              <td>(4.3215&nbsp;&plusmn;&nbsp;0.0098) &times;&nbsp;10<sup>&minus;4</sup>&nbsp;fs<sup>&minus;1</sup></td>
+              <td>4.4110 &times;&nbsp;10<sup>&minus;4</sup>&nbsp;fs<sup>&minus;1</sup><br><em>brute force</em></td>
             </tr>
             <tr>
-              <td>Kramers</td>
-              <td>0.3191</td><td>0.3191</td><td>0.1809</td><td>0.1809</td>
-              <td>4.6631</td>
+              <td>Pt adatom, 1000&nbsp;K&nbsp;&dagger;</td>
+              <td>387</td>
+              <td>(4.7242&nbsp;&plusmn;&nbsp;0.0393) &times;&nbsp;10<sup>&minus;2</sup>&nbsp;ps<sup>&minus;1</sup></td>
+              <td>[4.5763,&nbsp;4.8995] &times;&nbsp;10<sup>&minus;2</sup>&nbsp;ps<sup>&minus;1</sup><br><em>brute force, 95%&nbsp;CI</em></td>
             </tr>
             <tr>
-              <td>No Reweighting</td>
-              <td>0.2273</td><td>0.2263</td><td>0.2736</td><td>0.2721</td>
-              <td>2.6123 &plusmn; 0.0747</td>
+              <td>Fe vacancy, 800&nbsp;K&nbsp;&dagger;</td>
+              <td>2055</td>
+              <td>(2.9911&nbsp;&plusmn;&nbsp;0.0252) &times;&nbsp;10<sup>&minus;2</sup>&nbsp;ps<sup>&minus;1</sup></td>
+              <td>2.9287 &times;&nbsp;10<sup>&minus;2</sup>&nbsp;ps<sup>&minus;1</sup><br><em>brute force</em></td>
             </tr>
           </tbody>
         </table>
       </div>
       <p class="table-note">
-        <span class="caption-lead">Table 3.</span> Relative transition probabilities $r_{\rm AB}(M_k)/r_{\rm AB}$
-        through each mechanism and total transition rates $r_{\rm AB}$ (in $10^{-4}$ fs$^{-1}$) for the LJ7
-        system at 600 K, from importance sampling, brute-force Langevin dynamics, Kramers theory, and no
-        sampling / no reweighting (Eq. 31 assuming $I \approx I_{\rm opt}$).
+        <span class="caption-lead">Table 1.</span> Values after &plusmn; are one standard error of the mean,
+        excluding the error of $J_{\rm A}$ in the first three rows; the LJ7 and Fe brute-force rates have no
+        stated uncertainty. Model systems use model units (eV, nm, fs).
+        &dagger;&nbsp;Revised manuscript in preparation.
       </p>
 
-      <h3>4.4 Lennard&ndash;Jones (LJ7) System Across Temperatures</h3>
+      <h3>Two-Channel Potential: Rate and Channel Split Match Kramers Theory</h3>
       <p>
-        Because the optimal importance function is temperature dependent, the network must in principle be
-        retrained at each temperature. To avoid this cost we use transfer
-        learning<a class="cite" href="#ref-70">[70]</a>: the network trained at $T = 600$ K (Section 4.4) is
-        used as the initial model for fine-tuning at $T = 500, 400, 300$ K. At each temperature, 1,000 trials of
-        1,000 paths are performed with the BRW algorithm, repeated 10 times. The estimated rates are
-      </p>
-      <div class="eq-block">
-        $$
-        \begin{aligned}
-        r_{\rm AB}(500\,\text{K}) &= (6.2610 \pm 0.0172)\times 10^{-5}\ \text{fs}^{-1}, \\
-        r_{\rm AB}(400\,\text{K}) &= (3.5630 \pm 0.0149)\times 10^{-6}\ \text{fs}^{-1}, \\
-        r_{\rm AB}(300\,\text{K}) &= (3.0490 \pm 0.0261)\times 10^{-8}\ \text{fs}^{-1},
-        \end{aligned}
-        $$
-      </div>
-      <p>
-        in good agreement with the Kramers predictions
-        $r_{\rm AB}^{\rm Kr}(500\,\text{K}) = 6.7588\times 10^{-5}$,
-        $r_{\rm AB}^{\rm Kr}(400\,\text{K}) = 3.7553\times 10^{-6}$, and
-        $r_{\rm AB}^{\rm Kr}(300\,\text{K}) = 3.0898\times 10^{-8}$ fs$^{-1}$ (brute force cannot accumulate
-        sufficient statistics at these low temperatures). Agreement with Kramers theory in fact improves at
-        lower temperatures, where its harmonic approximation becomes more accurate. Without path sampling the
-        estimates $r_{\rm AB}^{\rm NS} = 4.7271\times 10^{-5}$, $2.8839\times 10^{-6}$, and
-        $6.0849\times 10^{-8}$ fs$^{-1}$ deviate systematically; at $300$ K the no-sampling estimate overshoots
-        by nearly a factor of two.
+        On Figure&nbsp;1a's potential at 500&nbsp;K, with barriers of 1.10&nbsp;eV (S<sub>1</sub>) and
+        1.06&nbsp;eV (S<sub>2</sub>) above the minima, the weighted rate matches Kramers rate theory, evaluated
+        without the harmonic approximation (Table&nbsp;1); the
+        committor-only estimate is nearly a factor of three low. The share through the saddle region near
+        S<sub>1</sub> is 0.2972&nbsp;&plusmn;&nbsp;0.0023 (Kramers: 0.2938); counting paths without weights
+        gives 0.4483, roughly 50% high. A separate network trained on both directions gives
+        (7.2093&nbsp;&plusmn;&nbsp;0.0472) and
+        (7.3635&nbsp;&plusmn;&nbsp;0.0528)&nbsp;&times;&nbsp;10<sup>&minus;12</sup>&nbsp;fs<sup>&minus;1</sup>
+        forward and backward, against the same Kramers value.
       </p>
 
-      <figure class="fig-medium">
-        <img src="../figs/accel_langevin/arrhenius_plot_all.png" alt="Arrhenius plot of the LJ7 transition rate across temperatures">
+      <h3>LJ7: Rates and Mechanisms Recovered Down to 300&nbsp;K</h3>
+      <p>
+        The seven soft-core LJ7 discs ${(d = 14)}$ escape from a C<sub>3</sub> minimum to
+        C<sub>2</sub> states by four mechanisms (Figure&nbsp;2): two atoms slide along an edge in M<sub>1</sub>
+        and M<sub>2</sub> (barrier 0.49&nbsp;eV), three in M<sub>3</sub> and M<sub>4</sub> (0.52&nbsp;eV). At
+        600&nbsp;K the weighted rate agrees with brute force and the committor-only estimate is about 40%
+        low. Weighted mode fractions reproduce brute force, about 32% each for M<sub>1</sub> and
+        M<sub>2</sub> and 18% each for M<sub>3</sub> and M<sub>4</sub>, whereas unweighted counts favor
+        M<sub>3</sub> and M<sub>4</sub>, the wrong trend.
+      </p>
+
+      <figure class="fig-triple">
+        <img src="../figs/accel_langevin/LJ7_map_and_clusters_web.png" alt="Map of the collective variables mu2 and mu3 with dashed circles marking the four groups of LJ7 energy minima, C0 to C3, each shown with a representative seven-disc configuration">
+        <img src="../figs/accel_langevin/LJ7_trajectories_M1_M2_web.png" alt="Dots in the mu2 and mu3 plane along accelerated transition paths for modes M1 and M2, running from the C3 circle up to the C2 circle and colored from dark purple (low importance function) to yellow (high)">
+        <img src="../figs/accel_langevin/LJ7_trajectories_M3_M4_web.png" alt="Dots in the mu2 and mu3 plane along accelerated transition paths for modes M3 and M4, running from the C3 circle up to the C2 circle and colored from dark purple (low importance function) to yellow (high)">
         <figcaption>
-          <b>Figure 6.</b> Arrhenius plot of the total LJ7 transition rate $r_{\rm AB}$ across temperatures,
-          from importance sampling (circles), Kramers rate theory (dashed line), and no sampling (squares).
-          Importance sampling tracks Kramers theory across roughly four orders of magnitude in rate, while the
-          no-sampling estimator deviates systematically.
+          <b>Figure 2.</b> <em>(a)</em> LJ7 minima grouped into C<sub>0</sub>&ndash;C<sub>3</sub> (green,
+          orange, magenta, teal) in the collective variables ${(\mu_2, \mu_3)}$, coordination-number moments.
+          <em>(b, c)</em> Accelerated-path states at 600&nbsp;K for M<sub>1</sub>, M<sub>2</sub> and
+          M<sub>3</sub>, M<sub>4</sub>, colored by $I$ from dark purple (low) to yellow (high).
         </figcaption>
       </figure>
 
       <p>
-        As the temperature decreases from $600$ K to $300$ K, the rate fractions of modes $M_1$ and $M_2$
-        increase from $0.3178$ and $0.3213$ to $0.3872$ and $0.3872$, while those of $M_3$ and $M_4$ decrease
-        from $0.1811$ and $0.1797$ to $0.1087$ and $0.1168$&mdash;consistent with the higher $0.52$ eV barrier
-        of $M_3, M_4$ being more strongly suppressed at low temperature. The importance sampling estimates agree
-        closely with Kramers theory across all temperatures and modes, whereas the no-reweighting estimator
-        consistently underestimates $M_1, M_2$ and overestimates $M_3, M_4$.
+        Below 600&nbsp;K, where brute force cannot collect enough transitions, harmonic Kramers theory is the
+        reference. Networks fine-tuned from the 600&nbsp;K one track it, the gap shrinking from about 7% at
+        500&nbsp;K to about 1% at 300&nbsp;K as the harmonic approximation improves (Figure&nbsp;3).
+        Unweighted counts underestimate M<sub>1</sub> and M<sub>2</sub> at every temperature.
       </p>
 
-      <figure class="fig-quad">
-        <img src="../figs/accel_langevin/fraction_plot_M1.png" alt="Fraction of rate through mode M1 versus temperature">
-        <img src="../figs/accel_langevin/fraction_plot_M2.png" alt="Fraction of rate through mode M2 versus temperature">
-        <img src="../figs/accel_langevin/fraction_plot_M3.png" alt="Fraction of rate through mode M3 versus temperature">
-        <img src="../figs/accel_langevin/fraction_plot_M4.png" alt="Fraction of rate through mode M4 versus temperature">
+      <figure class="fig-triple">
+        <img src="../figs/accel_langevin/arrhenius_plot_all_web.png" alt="Arrhenius plot of the LJ7 transition rate against inverse temperature from 600 K to 300 K: importance-sampling points lie on the Kramers line, while gray committor-only points fall below it at high temperature and above it at 300 K">
+        <img src="../figs/accel_langevin/fraction_plot_M1_web.png" alt="Fraction of the LJ7 rate through mode M1 against temperature: importance-sampling points follow the Kramers curve, which rises as the temperature falls, while unweighted counts lie well below it">
+        <img src="../figs/accel_langevin/fraction_plot_M3_web.png" alt="Fraction of the LJ7 rate through mode M3 against temperature: importance-sampling points follow the Kramers curve, which falls as the temperature falls, while unweighted counts lie well above it">
         <figcaption>
-          <b>Figure 7.</b> Fraction of the total rate carried by each transition mode $M_1$&ndash;$M_4$
-          (panels a&ndash;d) versus temperature, from importance sampling (circles), Kramers rate theory
-          (dashed line), and no reweighting (squares). Importance sampling tracks Kramers theory across all four
-          channels, while direct counting without reweighting flattens toward a near-uniform split.
+          <b>Figure 3.</b> <em>(a)</em> LJ7 rate against ${1/T}$, 600&ndash;300&nbsp;K: importance sampling (red),
+          harmonic Kramers theory (dashed), committor-only estimate (gray, &ldquo;No Sampling&rdquo;). The axis
+          label should read fs<sup>&minus;1</sup>, not s<sup>&minus;1</sup>. <em>(b, c)</em> Fractions through
+          M<sub>1</sub> and M<sub>3</sub>; gray: unweighted counts (&ldquo;No Reweighting&rdquo;).
         </figcaption>
       </figure>
 
-      <!-- ============ 5. CONCLUSIONS ============ -->
-      <h2>5. Conclusions</h2>
+      <h3>Metals (Revision in Preparation): Brute&#8209;Force Rates Reproduced</h3>
       <p>
-        We developed a rigorous importance sampling framework to efficiently sample rare escapes from
-        metastable states under Langevin dynamics. The method counteracts the inevitable approximation errors of
-        the optimal importance function in high dimensions, achieving two objectives: (1) accelerating the
-        sampling of transition paths while preserving the relative probabilities of different pathways, and
-        (2) providing an unbiased estimator for transition rates. Both are accomplished by assigning statistical
-        weights to sampled paths, and a branching random walk (BRW) algorithm actively controls the variance of
-        those weights. We validated the framework on a two-dimensional system and on the LJ7 benchmark,
-        confirming that it accurately recovers transition rates and relative escape-channel probabilities even
-        in the presence of approximation errors. This offers a practical route to accurate kinetic
-        characterization of complex, high-dimensional systems where the exact importance function (the
-        committor) is computationally prohibitive. Future work will extend the framework to more complex
-        atomistic systems, such as protein conformational changes and crystal defect evolution.
+        These results are from a revised manuscript in preparation, not the linked ChemRxiv v2 PDF. The
+        network reads a fixed cluster of 26 or 50 atoms around the defect, so defects that move farther will
+        need larger inputs; the dynamics and weights use every coordinate. Importance sampling and brute force
+        both use overdamped dynamics, whose rate prefactors differ from inertial molecular dynamics.
+      </p>
+      <p>
+        <b>Pt adatom on Pt(001), ${d = 387}$.</b> At 1000&nbsp;K the rate falls inside the brute-force
+        confidence interval (Table&nbsp;1), and the fractions of twelve transition modes agree with brute force
+        within 0.007. An unanticipated long-jump channel carries 0.0930 of the rate (brute force: 0.0891;
+        unweighted counts: 0.0520).
+      </p>
+      <p>
+        <b>Vacancy in bcc &alpha;-Fe, ${d = 2055}$.</b> At 800&nbsp;K the weighted rate is within 2.1% of brute
+        force; the committor-only estimate is about 44% low.
+      </p>
+      <p>
+        <b>No retraining at lower temperatures.</b> As the rate drops more than sevenfold to 700&nbsp;K, the
+        unchanged adatom network gives rates inside the brute-force 95% confidence intervals at 800 and
+        700&nbsp;K and 4% above the upper bound at 900&nbsp;K; its nearly flat committor-only rate is about 3.6
+        times too high at 700&nbsp;K. The vacancy network's rates stay within 3% of brute force from 800 to
+        600&nbsp;K and within 2% of the extrapolated Arrhenius fit at 500&nbsp;K (Figure&nbsp;4), though their
+        relative uncertainty grows from 0.8% to 3.5% at 500&nbsp;K.
       </p>
 
+      <figure class="fig-pair">
+        <img src="../figs/accel_langevin/vacancy_arrhenius_web.png" alt="Arrhenius plot of the vacancy migration rate in bcc iron from 800 K to 500 K: importance-sampling points coincide with brute-force triangles from 800 to 600 K and sit on the dashed Arrhenius fit at 500 K, while gray committor-only points lie below at 800 to 600 K and above at 500 K">
+        <figcaption>
+          <b>Figure 4.</b> Vacancy migration rate in bcc &alpha;-Fe against ${1/T}$, one network trained at
+          800&nbsp;K and reused unchanged: importance sampling (red), brute force
+          (black triangles, 800&ndash;600&nbsp;K only), committor-only estimate (gray diamonds), Arrhenius fit
+          to brute force (dashed).
+        </figcaption>
+      </figure>
+
+      <!-- ============ TAKEAWAY ============ -->
+      <h2>Takeaway</h2>
       <div class="takeaway">
-        <b>Takeaway.</b> A learned, imperfect importance function suffices for accurate rate and mechanism
-        estimation, provided the sampled paths are reweighted by the stopped-transition-operator weights and
-        managed by a branching random walk. The framework recovers both the correct total rate and the correct
-        channel-resolved breakdown, and it generalizes across temperatures via transfer learning.
+        <b>Takeaway.</b> A learned committor guiding path-space importance sampling need not be exact: its
+        errors go into the path weights, keeping the success-probability estimate unbiased at the cost of
+        variance. In all four systems (metals: revision in preparation), weighted estimates reproduce the
+        reference rates; committor-only estimates carry substantial errors, for instance about 40% too low
+        (LJ7, 600&nbsp;K) or about 3.6 times too high (Pt adatom, 700&nbsp;K).
       </div>
 
-      <!-- ============ REFERENCES ============ -->
-      <h2>References</h2>
-      <ol class="references">
-        <li id="ref-1">D. Van Der Spoel et al. &ldquo;GROMACS: fast, flexible, and free&rdquo;. <em>Journal of Computational Chemistry</em> 26.16 (2005), 1701&ndash;1718.</li>
-        <li id="ref-2">P. Eastman et al. &ldquo;OpenMM 7: Rapid development of high performance algorithms for molecular dynamics&rdquo;. <em>PLoS Computational Biology</em> 13.7 (2017), e1005659.</li>
-        <li id="ref-3">A. P. Thompson et al. &ldquo;LAMMPS &ndash; a flexible simulation tool for particle-based materials modeling at the atomic, meso, and continuum scales&rdquo;. <em>Computer Physics Communications</em> 271 (2022), 108171.</li>
-        <li id="ref-4">A. F. Voter, F. Montalenti, and T. C. Germann. &ldquo;Extending the time scale in atomistic simulation of materials&rdquo;. <em>Annual Review of Materials Research</em> 32.1 (2002), 321&ndash;346.</li>
-        <li id="ref-5">E. Van Der Giessen et al. &ldquo;Roadmap on multiscale materials modeling&rdquo;. <em>Modelling and Simulation in Materials Science and Engineering</em> 28.4 (2020), 043001.</li>
-        <li id="ref-6">L. Freddolino et al. &ldquo;Challenges in protein-folding simulations&rdquo;. <em>Nature Physics</em> 6.10 (2010), 751&ndash;758.</li>
-        <li id="ref-7">S. Izrailev et al. &ldquo;Steered molecular dynamics&rdquo;. In: <em>Computational Molecular Dynamics: Challenges, Methods, Ideas</em>. Springer, 1999, 39&ndash;65.</li>
-        <li id="ref-8">A. Laio and F. L. Gervasio. &ldquo;Metadynamics: a method to simulate rare events and reconstruct the free energy in biophysics, chemistry and material science&rdquo;. <em>Reports on Progress in Physics</em> 71.12 (2008), 126601.</li>
-        <li id="ref-9">Y. Wang et al. &ldquo;Frequency adaptive metadynamics for the calculation of rare-event kinetics&rdquo;. <em>The Journal of Chemical Physics</em> 149.7 (2018).</li>
-        <li id="ref-10">A. Laio and M. Parrinello. &ldquo;Escaping free-energy minima&rdquo;. <em>Proceedings of the National Academy of Sciences</em> 99.20 (2002), 12562&ndash;12566.</li>
-        <li id="ref-11">G. A. Tribello, M. Ceriotti, and M. Parrinello. &ldquo;A self-learning algorithm for biased molecular dynamics&rdquo;. <em>Proceedings of the National Academy of Sciences</em> 107.41 (2010), 17509&ndash;17514.</li>
-        <li id="ref-12">A. F. Voter. &ldquo;Hyperdynamics: Accelerated molecular dynamics of infrequent events&rdquo;. <em>Physical Review Letters</em> 78.20 (1997), 3908.</li>
-        <li id="ref-13">L. Y. Chen and N. J. M. Horing. &ldquo;An exact formulation of hyperdynamics simulations&rdquo;. <em>The Journal of Chemical Physics</em> 126.22 (2007).</li>
-        <li id="ref-14">R. J. Allen, C. Valeriani, and P. R. Ten Wolde. &ldquo;Forward flux sampling for rare event simulations&rdquo;. <em>Journal of Physics: Condensed Matter</em> 21.46 (2009), 463102.</li>
-        <li id="ref-15">G. A. Huber and S. Kim. &ldquo;Weighted-ensemble Brownian dynamics simulations for protein association reactions&rdquo;. <em>Biophysical Journal</em> 70.1 (1996), 97&ndash;110.</li>
-        <li id="ref-16">D. Ray, S. E. Stone, and I. Andricioaei. &ldquo;Markovian weighted ensemble milestoning (M-WEM): Long-time kinetics from short trajectories&rdquo;. <em>Journal of Chemical Theory and Computation</em> 18.1 (2021), 79&ndash;95.</li>
-        <li id="ref-17">E. Vanden-Eijnden. &ldquo;Transition path theory&rdquo;. In: <em>Computer Simulations in Condensed Matter Systems: From Materials to Chemical Biology Volume 1</em>. Springer, 2006, 453&ndash;493.</li>
-        <li id="ref-18">E. Vanden-Eijnden et al. &ldquo;Transition-path theory and path-finding algorithms for the study of rare events&rdquo;. <em>Annual Review of Physical Chemistry</em> 61 (2010), 391&ndash;420.</li>
-        <li id="ref-19">E. Vanden-Eijnden et al. &ldquo;Towards a theory of transition paths&rdquo;. <em>Journal of Statistical Physics</em> 123.3 (2006), 503&ndash;523.</li>
-        <li id="ref-20">C. Dellago, P. G. Bolhuis, and P. L. Geissler. &ldquo;Transition path sampling&rdquo;. <em>Advances in Chemical Physics</em> 123 (2002), 1&ndash;78.</li>
-        <li id="ref-21">E. Weinan, W. Ren, and E. Vanden-Eijnden. &ldquo;Transition pathways in complex systems: Reaction coordinates, isocommittor surfaces, and transition tubes&rdquo;. <em>Chemical Physics Letters</em> 413.1-3 (2005), 242&ndash;247.</li>
-        <li id="ref-22">P. G. Bolhuis et al. &ldquo;Transition path sampling: Throwing ropes over rough mountain passes, in the dark&rdquo;. <em>Annual Review of Physical Chemistry</em> 53.1 (2002), 291&ndash;318.</li>
-        <li id="ref-23">P. Metzner, C. Sch&uuml;tte, and E. Vanden-Eijnden. &ldquo;Transition path theory for Markov jump processes&rdquo;. <em>Multiscale Modeling &amp; Simulation</em> 7.3 (2009), 1192&ndash;1219.</li>
-        <li id="ref-24">C. Dellago, P. G. Bolhuis, and D. Chandler. &ldquo;Efficient transition path sampling: Application to Lennard-Jones cluster rearrangements&rdquo;. <em>The Journal of Chemical Physics</em> 108.22 (1998), 9236&ndash;9245.</li>
-        <li id="ref-25">C. Dellago et al. &ldquo;Transition path sampling and the calculation of rate constants&rdquo;. <em>The Journal of Chemical Physics</em> 108.5 (1998), 1964&ndash;1977.</li>
-        <li id="ref-26">D. J. Wales. &ldquo;Discrete path sampling&rdquo;. <em>Molecular Physics</em> 100.20 (2002), 3285&ndash;3305.</li>
-        <li id="ref-27">P. W. Glynn and D. L. Iglehart. &ldquo;Importance sampling for stochastic simulations&rdquo;. <em>Management Science</em> 35.11 (1989), 1367&ndash;1392.</li>
-        <li id="ref-28">W. Cai et al. &ldquo;Importance sampling of rare transition events in Markov processes&rdquo;. <em>Physical Review E</em> 66.4 (2002), 046703.</li>
-        <li id="ref-29">M. de Koning et al. &ldquo;Adaptive importance sampling Monte Carlo simulation of rare transition events&rdquo;. <em>The Journal of Chemical Physics</em> 122.7 (2005).</li>
-        <li id="ref-30">P. L&rsquo;Ecuyer, M. Mandjes, and B. Tuffin. &ldquo;Importance sampling in rare event simulation&rdquo;. In: <em>Rare Event Simulation using Monte Carlo Methods</em> (2009), 17&ndash;38.</li>
-        <li id="ref-31">Z. Shi et al. <em>Branching Random Walks</em>. Vol. 2151. Springer, 2015.</li>
-        <li id="ref-32">N. G. Van Kampen. <em>Stochastic Processes in Physics and Chemistry</em>. Vol. 1. Elsevier, 1992.</li>
-        <li id="ref-33">D. Chandler. &ldquo;Introduction to Modern Statistical Mechanics&rdquo;. Oxford University Press, 1987.</li>
-        <li id="ref-34">T. Hill. <em>Free Energy Transduction in Biology: The Steady-State Kinetic and Thermodynamic Formalism</em>. Elsevier, 2012.</li>
-        <li id="ref-35">T. L. Hill. <em>Free Energy Transduction and Biochemical Cycle Kinetics</em>. Courier Corporation, 2013.</li>
-        <li id="ref-36">M. Baudel, A. Guyader, and T. Leli&egrave;vre. &ldquo;On the Hill relation and the mean reaction time for metastable processes&rdquo;. <em>Stochastic Processes and their Applications</em> 155 (2023), 393&ndash;436.</li>
-        <li id="ref-37">A. R. Mitchell and G. M. Rotskoff. &ldquo;Committor guided estimates of molecular transition rates&rdquo;. <em>Journal of Chemical Theory and Computation</em> 20.21 (2024), 9378&ndash;9393.</li>
-        <li id="ref-38">G. N. Mil&rsquo;shtejn. &ldquo;Approximate integration of stochastic differential equations&rdquo;. <em>Theory of Probability &amp; Its Applications</em> 19.3 (1975), 557&ndash;562.</li>
-        <li id="ref-39">C. Hartmann et al. &ldquo;Characterization of rare events in molecular dynamics&rdquo;. <em>Entropy</em> 16.1 (2013), 350&ndash;376.</li>
-        <li id="ref-40">F. Legoll and T. Lelievre. &ldquo;Effective dynamics using conditional expectations&rdquo;. <em>Nonlinearity</em> 23.9 (2010), 2131.</li>
-        <li id="ref-41">J. Yuan et al. &ldquo;Optimal control for sampling the transition path process and estimating rates&rdquo;. <em>Communications in Nonlinear Science and Numerical Simulation</em> 129 (2024), 107701.</li>
-        <li id="ref-42">J. L. Doob. &ldquo;Conditional Brownian motion and the boundary limits of harmonic functions&rdquo;. <em>Bulletin de la Soci&eacute;t&eacute; Math&eacute;matique de France</em> 85 (1957), 431&ndash;458.</li>
-        <li id="ref-43">I. V. Girsanov. &ldquo;On transforming a certain class of stochastic processes by absolutely continuous substitution of measures&rdquo;. <em>Theory of Probability &amp; Its Applications</em> 5.3 (1960), 285&ndash;301.</li>
-        <li id="ref-44">L. Donati, C. Hartmann, and B. G. Keller. &ldquo;Girsanov reweighting for path ensembles and Markov state models&rdquo;. <em>The Journal of Chemical Physics</em> 146.24 (2017).</li>
-        <li id="ref-45">L. Donati and B. G. Keller. &ldquo;Girsanov reweighting for metadynamics simulations&rdquo;. <em>The Journal of Chemical Physics</em> 149.7 (2018).</li>
-        <li id="ref-46">C. Lorpaiboon, J. Weare, and A. R. Dinner. &ldquo;An exact multiple-time-step variational formulation for the committor and the transition rate&rdquo;. <em>arXiv preprint</em> arXiv:2509.03539 (2025).</li>
-        <li id="ref-47">J. Vorba and J. K&#345;iv&aacute;nek. &ldquo;Adjoint-driven Russian roulette and splitting in light transport simulation&rdquo;. <em>ACM Transactions on Graphics (TOG)</em> 35.4 (2016), 1&ndash;11.</li>
-        <li id="ref-48">J. Arvo and D. Kirk. &ldquo;Particle transport and image synthesis&rdquo;. In: <em>Proceedings of the 17th Annual Conference on Computer Graphics and Interactive Techniques</em>. 1990, 63&ndash;66.</li>
-        <li id="ref-49">A. Rath et al. &ldquo;EARS: efficiency-aware Russian roulette and splitting&rdquo;. <em>ACM Transactions on Graphics (TOG)</em> 41.4 (2022), 1&ndash;14.</li>
-        <li id="ref-50">H. Li et al. &ldquo;A semigroup method for high dimensional committor functions based on neural network&rdquo;. In: <em>Mathematical and Scientific Machine Learning</em>. PMLR, 2022, 598&ndash;618.</li>
-        <li id="ref-51">J. Strahan et al. &ldquo;Predicting rare events using neural networks and short-trajectory data&rdquo;. <em>Journal of Computational Physics</em> 488 (2023), 112152.</li>
-        <li id="ref-52">E. Trizio, P. Kang, and M. Parrinello. &ldquo;Everything everywhere all at once: a probability-based enhanced sampling approach to rare events&rdquo;. <em>Nature Computational Science</em> 5.7 (2025), 582&ndash;591.</li>
-        <li id="ref-53">H. Risken. &ldquo;Fokker-Planck equation&rdquo;. In: <em>The Fokker-Planck Equation: Methods of Solution and Applications</em>. Springer, 1989, 63&ndash;95.</li>
-        <li id="ref-54">P. Erd&#337;s. &ldquo;On a new law of large numbers&rdquo;. <em>J. Anal. Math.</em> 22 (1970), 103&ndash;111.</li>
-        <li id="ref-55">X. Hua et al. &ldquo;Accelerated sampling of rare events using a neural network bias potential&rdquo;. <em>arXiv preprint</em> arXiv:2401.06936 (2024).</li>
-        <li id="ref-56">M. Kim and W. Cai. &ldquo;Accelerated Markov Chain Monte Carlo Simulation via Neural Network-Driven Importance Sampling&rdquo;. <em>arXiv preprint</em> arXiv:2602.12294 (2026).</li>
-        <li id="ref-57">J. S. Liu, R. Chen, and T. Logvinenko. &ldquo;A theoretical framework for sequential importance sampling with resampling&rdquo;. In: <em>Sequential Monte Carlo Methods in Practice</em>. Springer, 2001, 225&ndash;246.</li>
-        <li id="ref-58">J. F. Talbot. <em>Importance Resampling for Global Illumination</em>. Brigham Young University, 2005.</li>
-        <li id="ref-59">P. Del Moral, A. Doucet, and A. Jasra. &ldquo;On adaptive resampling strategies for sequential Monte Carlo methods&rdquo; (2012).</li>
-        <li id="ref-60">D. P. Kingma. &ldquo;Adam: A method for stochastic optimization&rdquo;. <em>arXiv preprint</em> arXiv:1412.6980 (2014).</li>
-        <li id="ref-61">I. A. Baratta et al. &ldquo;DOLFINx: the next generation FEniCS problem solving environment&rdquo; (2023).</li>
-        <li id="ref-62">D. J. Wales and J. P. K. Doye. &ldquo;Global optimization by basin-hopping and the lowest energy structures of Lennard-Jones clusters containing up to 110 atoms&rdquo;. <em>The Journal of Physical Chemistry A</em> 101.28 (1997), 5111&ndash;5116.</li>
-        <li id="ref-63">S.-T. Tsai, Z. Smith, and P. Tiwary. &ldquo;Reaction coordinates and rate constants for liquid droplet nucleation: Quantifying the interplay between driving force and memory&rdquo;. <em>The Journal of Chemical Physics</em> 151.15 (2019).</li>
-        <li id="ref-64">L. Evans, M. K. Cameron, and P. Tiwary. &ldquo;Computing committors in collective variables via Mahalanobis diffusion maps&rdquo;. <em>Applied and Computational Harmonic Analysis</em> 64 (2023), 62&ndash;101.</li>
-        <li id="ref-65">J. Yuan et al. &ldquo;Learning collective variables that respect permutational symmetry&rdquo;. <em>arXiv preprint</em> arXiv:2507.00408 (2025).</li>
-        <li id="ref-66">E. Weinan, W. Ren, and E. Vanden-Eijnden. &ldquo;String method for the study of rare events&rdquo;. <em>Physical Review B</em> 66.5 (2002), 052301.</li>
-        <li id="ref-67">H. J&oacute;nsson, G. Mills, and K. W. Jacobsen. &ldquo;Nudged elastic band method for finding minimum energy paths of transitions&rdquo;. In: <em>Classical and Quantum Dynamics in Condensed Phase Simulations</em>. World Scientific, 1998, 385&ndash;404.</li>
-        <li id="ref-68">K. Sch&uuml;tt et al. &ldquo;SchNet: A continuous-filter convolutional neural network for modeling quantum interactions&rdquo;. <em>Advances in Neural Information Processing Systems</em> 30 (2017).</li>
-        <li id="ref-69">P. Izmailov et al. &ldquo;Averaging weights leads to wider optima and better generalization&rdquo;. <em>arXiv preprint</em> arXiv:1803.05407 (2018).</li>
-        <li id="ref-70">F. Zhuang et al. &ldquo;A comprehensive survey on transfer learning&rdquo;. <em>Proceedings of the IEEE</em> 109.1 (2020), 43&ndash;76.</li>
-      </ol>
+      <!-- ============ OUTLOOK ============ -->
+      <h2>Outlook</h2>
+      <p>
+        The paper names two future directions: larger atomistic systems (dislocations, grain
+        boundaries, protein conformational transitions) and integration with the molecular dynamics packages
+        OpenMM and LAMMPS. The companion paper, <a href="accel_mcmc.html">Accelerated Markov Chain Monte
+        Carlo</a>, treats discrete systems; the <a href="claude_hackathon.html">agent-guided protein kinetics
+        project</a> builds on both. See also <a href="accel_atomistic.html">Accelerated Atomistic
+        Simulations</a>.
+      </p>
 
     </div>
   </main>
