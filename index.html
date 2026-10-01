@@ -244,6 +244,38 @@
       transition: all 0.2s ease;
     }
 
+    /* The bio's call-out link: bold, with a highlighter band that fills in on hover */
+    .bio-text a.bio-highlight {
+      font-weight: 700;
+      padding: 0 2px;
+      background: linear-gradient(transparent 58%, rgba(140, 21, 21, 0.16) 58%);
+      -webkit-box-decoration-break: clone;
+      box-decoration-break: clone;
+      transition: background 0.25s ease;
+    }
+
+    .bio-text a.bio-highlight:hover,
+    .bio-text a.bio-highlight:focus-visible {
+      background: linear-gradient(transparent 0%, rgba(140, 21, 21, 0.14) 0%);
+    }
+
+    .bio-highlight .bio-arrow {
+      display: inline-block;
+      transition: transform 0.25s ease;
+    }
+
+    .bio-text a.bio-highlight:hover .bio-arrow,
+    .bio-text a.bio-highlight:focus-visible .bio-arrow {
+      transform: translateX(3px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .bio-text a.bio-highlight,
+      .bio-highlight .bio-arrow {
+        transition: none;
+      }
+    }
+
     @media (max-width: 768px) {
       .profile {
         flex-direction: column;
@@ -651,7 +683,7 @@
               <br><br>
               I develop theory and algorithms for importance sampling to (1) accelerate rare events and (2) estimate their dynamic properties. The method biases Langevin dynamics with a graph neural network committor and reweights paths to keep rates unbiased despite committor error.
               <br><br>
-              I have applied it to rare events in up to 2055 dimensions: alanine dipeptide in vacuum (<i>d</i>&nbsp;=&nbsp;66), Pt adatom diffusion on Pt(001) (<i>d</i>&nbsp;=&nbsp;387), and vacancy migration in bcc Fe (<i>d</i>&nbsp;=&nbsp;2055). Check out <a href="research/accel_atomistic.html">Accelerated Atomistic Simulations</a>.
+              I have applied it to rare events in up to 2055 dimensions: alanine dipeptide in vacuum (<i>d</i>&nbsp;=&nbsp;66), Pt adatom diffusion on Pt(001) (<i>d</i>&nbsp;=&nbsp;387), and vacancy migration in bcc Fe (<i>d</i>&nbsp;=&nbsp;2055). Check out <a class="bio-highlight" href="research/accel_atomistic.html">Accelerated Atomistic Simulations<span class="bio-arrow" aria-hidden="true">&nbsp;&rarr;</span></a>
               <br><br>
               With collaborators, I model strain in Si&ndash;Ge&ndash;Sn nanowires and dislocation mobility in fcc Cu, and develop Burgers-vector identification for dark-field X-ray microscopy.
             </p>
