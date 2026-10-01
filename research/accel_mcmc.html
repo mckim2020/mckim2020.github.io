@@ -1,7 +1,16 @@
 <!DOCTYPE html>
 <!--
-  Image paths used: ../figs/accel_mcmc/<figure>.png
-  Every image is one of the paper's own figure panels, web-optimized and committed in figs/accel_mcmc/.
+  Accelerated MCMC: the theory of neural-network importance sampling for lattice kinetic
+  Monte Carlo (Kim and Cai, arXiv:2602.12294). Theory only: the paper's numerical tests are
+  not reproduced here. Components (hero, switcher, section heads, stages, dark band, link
+  cards, lightbox, reveal) are shared with research/accel_atomistic.html.
+
+  Media: ../figs/accel_mcmc/
+    pel_discrete_omega.png          paper Fig. 1, the lattice schematic (505 x 506)
+    transition_rate_estimation.png  paper Fig. 2, failures then one success (852 x 326,
+                                    64-colour PNG made from figures_paper_final/)
+  The two other schematics (the extended domain, the reweighted jumps) are inline SVG, and
+  the weight window and training loop are HTML diagrams. The hero canvas is an illustration.
 -->
 <html lang="en">
 <head>
@@ -31,6 +40,8 @@
     };
   </script>
   <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+  <meta name="description" content="The theory of accelerated Markov chain Monte Carlo: failure and success states on a lattice, reweighted jump probabilities equivalent to a bias potential, an unbiased path-weight estimator, rates without a biased clock, branching random walks and a neural-network bias potential.">
+  <script>document.documentElement.className += ' js';</script>
 
   <style>
     body {
@@ -115,273 +126,1424 @@
       }
     }
 
-    main {
-      padding-top: 40px;
-      padding-bottom: 60px;
+    /* =====================================================================
+       Theory page (everything below the site header). Components are shared
+       with research/accel_atomistic.html; page-specific additions are marked.
+       ===================================================================== */
+    :root {
+      --cardinal: #8C1515;
+      --cardinal-bright: #B1040E;
+      --rose: #ff9d97;
+      --ink: #0c0a0e;
+      --text-strong: #1e1a1f;
+      --muted: #5d575e;
+      --line: #ebe4df;
+      --warm: #faf7f4;
+      --sans: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
+      --serif: 'Source Serif 4', Georgia, serif;
+      --garamond: 'EB Garamond', Georgia, serif;
+      --ease: cubic-bezier(.2, .7, .2, 1);
+      /* per-section accents, as r, g, b */
+      --setup: 33, 102, 172;
+      --setup-deep: 29, 88, 150;
+      --sampling: 206, 96, 38;
+      --sampling-deep: 164, 68, 24;
+      --rates: 18, 128, 118;
+      --rates-deep: 12, 100, 92;
+      --weights: 150, 96, 76;
+      --weights-deep: 118, 74, 58;
+      --learning: 110, 72, 168;
+      --learning-deep: 86, 54, 138;
     }
 
-    .page-title {
-      /* Scale down on narrow viewports so the title never strands a lone word */
-      font-size: clamp(1.9rem, 5.2vw, 2.5rem);
-      font-weight: bold;
-      margin-bottom: 8px;
-      color: #8C1515;
-      line-height: 1.18;
-      overflow-wrap: break-word;
-    }
-    /* Keep each phrase intact so the title breaks only between phrases. */
-    .page-title .tline {
-      display: inline-block;
-    }
-    /* Narrowest phones (360 px): one step smaller, so no title phrase wraps inside itself */
-    @media (max-width: 370px) {
-      .page-title { font-size: 1.75rem; }
+    html { scroll-behavior: smooth; scroll-padding-top: 64px; }
+    html.lb-open { overflow: hidden; }
+
+    .sc, .sc *, .sc *::before, .sc *::after { box-sizing: border-box; }
+    .sc img { max-width: 100%; }
+    .sc [hidden] { display: none !important; }
+
+    .wrap {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 24px;
     }
 
-    .page-subtitle {
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: 1.35rem;
-      font-style: italic;
-      color: #555;
-      margin-top: 0;
-      margin-bottom: 30px;
+    .sr-only {
+      position: absolute !important;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0 0 0 0);
+      white-space: nowrap; border: 0;
     }
 
-    .content {
-      font-size: 1.08rem;
-      line-height: 1.7;
+    .sc a:focus-visible,
+    .sc button:focus-visible {
+      outline: 3px solid var(--cardinal);
+      outline-offset: 3px;
+      border-radius: 12px;
+    }
+    .hero a:focus-visible, .hero button:focus-visible,
+    .band a:focus-visible, .band button:focus-visible,
+    .lb button:focus-visible {
+      outline-color: #ffb8b2;
     }
 
-    .content h2 {
-      font-family: 'EB Garamond', Georgia, serif;
-      color: #8C1515;
-      font-size: 1.7rem;
-      margin-top: 2.2em;
-      margin-bottom: 0.5em;
-      border-bottom: 2px solid #8C1515;
-      padding-bottom: 4px;
+    .eyebrow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 14px;
+      font: 700 0.78rem/1.2 var(--sans);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--cardinal);
     }
 
-    .content h3 {
-      font-family: 'EB Garamond', Georgia, serif;
-      color: #444;
-      font-size: 1.28rem;
-      margin-top: 1.7em;
-      margin-bottom: 0.4em;
+    .h2 {
+      margin: 0 0 18px;
+      font: 700 clamp(1.9rem, 1.25rem + 2vw, 2.75rem)/1.1 var(--serif);
+      letter-spacing: -0.012em;
+      color: var(--text-strong);
     }
 
-    .content p {
-      text-align: justify;
-      hyphens: auto;
+    .lead {
+      margin: 0;
+      font: 400 1.12rem/1.66 var(--serif);
+      color: #3a353b;
     }
 
-    .content a {
-      color: #8C1515;
+    /* ------------------------------ Hero ------------------------------ */
+    .hero {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      /* Fill the first screen below the 127 px site header, within sensible bounds. */
+      min-height: clamp(460px, calc(100vh - 127px), 830px);
+      min-height: clamp(460px, calc(100svh - 127px), 830px);
+      color: #ffffff;
+      background:
+        radial-gradient(60% 75% at 88% 16%, rgba(177, 4, 14, 0.52), rgba(177, 4, 14, 0) 70%),
+        radial-gradient(55% 65% at 4% 108%, rgba(140, 21, 21, 0.45), rgba(140, 21, 21, 0) 70%),
+        linear-gradient(180deg, #130d14 0%, var(--ink) 100%);
+    }
+
+    .hero-canvas {
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .hero-shade {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        radial-gradient(420px circle at var(--mx, 70%) var(--my, 40%), rgba(255, 110, 100, 0.10), rgba(255, 110, 100, 0) 70%),
+        linear-gradient(90deg, rgba(12, 10, 14, 0.82) 0%, rgba(12, 10, 14, 0.5) 34%, rgba(12, 10, 14, 0) 66%),
+        linear-gradient(180deg, rgba(12, 10, 14, 0) 72%, rgba(12, 10, 14, 0.75) 100%);
+    }
+
+    .hero-inner {
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      width: 100%;
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 84px 24px 36px;
+    }
+
+    .hero-kicker {
+      margin: 0 0 20px;
+      font: 700 0.8rem/1.3 var(--sans);
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--rose);
+    }
+
+    .hero-title {
+      margin: 0 0 22px;
+      font: 700 clamp(2.6rem, 1.1rem + 5.1vw, 5.2rem)/1.02 var(--serif);
+      letter-spacing: -0.018em;
+      text-shadow: 0 2px 30px rgba(0, 0, 0, 0.45);
+    }
+    .hero-title span { display: block; }
+    .hero-title .t2 {
+      padding-bottom: 0.06em;
+      color: #ff938c;
+      background: linear-gradient(92deg, #ffe1dc 0%, #ff9f98 40%, #ff5f55 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: none;
+    }
+
+    .hero-sub {
+      max-width: 52ch;
+      margin: 0 0 14px;
+      font: 400 clamp(1.25rem, 1.02rem + 0.75vw, 1.62rem)/1.36 var(--garamond);
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    .hero-authors {
+      margin: 0 0 40px;
+      font: 400 0.95rem/1.45 var(--sans);
+      letter-spacing: 0.01em;
+      color: rgba(255, 255, 255, 0.64);
+    }
+
+    .hero-authors a {
+      color: #ffd0cb;
       text-decoration: none;
-      border-bottom: 1px solid rgba(140, 21, 21, 0.4);
-      transition: border-color 0.2s ease;
+      border-bottom: 1px solid rgba(255, 208, 203, 0.4);
+      white-space: nowrap;
     }
-    .content a:hover {
-      border-bottom-color: #8C1515;
-    }
+    .hero-authors a:hover { border-bottom-color: currentColor; }
 
-    /* Paper info card */
-    .paper-card {
-      background: #faf6f6;
-      border-left: 4px solid #8C1515;
-      padding: 16px 22px;
-      margin: 0 0 30px 0;
-      font-size: 1.0rem;
-    }
-    .paper-card .authors {
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: 1.15rem;
-      margin-bottom: 4px;
-      line-height: 1.4;
-    }
-    .paper-card .venue {
-      color: #666;
-      font-style: italic;
-      font-size: 0.95rem;
-    }
-    .paper-card .links {
-      margin-top: 12px;
-    }
-    .paper-card .links a {
-      display: inline-block;
-      margin-right: 14px;
-      color: #8C1515;
-      font-weight: 600;
-      border: none;
-    }
-    .paper-card .links a i {
-      margin-right: 4px;
-    }
-
-    /* Key ideas list */
-    .contributions {
-      padding-left: 0;
+    /* Page-specific: the paper as pill links under the author line. */
+    .hero-copy .hero-authors { margin-bottom: 14px; }
+    .hero-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 34px;
+      padding: 0;
       list-style: none;
     }
-    .contributions li {
-      position: relative;
-      padding: 8px 0 8px 32px;
-      border-bottom: 1px dashed #e0e0e0;
-    }
-    .contributions li:last-child { border-bottom: none; }
-    .contributions li::before {
-      content: '\f192'; /* fontawesome dot-circle */
-      font-family: 'Font Awesome 6 Free';
-      font-weight: 900;
-      color: #8C1515;
-      position: absolute;
-      left: 4px;
-      top: 11px;
-      font-size: 0.9em;
-    }
-
-    /* Figures */
-    figure {
-      margin: 30px auto;
-      text-align: center;
-    }
-    figure img {
-      max-width: 100%;
-      height: auto;
-      border: 1px solid #e6e6e6;
-      border-radius: 4px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    }
-    figure.fig-narrow img { max-width: 60%; }
-    figure.fig-medium img { max-width: 80%; }
-    figure.fig-pair {
-      display: flex;
-      gap: 14px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    figure.fig-pair img { max-width: 48%; }
-    figure.fig-triple {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
+    .hero-link {
+      display: inline-flex;
       align-items: center;
-      flex-wrap: wrap;
+      gap: 8px;
+      padding: 8px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 999px;
+      font: 600 0.86rem/1 var(--sans);
+      color: #ffe1dc;
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.07);
+      transition: background 0.25s, border-color 0.25s;
     }
-    figure.fig-triple img {
-      max-width: 32%;
-      min-width: 190px;
-    }
-    figure.fig-pair,
-    figure.fig-quad { align-items: center; }
-    figcaption {
-      font-size: 0.9rem;
-      color: #555;
-      margin-top: 10px;
-      line-height: 1.45;
-      text-align: justify;
-      padding: 0 6px;
-    }
-    figcaption b { color: #333; }
-    /* In the flex figures, give the caption its own full-width row */
-    figure.fig-pair figcaption,
-    figure.fig-quad figcaption,
-    figure.fig-triple figcaption { flex-basis: 100%; }
+    .hero-link:hover { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 157, 151, 0.6); }
+    .hero-link i { font-size: 0.82em; color: var(--rose); }
 
-    /* Equations / display math wrapper.
-       No overflow-x scrolling: equations are re-flowed to fit the column,
-       and MathJax v4's displayOverflow:'linebreak' wraps anything wider
-       than the container instead of letting it overflow. */
-    .eq-block {
-      margin: 18px 0;
-      max-width: 100%;
-    }
-    .eq-block mjx-container {
-      max-width: 100%;
-    }
-    /* Last resort at phone widths only: a few equations contain unbreakable
-       fenced groups (e.g. matrices) wider than a narrow screen. No scrollbar
-       ever appears at desktop width. */
-    @media (max-width: 640px) {
-      .eq-block { overflow-x: auto; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      max-width: 800px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
     }
 
-    /* Highlight box for key takeaway */
-    .takeaway {
-      background: #fff8e6;
-      border-left: 4px solid #d4a017;
-      padding: 14px 20px;
-      margin: 24px 0;
-      font-size: 1.0rem;
-    }
-
-    /* ---- Data tables ---- */
-    .table-wrap {
-      overflow-x: auto;
-      margin: 22px 0 6px 0;
-    }
-    table.data-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-family: 'Source Sans 3', Helvetica, sans-serif;
-      font-size: 0.92rem;
-      min-width: 460px;
-    }
-    table.data-table thead th {
-      background: #8C1515;
+    .stat {
+      position: relative;
+      display: block;
+      height: 100%;
+      padding: 16px 18px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 18px;
       color: #ffffff;
-      font-weight: 600;
-      text-align: left;
-      padding: 9px 12px;
+      text-decoration: none;
+      background:
+        linear-gradient(160deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.035)),
+        rgba(12, 10, 14, 0.55);
+      transition: transform 0.4s var(--ease), border-color 0.4s, box-shadow 0.4s, background 0.4s;
+    }
+    .stat:hover {
+      transform: translateY(-5px);
+      border-color: rgba(255, 157, 151, 0.6);
+      background:
+        linear-gradient(160deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05)),
+        rgba(12, 10, 14, 0.55);
+      box-shadow: 0 22px 44px -20px rgba(255, 80, 70, 0.55);
+    }
+    .stat-top {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font: 700 0.76rem/1 var(--sans);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.78);
+    }
+    .stat-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: rgb(var(--acc));
+      box-shadow: 0 0 14px rgba(var(--acc), 0.95);
+    }
+    .stat-value {
+      display: block;
+      margin: 14px 0 6px;
+      font: 600 clamp(2.1rem, 1.3rem + 2.1vw, 3rem)/1 var(--sans);
+      letter-spacing: -0.01em;
       white-space: nowrap;
     }
-    table.data-table td {
-      padding: 8px 12px;
-      border-bottom: 1px solid #ececec;
+    .stat-label {
+      display: block;
+      font: 400 0.92rem/1.35 var(--sans);
+      color: rgba(255, 255, 255, 0.74);
+    }
+    .stat-go {
+      position: absolute;
+      top: 15px;
+      right: 16px;
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.45);
+      transition: transform 0.3s var(--ease), color 0.3s;
+    }
+    .stat:hover .stat-go { transform: translateY(3px); color: #ffffff; }
+    /* Page-specific: concept tiles carry a word, not a number. */
+    .stat-value.stat-word { font-size: clamp(1.75rem, 1.2rem + 1.45vw, 2.4rem); letter-spacing: -0.005em; }
+
+    .hero-foot {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px 24px;
+      width: 100%;
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 24px 22px;
+      font: 400 0.8rem/1.4 var(--sans);
+      color: rgba(255, 255, 255, 0.6);
+    }
+    .scroll-cue {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font: 700 0.72rem/1 var(--sans);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.78);
+      text-decoration: none;
+    }
+    .scroll-cue .chev {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      animation: bob 2.4s ease-in-out infinite;
+    }
+    .hero-note {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-align: right;
+    }
+    .hero-toggle {
+      flex: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 999px;
+      font: 700 0.72rem/1 var(--sans);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      transition: background 0.25s;
+    }
+    .hero-toggle:hover { background: rgba(255, 255, 255, 0.16); }
+
+    @keyframes bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(5px); }
+    }
+
+    /* --------------------------- Switcher --------------------------- */
+    .switcher-sentinel { height: 1px; margin-top: -1px; }
+    .switcher {
+      display: block;
+      position: -webkit-sticky;
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      background: rgba(255, 255, 255, 0.88);
+      -webkit-backdrop-filter: saturate(1.4) blur(14px);
+      backdrop-filter: saturate(1.4) blur(14px);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+      transition: box-shadow 0.3s;
+    }
+    .switcher.stuck { box-shadow: 0 12px 30px -20px rgba(0, 0, 0, 0.45); }
+    .switcher-inner {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 10px 24px;
+    }
+    /* Left of the pills: a quiet "On this page" label at rest, the page title once the bar sticks. */
+    .switcher-title {
+      display: grid;
+      align-items: center;
+      min-width: 0;
+      margin-right: auto;
+    }
+    .switcher-title > span {
+      grid-area: 1 / 1;
+      overflow: hidden;
       white-space: nowrap;
+      text-overflow: ellipsis;
+      transition: opacity 0.3s, transform 0.3s var(--ease);
     }
-    table.data-table tbody tr:nth-child(even) td {
-      background: #fbf9f9;
+    .st-rest {
+      font: 700 0.72rem/1.2 var(--sans);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #8a8187;
     }
-    table.data-table tr.row-best td {
-      background: #f4e6e6;
-      color: #5f0f0f;
-      font-weight: 700;
+    .st-stuck {
+      font: 600 1.02rem/1.2 var(--serif);
+      color: var(--text-strong);
+      opacity: 0;
+      transform: translateY(6px);
     }
-    table.data-table tr.row-best td:first-child {
-      box-shadow: inset 3px 0 0 #8C1515;
+    .switcher.stuck .st-rest { opacity: 0; transform: translateY(-6px); }
+    .switcher.stuck .st-stuck { opacity: 1; transform: none; }
+    .pills {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 6px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
     }
-    table.data-table tr.row-ref td {
-      font-style: italic;
-      color: #444;
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      font: 600 0.93rem/1 var(--sans);
+      color: #3b3539;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.25s, color 0.25s, box-shadow 0.25s;
+    }
+    .pill:hover { color: var(--cardinal); background: rgba(140, 21, 21, 0.06); }
+    .pill.is-active {
+      color: #ffffff;
+      background: var(--cardinal);
+      box-shadow: 0 8px 18px -10px rgba(140, 21, 21, 0.9);
+    }
+    .pill-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgb(var(--acc));
+    }
+    .pill.is-active .pill-dot { background: #ffffff; }
+
+    /* ----------------------------- Intro ----------------------------- */
+    .intro { padding: 92px 0 84px; background: #ffffff; }
+    .intro-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.3fr);
+      gap: 56px;
+      align-items: start;
+    }
+    .steps {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .step {
+      position: relative;
+      display: grid;
+      grid-template-columns: 46px minmax(0, 1fr);
+      column-gap: 20px;
+      align-items: start;
+      padding: 20px 56px 20px 22px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: linear-gradient(180deg, #ffffff, #fbf8f6);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 20px 44px -32px rgba(140, 21, 21, 0.4);
+      transition: transform 0.4s var(--ease), box-shadow 0.4s;
+    }
+    .step:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 28px 54px -30px rgba(140, 21, 21, 0.5);
+    }
+    .step-icon {
+      grid-row: span 2;
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      border-radius: 13px;
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--cardinal-bright), var(--cardinal));
+      box-shadow: 0 12px 22px -12px rgba(140, 21, 21, 0.95);
+    }
+    .step-n {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font: 700 0.8rem/1 var(--sans);
+      letter-spacing: 0.1em;
+      color: #b9adad;
+    }
+    .step h3 {
+      margin: 1px 0 6px;
+      font: 700 1.18rem/1.2 var(--serif);
+      color: var(--text-strong);
+    }
+    .step p {
+      margin: 0;
+      font: 400 0.95rem/1.55 var(--sans);
+      color: #4a444b;
+    }
+
+    /* ---------------------------- Sections ---------------------------- */
+    .system {
+      position: relative;
+      overflow: hidden;
+      padding: 100px 0 100px;
       background: #ffffff;
     }
-    table.data-table tr.row-ref:first-of-type td {
-      border-top: 2px solid #8C1515;
+    .system.tint { background: var(--warm); }
+    .system.tint::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image: radial-gradient(rgba(140, 21, 21, 0.075) 1.2px, transparent 1.4px);
+      background-size: 22px 22px;
+      -webkit-mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
+      mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
     }
-    .table-note {
-      font-size: 0.84rem;
-      color: #666;
-      line-height: 1.5;
-      margin: 8px 0 0 0;
-      text-align: left;
+    .system .wrap { position: relative; z-index: 1; }
+    .blob {
+      position: absolute;
+      z-index: 0;
+      width: 640px;
+      height: 640px;
+      border-radius: 50%;
+      pointer-events: none;
+      background: radial-gradient(circle, rgba(var(--acc), 0.2), rgba(var(--acc), 0) 66%);
     }
-    .table-note .caption-lead { color: #333; font-weight: 700; }
 
-    /* Phones: figures at full column width; ragged-right text without
-       automatic hyphenation (justified text leaves wide gaps in a narrow
-       column); tables wrap inside their cells instead of scrolling sideways. */
+    .sys-head {
+      display: flex;
+      align-items: flex-end;
+      gap: 26px;
+      margin-bottom: 46px;
+    }
+    .sys-num {
+      flex: none;
+      font: 700 clamp(4.4rem, 2.2rem + 6.4vw, 8rem)/0.8 var(--serif);
+      letter-spacing: -0.04em;
+      color: transparent;
+      -webkit-text-stroke: 1.6px rgba(var(--acc), 0.6);
+      user-select: none;
+    }
+    .sys-title {
+      margin: 0 0 16px;
+      font: 700 clamp(2rem, 1.2rem + 2.7vw, 3.15rem)/1.06 var(--serif);
+      letter-spacing: -0.014em;
+      color: var(--text-strong);
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border: 1px solid #ecd49a;
+      border-radius: 999px;
+      font: 600 0.72rem/1.2 var(--sans);
+      letter-spacing: 0.04em;
+      text-transform: none;
+      color: #5c4a14;
+      background: #fcf3da;
+    }
+    .status.posted { color: #1b5133; background: #e6f4eb; border-color: #bde0c9; }
+    .specs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .specs li {
+      padding: 8px 13px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font: 600 0.86rem/1 var(--sans);
+      color: #463f45;
+      background: #ffffff;
+    }
+    .specs li.key {
+      border-color: transparent;
+      color: #ffffff;
+      background: rgb(var(--acc-deep));
+      box-shadow: 0 8px 18px -10px rgba(var(--acc), 0.9);
+    }
+
+    .sys-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+      gap: 60px;
+      align-items: start;
+    }
+    .system.flip .media { order: 2; }
+    /* Page-specific: two text columns of equal width, and a full-width figure above them. */
+    .sys-grid.duo { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .stage.wide { max-width: 940px; margin: 0 auto 60px; }
+    /* Page-specific: a long story column keeps its diagram in view on wide screens. */
+    @media (min-width: 901px) {
+      .media.pin { position: -webkit-sticky; position: sticky; top: 88px; }
+    }
+
+    /* Stage: the figure frame */
+    .stage { margin: 0; }
+    .stage-box {
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 1 / 1;
+      border-radius: 26px;
+      background: #ffffff;
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.05),
+        0 34px 64px -34px rgba(var(--acc), 0.6),
+        0 50px 90px -56px rgba(0, 0, 0, 0.4);
+    }
+    .stage-box::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      border-radius: inherit;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+      pointer-events: none;
+    }
+    .stage-media {
+      position: absolute;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: transform 1.6s var(--ease);
+    }
+    img.stage-media { padding: 16px; }
+    .stage-box:hover img.stage-media { transform: scale(1.035); }
+    .stage-tag {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      max-width: calc(100% - 32px);
+      padding: 8px 13px;
+      border-radius: 999px;
+      font: 600 0.8rem/1.1 var(--sans);
+      color: #2b262c;
+      background: rgba(255, 255, 255, 0.86);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.3);
+    }
+    .stage-tag i.m, .m { font-family: var(--serif); font-style: italic; }
+    .stage-ctrls {
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      z-index: 4;
+      display: flex;
+      gap: 8px;
+    }
+    .stage-btn {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 50%;
+      font-size: 0.9rem;
+      color: #2b262c;
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.88);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 18px -10px rgba(0, 0, 0, 0.45);
+      cursor: pointer;
+      transition: transform 0.2s var(--ease), background 0.2s;
+    }
+    .stage-btn:hover { transform: scale(1.08); background: #ffffff; }
+    .stage figcaption {
+      margin: 16px 2px 0;
+      font: 400 0.9rem/1.5 var(--sans);
+      color: var(--muted);
+    }
+
+    /* Page-specific stage variants: a frame that takes the height of its content
+       (a wide figure, an HTML diagram), and a tag pinned to the right. */
+    .stage-box.auto { aspect-ratio: auto; }
+    .stage-box.auto img.stage-media { position: relative; inset: auto; height: auto; padding: 58px 22px 20px; }
+    .stage-tag.r { left: auto; right: 16px; }
+    .stage-dot {
+      flex: none;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgb(var(--acc));
+    }
+
+    /* Story column */
+    .story { padding-top: 4px; }
+    .beat + .beat { margin-top: 28px; }
+    .beat-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 10px;
+      font: 700 0.76rem/1 var(--sans);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--cardinal);
+    }
+    .beat-label::before {
+      content: '';
+      width: 24px;
+      height: 2px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--cardinal), rgb(var(--acc)));
+    }
+    .beat p {
+      margin: 0;
+      font: 400 1.06rem/1.68 var(--serif);
+      color: #2f2a30;
+    }
+    .beat p + p { margin-top: 12px; }
+
+    /* Feature strips */
+    .strip { margin-top: 70px; }
+    .strip-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px 24px;
+      margin-bottom: 20px;
+    }
+    .strip-title {
+      margin: 0;
+      font: 700 1.55rem/1.2 var(--serif);
+      color: var(--text-strong);
+    }
+    .strip-note {
+      max-width: 62ch;
+      margin: 0;
+      font: 400 0.9rem/1.5 var(--sans);
+      color: var(--muted);
+    }
+
+    /* ------------------- Page-specific: equation cards ------------------- */
+    .eq-card {
+      position: relative;
+      margin: 18px 0 20px;
+      padding: 13px 18px 6px 22px;
+      border: 1px solid rgba(var(--acc), 0.24);
+      border-radius: 18px;
+      background: linear-gradient(180deg, #ffffff, #fdfbfa);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 18px 34px -28px rgba(var(--acc), 0.95);
+      overflow: hidden;
+    }
+    .eq-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 4px;
+      background: linear-gradient(180deg, rgb(var(--acc)), rgba(var(--acc), 0.45));
+    }
+    .eq-card .eq-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 0;
+      font: 700 0.7rem/1.2 var(--sans);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgb(var(--acc-deep));
+    }
+    .tag {
+      flex: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 9px;
+      border: 1px solid;
+      border-radius: 999px;
+      font: 700 0.64rem/1 var(--sans);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .tag.exact { color: #1b5133; background: #e6f4eb; border-color: #bde0c9; }
+    .tag.approx { color: #5c4a14; background: #fcf3da; border-color: #ecd49a; }
+    .tag.choice { color: #2f4260; background: #e9eff8; border-color: #c7d4e8; }
+    .tag.def { color: #4a4148; background: #f3efec; border-color: #e0d6d0; }
+    .eq-body { font-size: 1.04rem; color: var(--text-strong); }
+    .eq-body mjx-container[display="true"] { margin: 10px 0 8px !important; }
+    .tag-key {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin: 22px 0 0;
+      font: 400 0.9rem/1.5 var(--sans);
+      color: var(--muted);
+    }
+
+    /* --------------- Page-specific: inline SVG schematics --------------- */
+    .diagram { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+    .diagram text { font-family: var(--sans); }
+    .d-frame { fill: none; stroke: #cfc3bd; stroke-width: 2; stroke-dasharray: 9 7; }
+    .d-field { fill: #fbf8f6; }
+    .d-edge { fill: none; stroke: #e0d5cf; stroke-width: 1.5; }
+    .d-dot { fill: #c9bbb5; }
+    .d-basin-0 { stop-color: rgb(177, 4, 14); stop-opacity: 0.2; }
+    .d-basin-1 { stop-color: rgb(177, 4, 14); stop-opacity: 0; }
+    .d-rc { fill: rgba(var(--acc), 0.07); stroke: rgb(var(--acc)); stroke-width: 1.8; stroke-dasharray: 5 5; }
+    .d-link { stroke: rgb(var(--acc-deep)); stroke-width: 2; stroke-dasharray: 1 5; stroke-linecap: round; }
+    .d-cpl { fill: rgb(var(--acc)); }
+    .d-min { fill: #1e1a1f; }
+    .d-lab {
+      font: 700 22px var(--serif);
+      fill: #1e1a1f;
+      paint-order: stroke;
+      stroke: #fbf8f6;
+      stroke-width: 5px;
+      stroke-linejoin: round;
+    }
+    .d-it { font-style: italic; font-weight: 600; }
+    .d-sub { font-size: 15px; }
+    .d-big { font-size: 27px; stroke: #ffffff; }
+    .d-node { fill: #1e1a1f; }
+    .d-node-t { font: 700 20px var(--sans); fill: #ffffff; }
+    .d-node-sm { font-size: 17px; }
+    .d-path { fill: none; stroke-width: 3.2; stroke-linejoin: round; stroke-linecap: round; }
+    .d-hop { stroke-width: 2.4; stroke-dasharray: 4 5; stroke-linecap: round; }
+    .d-fail { stroke: #e8707e; }
+    .d-succ { stroke: #2653a6; }
+    .d-v { stroke: #ffffff; stroke-width: 1.5; }
+    .d-fail-v { fill: #e8707e; }
+    .d-succ-v { fill: #2653a6; }
+    .d-rad { stroke: #1e1a1f; stroke-width: 1.5; }
+    .d-panel { fill: #ffffff; stroke: #e6ddd7; stroke-width: 1.5; }
+    .d-dots { opacity: 0.85; }
+    .d-tilt-0 { stop-color: rgb(var(--acc)); stop-opacity: 0; }
+    .d-tilt-1 { stop-color: rgb(var(--acc)); stop-opacity: 0.2; }
+    .d-arr { stroke: rgb(var(--acc-deep)); stroke-linecap: round; }
+    .d-arr-h { fill: rgb(var(--acc-deep)); }
+    .d-arr-f { stroke: #8f858b; stroke-dasharray: 5 6; }
+    .d-arr-fh { fill: #8f858b; }
+    .d-arr-off { stroke: #d3c7c1; stroke-width: 2.6; stroke-dasharray: 4 7; stroke-linecap: round; }
+    .d-x { fill: none; stroke: var(--cardinal-bright); stroke-width: 3.4; stroke-linecap: round; }
+    .d-nb { fill: #ffffff; stroke: #9d9197; stroke-width: 2; }
+    .d-i { fill: rgb(var(--acc-deep)); }
+    .d-i-t { font: italic 700 19px var(--serif); fill: #ffffff; }
+    /* HTML labels laid over the reweighting schematic (positions follow its viewBox) */
+    .rw-lab {
+      position: absolute;
+      z-index: 2;
+      left: 7%;
+      margin: 0;
+      font: 700 0.72rem/1.25 var(--sans);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgb(var(--acc-deep));
+    }
+    .rw-lab .rw-m { display: block; margin-top: 6px; font-size: 1.28rem; letter-spacing: 0; text-transform: none; color: var(--text-strong); }
+    .rw-lab.top { top: 7.2%; }
+    .rw-lab.bot { top: 56.5%; }
+    .rw-cue {
+      position: absolute;
+      z-index: 2;
+      right: 7%;
+      top: 56.5%;
+      margin: 0;
+      font: 600 0.84rem/1.2 var(--sans);
+      color: rgb(var(--acc-deep));
+    }
+
+    /* ------------- Page-specific: the branching weight window ------------- */
+    .win { padding: 70px 24px 24px; }
+    .win-cap {
+      display: flex;
+      justify-content: space-between;
+      margin: 0 4px 10px;
+      font: 700 0.72rem/1.2 var(--sans);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .win-axis {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr 1.3fr 1fr;
+      height: 14px;
+      margin: 0 4px 44px;
+    }
+    .win-axis .wz { display: block; height: 100%; }
+    .win-axis .wz.lo { border-radius: 999px 0 0 999px; background: linear-gradient(90deg, rgba(232, 112, 126, 0.12), rgba(232, 112, 126, 0.6)); }
+    .win-axis .wz.mid { background: rgb(var(--acc)); box-shadow: 0 10px 20px -8px rgba(var(--acc), 0.9); }
+    .win-axis .wz.hi { border-radius: 0 999px 999px 0; background: linear-gradient(90deg, rgba(38, 83, 166, 0.6), rgba(38, 83, 166, 0.12)); }
+    .win-tick {
+      position: absolute;
+      top: -6px;
+      width: 2px;
+      height: 26px;
+      margin-left: -1px;
+      border-radius: 2px;
+      background: var(--text-strong);
+    }
+    .win-tick span {
+      position: absolute;
+      top: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      font-size: 1rem;
+      color: var(--text-strong);
+    }
+    .win-zones {
+      display: grid;
+      grid-template-columns: 1fr 1.3fr 1fr;
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .wzone {
+      position: relative;
+      padding: 14px 14px 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #ffffff;
+      font: 400 0.86rem/1.45 var(--sans);
+      color: #4a444b;
+    }
+    .wzone::before {
+      content: '';
+      position: absolute;
+      top: 12px;
+      bottom: 12px;
+      left: 0;
+      width: 3px;
+      border-radius: 3px;
+      background: var(--zc);
+    }
+    .wzone.lo { --zc: #e8707e; }
+    .wzone.mid { --zc: rgb(var(--acc)); border-color: rgba(var(--acc), 0.35); box-shadow: 0 16px 30px -24px rgba(var(--acc), 0.9); }
+    .wzone.hi { --zc: #2653a6; }
+    .wzone b {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      font: 700 0.98rem/1.2 var(--sans);
+      color: var(--text-strong);
+    }
+    .wzone b i { color: var(--zc); font-size: 0.9em; }
+
+    /* --------------- Page-specific: the training loop diagram --------------- */
+    .loop {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 46px 50px;
+      margin: 0;
+      padding: 72px 26px 10px;
+      list-style: none;
+    }
+    .lnode {
+      position: relative;
+      padding: 14px 14px 15px;
+      border: 1px solid rgba(var(--acc), 0.26);
+      border-radius: 16px;
+      background: #ffffff;
+      box-shadow: 0 16px 30px -24px rgba(var(--acc), 0.9);
+      font: 400 0.86rem/1.45 var(--sans);
+      color: #4a444b;
+    }
+    .lnode b {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 5px;
+      font: 700 1rem/1.2 var(--sans);
+      color: var(--text-strong);
+    }
+    .lnode b i { color: rgb(var(--acc)); font-size: 0.88em; }
+    .lnode::after {
+      position: absolute;
+      font: 900 0.95rem/1 'Font Awesome 6 Free';
+      color: rgba(var(--acc), 0.75);
+    }
+    .lnode.n1::after { content: '\f061'; top: 50%; right: -33px; transform: translateY(-50%); }
+    .lnode.n2::after { content: '\f063'; bottom: -32px; left: 50%; transform: translateX(-50%); }
+    .lnode.n3 { grid-column: 2; grid-row: 2; }
+    .lnode.n3::after { content: '\f060'; top: 50%; left: -33px; transform: translateY(-50%); }
+    .lnode.n4 { grid-column: 1; grid-row: 2; }
+    .lnode.n4::after { content: '\f062'; top: -32px; left: 50%; transform: translateX(-50%); }
+    .loop-foot {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin: 22px 26px 26px;
+      padding: 13px 15px;
+      border: 1px dashed rgba(var(--acc), 0.45);
+      border-radius: 14px;
+      font: 400 0.86rem/1.45 var(--sans);
+      color: #4a444b;
+      background: rgba(var(--acc), 0.045);
+    }
+    .loop-foot > i { margin-top: 2px; color: rgb(var(--acc)); }
+    .loop-foot b { color: var(--text-strong); }
+
+    /* ---------------------------- Dark band ---------------------------- */
+    .band {
+      position: relative;
+      overflow: hidden;
+      padding: 104px 0 96px;
+      color: #ffffff;
+      background:
+        radial-gradient(55% 80% at 12% 0%, rgba(177, 4, 14, 0.38), rgba(177, 4, 14, 0) 70%),
+        radial-gradient(50% 70% at 96% 100%, rgba(140, 21, 21, 0.38), rgba(140, 21, 21, 0) 70%),
+        linear-gradient(180deg, #130d14, var(--ink));
+    }
+    .band::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1.1px, transparent 1.3px);
+      background-size: 26px 26px;
+      -webkit-mask-image: radial-gradient(70% 60% at 50% 40%, #000, transparent);
+      mask-image: radial-gradient(70% 60% at 50% 40%, #000, transparent);
+    }
+    .band .wrap { position: relative; }
+    .band .eyebrow { color: var(--rose); }
+    .band .h2 { color: #ffffff; }
+    .band .lead { max-width: 74ch; color: rgba(255, 255, 255, 0.84); }
+    .verdicts {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin: 34px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    .verdict {
+      padding: 18px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .verdict b {
+      display: block;
+      margin-bottom: 8px;
+      font: 700 1.9rem/1 var(--sans);
+      color: #ffffff;
+    }
+    .verdict span {
+      display: block;
+      font: 400 0.9rem/1.45 var(--sans);
+      color: rgba(255, 255, 255, 0.74);
+    }
+    /* Page-specific: each verdict carries the colour of its equation tag. */
+    .verdict b::before {
+      content: '';
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      margin-right: 12px;
+      border-radius: 50%;
+      vertical-align: 0.16em;
+      background: var(--vc);
+      box-shadow: 0 0 14px var(--vc);
+    }
+    .verdict.exact { --vc: #7fd3a0; }
+    .verdict.approx { --vc: #f2cd6b; }
+    .verdict.choice { --vc: #9fb8e6; }
+    .verdict i { font-family: var(--serif); }
+
+    /* ---------------------------- Closing ---------------------------- */
+    .outlook { padding: 92px 0 88px; background: #ffffff; }
+    .outlook .lead { max-width: 70ch; }
+    .outlook .specs { margin-top: 26px; }
+    .closing { padding: 92px 0 104px; background: var(--warm); }
+    .links {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin: 32px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    .link-card {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      height: 100%;
+      padding: 24px 22px 22px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      color: inherit;
+      text-decoration: none;
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 22px 44px -36px rgba(140, 21, 21, 0.45);
+      transition: transform 0.4s var(--ease), box-shadow 0.4s, border-color 0.4s;
+    }
+    .link-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(140, 21, 21, 0.3);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 30px 56px -34px rgba(140, 21, 21, 0.55);
+    }
+    .link-icon {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 13px;
+      color: var(--cardinal);
+      background: rgba(140, 21, 21, 0.08);
+    }
+    .link-card h3 {
+      margin: 4px 0 0;
+      font: 700 1.15rem/1.25 var(--serif);
+      color: var(--cardinal);
+    }
+    .link-card p {
+      margin: 0;
+      font: 400 0.93rem/1.52 var(--sans);
+      color: #4c464d;
+    }
+    .link-go {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 6px;
+      font: 700 0.86rem/1 var(--sans);
+      color: var(--cardinal);
+    }
+    .link-go i { transition: transform 0.3s var(--ease); }
+    .link-card:hover .link-go i { transform: translateX(4px); }
+    .status-box {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      margin-top: 26px;
+      padding: 20px 22px;
+      border: 1px dashed #d8cdc6;
+      border-radius: 18px;
+      background: #ffffff;
+    }
+    .status-box > i { margin-top: 3px; font-size: 1.05rem; color: var(--cardinal); }
+    .status-box p {
+      margin: 0;
+      font: 400 0.95rem/1.58 var(--sans);
+      color: #463f46;
+    }
+    .status-box a {
+      color: var(--cardinal);
+      font-weight: 600;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(140, 21, 21, 0.35);
+    }
+    .status-box a:hover { border-bottom-color: var(--cardinal); }
+
+    /* Page-specific: the paper card */
+    .paper-card {
+      display: grid;
+      grid-template-columns: 52px minmax(0, 1fr);
+      column-gap: 20px;
+      margin-top: 0;
+      padding: 24px 26px 22px 22px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 22px 44px -36px rgba(140, 21, 21, 0.45);
+      font: 400 0.98rem/1.5 var(--sans);
+      color: #463f46;
+    }
+    .paper-icon {
+      display: grid;
+      place-items: center;
+      width: 52px;
+      height: 52px;
+      border-radius: 15px;
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--cardinal-bright), var(--cardinal));
+      box-shadow: 0 12px 22px -12px rgba(140, 21, 21, 0.95);
+    }
+    .paper-body { min-width: 0; }
+    .paper-card .authors {
+      margin-bottom: 4px;
+      font: 400 1.18rem/1.35 var(--serif);
+      color: var(--text-strong);
+    }
+    .paper-card .venue { font-style: italic; color: var(--muted); }
+    .paper-card .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 10px;
+      margin-top: 14px;
+    }
+    .paper-card .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 13px;
+      border: 1px solid rgba(140, 21, 21, 0.22);
+      border-radius: 999px;
+      font: 700 0.86rem/1 var(--sans);
+      color: var(--cardinal);
+      text-decoration: none;
+      background: rgba(140, 21, 21, 0.04);
+      transition: background 0.25s, border-color 0.25s;
+    }
+    .paper-card .links a:hover { background: rgba(140, 21, 21, 0.09); border-color: rgba(140, 21, 21, 0.45); }
+    .paper-card pre { white-space: pre; color: #3a353b; }
+
+    .nowrap { white-space: nowrap; }
+    .hero-kicker, .hero-title, .h2, .sys-title, .strip-title { text-wrap: balance; }
+    .lead, .beat p, .strip-note, .stage figcaption, .step p, .link-card p, .wzone, .lnode { text-wrap: pretty; }
+
+    /* ---------------------------- Lightbox ---------------------------- */
+    .lb {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 28px 84px;
+    }
+    .lb-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(9, 7, 11, 0.92);
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+    }
+    .lb-figure {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: min(1180px, 100%);
+      margin: 0;
+      animation: lbIn 0.4s var(--ease);
+    }
+    .lb-img {
+      display: block;
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: calc(100vh - 190px);
+      border-radius: 16px;
+      background: #ffffff;
+      box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.85);
+    }
+    .lb-cap {
+      max-width: 82ch;
+      margin: 16px 0 0;
+      font: 400 0.95rem/1.52 var(--sans);
+      text-align: center;
+      color: rgba(255, 255, 255, 0.86);
+    }
+    .lb-count {
+      margin-right: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--rose);
+    }
+    .lb-btn {
+      position: absolute;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      width: 50px;
+      height: 50px;
+      padding: 0;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 50%;
+      font-size: 1.1rem;
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .lb-btn:hover { background: rgba(255, 255, 255, 0.2); }
+    .lb-close { top: 18px; right: 18px; }
+    .lb-prev { top: 50%; left: 18px; transform: translateY(-50%); }
+    .lb-next { top: 50%; right: 18px; transform: translateY(-50%); }
+    @keyframes lbIn {
+      from { opacity: 0; transform: translateY(14px) scale(0.985); }
+      to { opacity: 1; transform: none; }
+    }
+
+    /* ------------------------ Reveal on scroll ------------------------ */
+    .js .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
+    }
+    .js .reveal.in { opacity: 1; transform: none; }
+    .js .reveal.now { transition: none !important; }
+    .d1 { transition-delay: 0.08s !important; }
+    .d2 { transition-delay: 0.16s !important; }
+    .d3 { transition-delay: 0.24s !important; }
+    .d4 { transition-delay: 0.32s !important; }
+
+    /* --------------------------- Responsive --------------------------- */
+    /* Short laptop screens: keep the whole hero, down to the Explore / Pause row, above the fold. */
+    @media (min-width: 561px) and (max-height: 860px) {
+      .hero-inner { padding-top: 48px; padding-bottom: 24px; }
+      .hero-kicker { margin-bottom: 14px; }
+      .hero-title { margin-bottom: 16px; }
+      .hero-links { margin-bottom: 24px; }
+    }
+    @media (min-width: 561px) and (max-height: 760px) {
+      .hero-inner { padding-top: 26px; padding-bottom: 14px; }
+      .hero-kicker { margin-bottom: 10px; }
+      .hero-title { margin-bottom: 12px; font-size: min(clamp(2.6rem, 1.1rem + 5.1vw, 5.2rem), 10.5vh); }
+      .hero-sub { margin-bottom: 8px; font-size: min(clamp(1.25rem, 1.02rem + 0.75vw, 1.62rem), 3.5vh); }
+      .hero-copy .hero-authors { margin-bottom: 10px; }
+      .hero-links { margin-bottom: 16px; }
+      .hero-link { padding: 6px 12px; }
+      .stat { padding: 11px 16px 12px; }
+      .stat-value { margin: 9px 0 4px; font-size: min(clamp(2.1rem, 1.3rem + 2.1vw, 3rem), 6.2vh); }
+      .stat-value.stat-word { font-size: min(clamp(1.75rem, 1.2rem + 1.45vw, 2.4rem), 5vh); }
+      .hero-foot { padding-bottom: 12px; }
+    }
+    @media (max-width: 1060px) {
+      .sys-grid { gap: 44px; }
+    }
+    @media (max-width: 900px) {
+      .intro-grid { grid-template-columns: 1fr; gap: 36px; }
+      .sys-grid, .sys-grid.duo { grid-template-columns: 1fr; gap: 40px; }
+      .system.flip .media { order: 0; }
+      .media { max-width: 620px; }
+      .links { grid-template-columns: 1fr; }
+      .verdicts { grid-template-columns: 1fr; }
+      .switcher-title { display: none; }
+      .switcher-inner { justify-content: center; }
+    }
+    @media (max-width: 700px) {
+      .steps { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      .wrap { padding: 0 18px; }
+      .hero { min-height: 0; }
+      .hero-inner { padding: 56px 18px 28px; }
+      .hero-shade {
+        background:
+          linear-gradient(180deg, rgba(12, 10, 14, 0.1) 0%, rgba(12, 10, 14, 0.45) 45%, rgba(12, 10, 14, 0.8) 100%);
+      }
+      .hero-links { margin-bottom: 28px; }
+      .stats { grid-template-columns: 1fr; gap: 10px; }
+      .stat { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 16px; padding: 13px 16px; }
+      .stat-top { grid-column: 1 / -1; }
+      .stat-value { margin: 10px 0 0; font-size: 2.1rem; }
+      .stat-value.stat-word { font-size: 1.6rem; }
+      .stat-label { margin-top: 10px; }
+      .hero-foot { flex-direction: column-reverse; align-items: flex-start; padding: 0 18px 20px; }
+      .hero-note { text-align: left; }
+      .switcher-inner { padding: 8px 10px; }
+      .pills { gap: 2px; }
+      .pill { gap: 6px; padding: 8px 10px; font-size: 0.86rem; }
+      .intro { padding: 70px 0 64px; }
+      .system { padding: 76px 0 76px; }
+      .sys-head { flex-direction: column; align-items: flex-start; gap: 6px; margin-bottom: 30px; }
+      .sys-num { font-size: 4.6rem; }
+      .specs li { padding: 7px 11px; font-size: 0.82rem; }
+      .stage-box { border-radius: 20px; }
+      .stage-tag { top: 12px; left: 12px; font-size: 0.74rem; }
+      .stage-tag.r { left: auto; right: 12px; }
+      .step { padding: 18px 40px 18px 18px; column-gap: 16px; }
+      .step-n { top: 16px; right: 16px; }
+      .strip { margin-top: 54px; }
+      .band { padding: 80px 0 76px; }
+      .outlook { padding: 72px 0 70px; }
+      .closing { padding: 72px 0 80px; }
+      .status-box { padding: 18px; }
+      .lb { padding: 64px 12px 96px; }
+      .lb-img { max-height: calc(100vh - 260px); }
+      .lb-prev, .lb-next { top: auto; bottom: 22px; transform: none; }
+      .lb-prev { left: calc(50% - 62px); }
+      .lb-next { right: calc(50% - 62px); }
+      .lb-close { top: 12px; right: 12px; }
+      /* Page-specific */
+      .eq-card { padding: 12px 12px 4px 16px; border-radius: 16px; }
+      .eq-body { font-size: 0.95rem; }
+      .stage-box.auto img.stage-media { padding: 50px 10px 12px; }
+      .win { padding: 58px 14px 16px; }
+      .win-zones { grid-template-columns: 1fr; gap: 10px; }
+      .loop { gap: 40px 34px; padding: 60px 14px 6px; }
+      .lnode { padding: 12px 11px 13px; font-size: 0.8rem; }
+      .lnode b { font-size: 0.92rem; }
+      .lnode.n1::after { right: -25px; }
+      .lnode.n3::after { left: -25px; }
+      .loop-foot { margin: 20px 14px 16px; }
+      .paper-card { grid-template-columns: 1fr; row-gap: 14px; padding: 20px 18px; }
+      .rw-lab { font-size: 0.64rem; }
+      .rw-lab .rw-m { font-size: 1.05rem; margin-top: 3px; }
+      .rw-cue { font-size: 0.72rem; }
+    }
     @media (max-width: 640px) {
-      figure.fig-narrow img,
-      figure.fig-medium img,
-      figure.fig-pair img,
-      figure.fig-quad img,
-      figure.fig-triple img { max-width: 100%; }
-      .content p,
-      figcaption { text-align: left; hyphens: manual; }
-      table.data-table { min-width: 0; font-size: 0.84rem; }
-      table.data-table thead th,
-      table.data-table td { white-space: normal; padding: 7px 6px; }
+      /* Phones only: an equation too wide for the card scrolls inside it. */
+      .eq-body { overflow-x: auto; overflow-y: hidden; }
+    }
+    @media (max-width: 380px) {
+      .pill-dot { display: none; }
+      /* Page-specific: the narrowest phones keep every equation line inside its card. */
+      .eq-card { padding-left: 13px; padding-right: 9px; }
+      .eq-body { font-size: 0.9rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .js .reveal { opacity: 1; transform: none; transition: none; }
+      .scroll-cue .chev { animation: none; }
+      .lb-figure { animation: none; }
+      .sc *, .sc *::before, .sc *::after { transition-duration: 0.01ms !important; }
+    }
+    @media print {
+      .js .reveal { opacity: 1 !important; transform: none !important; }
+      .switcher, .hero-foot, .stage-ctrls { display: none !important; }
     }
   </style>
 </head>
@@ -401,319 +1563,779 @@
     </div>
   </header>
 
-  <main class="container">
-    <h1 class="page-title">Accelerated MCMC</h1>
-    <p class="page-subtitle">A neural-network bias potential steers lattice Monte Carlo through rare transitions; path reweighting recovers the original rates.</p>
+  <div class="sc">
 
-    <div class="content">
+    <!-- ================================ HERO ================================ -->
+    <section class="hero" aria-labelledby="page-title">
+      <canvas class="hero-canvas" aria-hidden="true"></canvas>
+      <div class="hero-shade" aria-hidden="true"></div>
 
-      <!-- ============ PAPER CARD ============ -->
-      <div class="paper-card">
-        <div class="authors"><b>Accelerated Markov Chain Monte Carlo Simulation via Neural Network-Driven Importance Sampling</b></div>
-        <div>Michael Kim, Wei Cai</div>
-        <div class="venue">arXiv preprint arXiv:2602.12294 (2026)</div>
-        <div class="links">
-          <a href="../docs/importance_sampling_mcmc.pdf" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-file-pdf"></i>Paper (PDF)</a>
-          <a href="https://arxiv.org/abs/2602.12294" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-book"></i>arXiv</a>
-          <a href="#"><i class="fa-brands fa-github"></i>Code</a>
-          <a href="#" onclick="toggleBibtex(event, 'bibtex-mcmc')"><i class="fa-solid fa-quote-right"></i>BibTeX</a>
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <p class="hero-kicker">Theory &middot; Lattice kinetic Monte Carlo</p>
+          <h1 class="hero-title" id="page-title"><span class="t1">Accelerated</span> <span class="t2">MCMC</span></h1>
+          <p class="hero-sub">A neural-network bias potential steers lattice Monte Carlo through rare transitions; path reweighting recovers the original rates.</p>
+          <p class="hero-authors">Michael Kim and Wei Cai &middot; Department of Mechanical Engineering, Stanford University</p>
+          <ul class="hero-links" aria-label="The paper">
+            <li><a class="hero-link" href="../docs/importance_sampling_mcmc.pdf" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-file-pdf" aria-hidden="true"></i>Paper (PDF)</a></li>
+            <li><a class="hero-link" href="https://arxiv.org/abs/2602.12294" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-book" aria-hidden="true"></i>arXiv</a></li>
+            <li><a class="hero-link" href="#paper"><i class="fa-solid fa-quote-right" aria-hidden="true"></i>Cite</a></li>
+          </ul>
         </div>
-        <pre id="bibtex-mcmc" style="display:none; margin-top:12px; background:#f3f0ec; padding:12px; border-radius:4px; font-size:0.85rem; overflow-x:auto;">@article{kim2026acceleratedmcmc,
+
+        <ul class="stats" aria-label="Three ideas">
+          <li>
+            <a class="stat" href="#reweight" style="--acc: 240, 128, 62;" aria-label="Optimal importance function: the committor, which gives one known factor for all success paths from a given start. Jump to the section.">
+              <span class="stat-top"><span class="stat-dot"></span>Optimal importance</span>
+              <span class="stat-value stat-word">Committor</span>
+              <span class="stat-label">One known factor for all success paths from a given start</span>
+              <i class="fa-solid fa-arrow-down stat-go" aria-hidden="true"></i>
+            </a>
+          </li>
+          <li>
+            <a class="stat" href="#estimator" style="--acc: 72, 200, 184;" aria-label="Estimator: unbiased for any positive importance function. Jump to the section.">
+              <span class="stat-top"><span class="stat-dot"></span>Estimator</span>
+              <span class="stat-value stat-word">Unbiased</span>
+              <span class="stat-label">For any positive importance function</span>
+              <i class="fa-solid fa-arrow-down stat-go" aria-hidden="true"></i>
+            </a>
+          </li>
+          <li>
+            <a class="stat" href="#branching" style="--acc: 222, 150, 118;" aria-label="Path weights: bounded, kept in a window by roulette and splitting. Jump to the section.">
+              <span class="stat-top"><span class="stat-dot"></span>Path weights</span>
+              <span class="stat-value stat-word">Bounded</span>
+              <span class="stat-label">Kept in a window by roulette and splitting</span>
+              <i class="fa-solid fa-arrow-down stat-go" aria-hidden="true"></i>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="hero-foot">
+        <a class="scroll-cue" href="#idea"><span class="chev" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>Explore</a>
+        <div class="hero-note">
+          <span>Illustration: walkers hop between neighboring grid states over a two-basin landscape. Most excursions from F fall back; a rare one reaches S, and its path lights up.</span>
+          <button class="hero-toggle" type="button" hidden><i class="fa-solid fa-pause" aria-hidden="true"></i><span>Pause</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ SWITCHER ============================ -->
+    <div class="switcher-sentinel" aria-hidden="true"></div>
+    <nav class="switcher" aria-label="Sections on this page">
+      <div class="switcher-inner">
+        <span class="switcher-title" aria-hidden="true"><span class="st-rest">On this page</span><span class="st-stuck">Accelerated MCMC</span></span>
+        <ul class="pills">
+          <li><a class="pill" href="#lattice" data-spy="setup" style="--acc: var(--setup);"><span class="pill-dot"></span>Setup</a></li>
+          <li><a class="pill" href="#reweight" data-spy="sampling" style="--acc: var(--sampling);"><span class="pill-dot"></span>Sampling</a></li>
+          <li><a class="pill" href="#estimator" data-spy="rates" style="--acc: var(--rates);"><span class="pill-dot"></span>Rates</a></li>
+          <li><a class="pill" href="#learning" data-spy="learning" style="--acc: var(--learning);"><span class="pill-dot"></span>Learning</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <main>
+
+      <!-- ============================== IDEA ============================== -->
+      <section class="intro" id="idea" aria-labelledby="idea-title" data-spy-group="">
+        <div class="wrap intro-grid">
+          <div class="reveal">
+            <p class="eyebrow">The idea</p>
+            <h2 class="h2" id="idea-title">Reweight the jumps, recover the rates</h2>
+            <p class="lead">A lattice walker that starts in one deep basin waits a long time before it crosses to the other, so direct kinetic Monte Carlo spends nearly all its effort on excursions that fall back. Importance sampling tilts each jump out of a grid state toward the product and accounts for the tilt exactly.</p>
+            <p class="tag-key"><span class="tag exact">Exact</span><span class="tag approx">Approximate</span><span class="tag choice">Design choice</span><span class="tag def">Model or definition</span><span>tags give the status of each equation.</span></p>
+          </div>
+          <ol class="steps">
+            <li class="step reveal d1">
+              <span class="step-n" aria-hidden="true">01</span>
+              <span class="step-icon" aria-hidden="true"><i class="fa-solid fa-flag-checkered"></i></span>
+              <h3>Failure and success states</h3>
+              <p>Auxiliary states F and S, fed from regions around the minima, make the formulation robust to grid refinement.</p>
+            </li>
+            <li class="step reveal d2">
+              <span class="step-n" aria-hidden="true">02</span>
+              <span class="step-icon" aria-hidden="true"><i class="fa-solid fa-scale-unbalanced"></i></span>
+              <h3>Reweight the jumps</h3>
+              <p>An importance function \(I\) tilts the jump probabilities out of every grid state, which is the same as adding a bias potential.</p>
+            </li>
+            <li class="step reveal d3">
+              <span class="step-n" aria-hidden="true">03</span>
+              <span class="step-icon" aria-hidden="true"><i class="fa-solid fa-scale-balanced"></i></span>
+              <h3>Weights keep it unbiased</h3>
+              <p>Path weights keep the estimate unbiased for any positive \(I\), and the rate needs no biased clock.</p>
+            </li>
+            <li class="step reveal d4">
+              <span class="step-n" aria-hidden="true">04</span>
+              <span class="step-icon" aria-hidden="true"><i class="fa-solid fa-brain"></i></span>
+              <h3>Learn the bias, bound the weights</h3>
+              <p>A neural network learns the bias in log space; branching keeps the path weights in a window.</p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- ========================== 01 THE LATTICE ========================== -->
+      <section class="system" id="lattice" aria-labelledby="lattice-title" data-spy-group="setup" style="--acc: var(--setup); --acc-deep: var(--setup-deep);">
+        <div class="blob" aria-hidden="true" style="left: -200px; top: 180px;"></div>
+        <div class="wrap">
+          <div class="sys-head reveal">
+            <span class="sys-num" aria-hidden="true">01</span>
+            <div>
+              <p class="eyebrow">The setting</p>
+              <h2 class="sys-title" id="lattice-title">Rare hops on a grid</h2>
+              <ul class="specs">
+                <li class="key">Microstates on a grid</li>
+                <li>Nearest-neighbor jumps</li>
+                <li>Detailed balance</li>
+                <li>Two basins, two saddles</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="sys-grid">
+            <div class="media reveal">
+              <figure class="stage">
+                <div class="stage-box">
+                  <img class="stage-media" src="../figs/accel_mcmc/pel_discrete_omega.png" width="505" height="506" decoding="async"
+                       alt="Coarse square grid of microstates over a two-dimensional energy landscape, dark red in two basins labeled A and B and blue toward the high-energy edges, with markers S1 at the top and S2 at the bottom and a white nearest-neighbor path from A to B through states i and j in the upper half">
+                  <span class="stage-tag"><span class="stage-dot" aria-hidden="true"></span>Schematic &middot; from the paper</span>
+                  <div class="stage-ctrls">
+                    <a class="stage-btn stage-expand" href="../figs/accel_mcmc/pel_discrete_omega.png" data-gallery="figures"
+                       data-caption="Schematic of the setting: an energy landscape E(i) (dark red low, blue high) on a coarse grid of microstates such as i and j, with minima A and B, saddle points S₁ and S₂, and one nearest-neighbor path from A to B (white)."
+                       aria-label="Enlarge: the lattice schematic"><i class="fa-solid fa-expand" aria-hidden="true"></i></a>
+                  </div>
+                </div>
+                <figcaption>Schematic from the paper: a landscape \(E(i)\) (dark red low, blue high) on a coarse grid of microstates such as \(i\) and \(j\), with minima A and B, saddle points S<sub>1</sub> and S<sub>2</sub>, and one path from A to B (white).</figcaption>
+              </figure>
+            </div>
+
+            <div class="story reveal d1">
+              <div class="beat">
+                <h3 class="beat-label">The kinetics</h3>
+                <p>Each point \(i\) of a regular grid \(\Omega\) is a microstate with energy \(E(i)\). The system jumps between nearest neighbors at rates that obey detailed balance with respect to \(e^{-E/k_{\rm B}T}\):</p>
+                <div class="eq-card">
+                  <p class="eq-head"><span>Jump rates</span><span class="tag def">Model</span></p>
+                  <div class="eq-body">\[
+                    \begin{gathered}
+                    r(i \to j) = \nu_0 \exp\!\left[-\frac{E(j)-E(i)}{2k_{\rm B}T}\right] \mathbb{1}_{\rm nn}(i,j), \\
+                    r(i \to j)\, e^{-E(i)/k_{\rm B}T} = r(j \to i)\, e^{-E(j)/k_{\rm B}T}.
+                    \end{gathered}
+                  \]</div>
+                </div>
+                <p>Here \(k_{\rm B}T\) is the thermal energy and \(\mathbb{1}_{\rm nn}(i,j)\) is 1 for nearest neighbors and 0 otherwise. On a two-dimensional grid, \(\nu_0 = \mu k_{\rm B}T/(\Delta x)^2\) for mobility \(\mu\) and grid spacing \(\Delta x\), a scaling chosen so that the transition rate between the basins converges as \(\Delta x \to 0\).</p>
+              </div>
+              <div class="beat">
+                <h3 class="beat-label">Why transitions are rare</h3>
+                <p>Deep basins around the minima A and B are joined through saddle points S<sub>1</sub> and S<sub>2</sub>. At low temperature a walker near A lingers in its basin; a rare crossing passes near S<sub>1</sub> or S<sub>2</sub>. The aim is faster crossings with accurate rates and correct relative path probabilities, which carry the mechanism.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 02 FAILURE AND SUCCESS STATES ==================== -->
+      <section class="system tint flip" id="fs" aria-labelledby="fs-title" data-spy-group="setup" style="--acc: var(--setup); --acc-deep: var(--setup-deep);">
+        <div class="blob" aria-hidden="true" style="right: -220px; top: 140px;"></div>
+        <div class="wrap">
+          <div class="sys-head reveal">
+            <span class="sys-num" aria-hidden="true">02</span>
+            <div>
+              <p class="eyebrow">Generalized formulation</p>
+              <h2 class="sys-title" id="fs-title">Boundaries that survive refinement</h2>
+              <ul class="specs">
+                <li class="key">Auxiliary states F and S</li>
+                <li>Finite regions, fixed size</li>
+                <li>Flux kept under refinement</li>
+                <li>Detailed balance kept</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="sys-grid">
+            <div class="media reveal">
+              <figure class="stage">
+                <div class="stage-box">
+<svg class="diagram" viewBox="0 0 560 560" role="img" aria-labelledby="fsd-t fsd-d">
+  <title id="fsd-t">The extended domain with failure and success states</title>
+  <desc id="fsd-d">A grid of microstates over a two-basin landscape with minima A and B. The states inside a dashed circle of radius r_c around A are linked to an auxiliary failure state F, and the states around B to a success state S. A pink path leaves F and returns to it; a blue path leaves F, crosses over the top of the grid and reaches S. A dashed outline encloses the grid and both auxiliary states.</desc>
+  <defs>
+    <pattern id="fsd-dots" x="70" y="40" width="34" height="34" patternUnits="userSpaceOnUse"><circle cx="17" cy="17" r="2.3" class="d-dot"/></pattern>
+    <radialGradient id="fsd-basin"><stop offset="0" class="d-basin-0"/><stop offset="1" class="d-basin-1"/></radialGradient>
+    <radialGradient id="fsd-hump"><stop offset="0" stop-color="#ffffff" stop-opacity="0.95"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+    <clipPath id="fsd-clip"><rect x="70" y="40" width="420" height="380" rx="18"/></clipPath>
+  </defs>
+  <rect class="d-frame" x="14" y="14" width="532" height="532" rx="28"/>
+  <g clip-path="url(#fsd-clip)">
+    <rect class="d-field" x="70" y="40" width="420" height="380"/>
+    <circle cx="189" cy="227" r="150" fill="url(#fsd-basin)"/>
+    <circle cx="359" cy="227" r="150" fill="url(#fsd-basin)"/>
+    <circle cx="274" cy="227" r="92" fill="url(#fsd-hump)"/>
+    <rect x="70" y="40" width="420" height="380" fill="url(#fsd-dots)"/>
+  </g>
+  <rect class="d-edge" x="70" y="40" width="420" height="380" rx="18"/>
+  <circle class="d-rc" cx="189" cy="227" r="58"/>
+  <circle class="d-rc" cx="359" cy="227" r="58"/>
+  <line class="d-link" x1="54" y1="318" x2="155" y2="193" style="opacity:0.61"/>
+  <line class="d-link" x1="54" y1="318" x2="155" y2="227" style="opacity:0.77"/>
+  <line class="d-link" x1="54" y1="318" x2="155" y2="261" style="opacity:0.61"/>
+  <line class="d-link" x1="54" y1="318" x2="189" y2="193" style="opacity:0.77"/>
+  <line class="d-link" x1="54" y1="318" x2="189" y2="227" style="opacity:1.00"/>
+  <line class="d-link" x1="54" y1="318" x2="189" y2="261" style="opacity:0.77"/>
+  <line class="d-link" x1="54" y1="318" x2="223" y2="193" style="opacity:0.61"/>
+  <line class="d-link" x1="54" y1="318" x2="223" y2="227" style="opacity:0.77"/>
+  <line class="d-link" x1="54" y1="318" x2="223" y2="261" style="opacity:0.61"/>
+  <line class="d-link" x1="506" y1="318" x2="325" y2="193" style="opacity:0.61"/>
+  <line class="d-link" x1="506" y1="318" x2="325" y2="227" style="opacity:0.77"/>
+  <line class="d-link" x1="506" y1="318" x2="325" y2="261" style="opacity:0.61"/>
+  <line class="d-link" x1="506" y1="318" x2="359" y2="193" style="opacity:0.77"/>
+  <line class="d-link" x1="506" y1="318" x2="359" y2="227" style="opacity:1.00"/>
+  <line class="d-link" x1="506" y1="318" x2="359" y2="261" style="opacity:0.77"/>
+  <line class="d-link" x1="506" y1="318" x2="393" y2="193" style="opacity:0.61"/>
+  <line class="d-link" x1="506" y1="318" x2="393" y2="227" style="opacity:0.77"/>
+  <line class="d-link" x1="506" y1="318" x2="393" y2="261" style="opacity:0.61"/>
+  <line class="d-hop d-fail" x1="68" y1="308" x2="155" y2="261"/>
+  <polyline class="d-path d-fail" points="155,261 155,295 189,295 223,295 223,261"/>
+  <line class="d-hop d-fail" x1="223" y1="261" x2="73" y2="322"/>
+  <line class="d-hop d-succ" x1="70" y1="302" x2="223" y2="193"/>
+  <polyline class="d-path d-succ" points="223,193 223,159 223,125 257,125 257,91 291,91 325,91 325,125 359,125 359,159 359,193"/>
+  <line class="d-hop d-succ" x1="359" y1="193" x2="490" y2="302"/>
+  <circle class="d-v d-fail-v" cx="155" cy="261" r="3.6"/>
+  <circle class="d-v d-fail-v" cx="155" cy="295" r="3.6"/>
+  <circle class="d-v d-fail-v" cx="189" cy="295" r="3.6"/>
+  <circle class="d-v d-fail-v" cx="223" cy="295" r="3.6"/>
+  <circle class="d-v d-fail-v" cx="223" cy="261" r="3.6"/>
+  <circle class="d-v d-succ-v" cx="223" cy="193" r="3.6"/>
+  <circle class="d-v d-succ-v" cx="223" cy="159" r="3.6"/>
+  <circle class="d-v d-succ-v" cx="223" cy="125" r="3.6"/>
+  <circle class="d-v d-succ-v" cx="257" cy="125" r="3.6"/>
+  <circle class="d-v d-succ-v" cx="257" cy="91" r="3.6"/>
+  <circle class="d-v d-succ-v" cx="291" cy="91" r="3.6"/>
+  <circle class="d-v d-succ-v" cx="325" cy="91" r="3.6"/>
+  <circle class="d-v d-succ-v" cx="325" cy="125" r="3.6"/>
+  <circle class="d-v d-succ-v" cx="359" cy="125" r="3.6"/>
+  <circle class="d-v d-succ-v" cx="359" cy="159" r="3.6"/>
+  <circle class="d-v d-succ-v" cx="359" cy="193" r="3.6"/>
+  <circle class="d-cpl" cx="155" cy="193" r="4.1"/>
+  <circle class="d-cpl" cx="155" cy="227" r="4.5"/>
+  <circle class="d-cpl" cx="155" cy="261" r="4.1"/>
+  <circle class="d-cpl" cx="189" cy="193" r="4.5"/>
+  <circle class="d-cpl" cx="189" cy="227" r="5.0"/>
+  <circle class="d-cpl" cx="189" cy="261" r="4.5"/>
+  <circle class="d-cpl" cx="223" cy="193" r="4.1"/>
+  <circle class="d-cpl" cx="223" cy="227" r="4.5"/>
+  <circle class="d-cpl" cx="223" cy="261" r="4.1"/>
+  <circle class="d-cpl" cx="325" cy="193" r="4.1"/>
+  <circle class="d-cpl" cx="325" cy="227" r="4.5"/>
+  <circle class="d-cpl" cx="325" cy="261" r="4.1"/>
+  <circle class="d-cpl" cx="359" cy="193" r="4.5"/>
+  <circle class="d-cpl" cx="359" cy="227" r="5.0"/>
+  <circle class="d-cpl" cx="359" cy="261" r="4.5"/>
+  <circle class="d-cpl" cx="393" cy="193" r="4.1"/>
+  <circle class="d-cpl" cx="393" cy="227" r="4.5"/>
+  <circle class="d-cpl" cx="393" cy="261" r="4.1"/>
+  <circle class="d-min" cx="189" cy="227" r="6"/>
+  <text class="d-lab" x="189" y="257" text-anchor="middle">A</text>
+  <circle class="d-min" cx="359" cy="227" r="6"/>
+  <text class="d-lab" x="359" y="257" text-anchor="middle">B</text>
+  <line class="d-rad" x1="189" y1="227" x2="148.0" y2="186.0"/>
+  <text class="d-lab d-it" x="139.0" y="183.0" text-anchor="middle">r<tspan class="d-sub" dy="5">c</tspan></text>
+  <circle class="d-node" cx="54" cy="318" r="22"/>
+  <text class="d-node-t" x="54" y="325" text-anchor="middle">F</text>
+  <circle class="d-node" cx="506" cy="318" r="22"/>
+  <text class="d-node-t" x="506" y="325" text-anchor="middle">S</text>
+  <text class="d-lab d-it d-big" x="96" y="80">&#937;</text>
+  <text class="d-lab d-it d-big" x="34" y="528">&#937;&#771;</text>
+</svg>
+                  <span class="stage-tag r"><span class="stage-dot" aria-hidden="true"></span>Schematic</span>
+                </div>
+                <figcaption>Schematic: states within \(r_{\rm c}\) of A (filled) may jump into F, and states near B into S (dotted links). Pink: a failure path. Blue: a success path.</figcaption>
+              </figure>
+            </div>
+
+            <div class="story reveal d1">
+              <div class="beat">
+                <h3 class="beat-label">Why not single points</h3>
+                <p>Declaring failure and success at the grid points A and B imposes point boundary conditions on the optimal importance function, whose gradients around them grow ever sharper as the grid is refined, like a boundary condition at a single point of a partial differential equation.</p>
+              </div>
+              <div class="beat">
+                <h3 class="beat-label">Two extra states</h3>
+                <p>Instead, the state space becomes \(\tilde\Omega = \Omega \cup \{{\rm F}, {\rm S}\}\): states in small regions around A and B, fixed in size under refinement, may jump into F or S. A control function \(f(i)\), for example a truncated Gaussian, weights the coupling to F:</p>
+                <div class="eq-card">
+                  <p class="eq-head"><span>Coupling to F</span><span class="tag choice">Design choice</span></p>
+                  <div class="eq-body">\[
+                    \begin{gathered}
+                    \tilde r(i \to {\rm F}) = \nu_0 \exp\!\left[-\frac{E({\rm F})-E(i)}{2k_{\rm B}T}\right] f(i), \\
+                    \begin{aligned}
+                    f(i) &= \epsilon\,(\Delta x)^d \exp\!\left(-\frac{\lVert \mathbf{x}(i)-\mathbf{x}({\rm A})\rVert^2}{2\sigma^2}\right) \\
+                    &\qquad \times \mathbb{1}\big(\lVert \mathbf{x}(i)-\mathbf{x}({\rm A})\rVert &lt; r_{\rm c}\big),
+                    \end{aligned}
+                    \end{gathered}
+                  \]</div>
+                </div>
+                <p>and likewise \(s(i)\) around B, where \(\mathbf{x}(i)\) is the position of \(i\) in \(d\) dimensions and \(\epsilon\), \(\sigma\), \(r_{\rm c}\) set strength, width and range. The factor \((\Delta x)^d\) keeps the flux between \(i\) and F nearly constant as \(\Delta x\) changes. With energies \(E({\rm F})\) and \(E({\rm S})\) assigned, the extended rates \(\tilde r\) still obey detailed balance.</p>
+              </div>
+              <div class="beat">
+                <h3 class="beat-label">Paths</h3>
+                <p>A path leaves F and ends at F (a failure) or at S (a success); the walker returns to F many times before it reaches S.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================== 03 IMPORTANCE SAMPLING ====================== -->
+      <section class="system" id="reweight" aria-labelledby="reweight-title" data-spy-group="sampling" style="--acc: var(--sampling); --acc-deep: var(--sampling-deep);">
+        <div class="blob" aria-hidden="true" style="left: -220px; top: 160px;"></div>
+        <div class="wrap">
+          <div class="sys-head reveal">
+            <span class="sys-num" aria-hidden="true">03</span>
+            <div>
+              <p class="eyebrow">Importance sampling</p>
+              <h2 class="sys-title" id="reweight-title">Reweight the jumps, or add a bias</h2>
+              <ul class="specs">
+                <li class="key">Reweighted jump chain</li>
+                <li>Jumps into F removed</li>
+                <li>Optimum: the committor</li>
+                <li>Bias potential</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="sys-grid">
+            <div class="media pin reveal">
+              <figure class="stage">
+                <div class="stage-box">
+<svg class="diagram" viewBox="0 0 560 560" role="img" aria-labelledby="rwd-t rwd-d">
+  <title id="rwd-t">Reweighting the jump probabilities out of one state</title>
+  <desc id="rwd-d">Two panels show the same state i with four nearest neighbors and a possible jump into the failure state F. In the upper, unbiased panel the arrows to the neighbors have similar widths and a thinner dashed arrow leads to F. In the lower, reweighted panel the importance function grows to the right: the arrow toward the right neighbor is much thicker, the arrow to the left neighbor is thin, and the jump into F is crossed out.</desc>
+  <defs>
+    <pattern id="rwd-dots" x="0" y="0" width="37" height="37" patternUnits="userSpaceOnUse"><circle cx="18.5" cy="18.5" r="1.8" class="d-dot"/></pattern>
+    <linearGradient id="rwd-tilt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" class="d-tilt-0"/><stop offset="1" class="d-tilt-1"/></linearGradient>
+  </defs>
+  <rect class="d-panel" x="16" y="16" width="528" height="252" rx="20"/>
+  <rect x="16" y="16" width="528" height="252" rx="20" fill="url(#rwd-dots)" class="d-dots"/>
+  <line class="d-arr" x1="347.0" y1="156.0" x2="381.5" y2="156.0" style="stroke-width:5.0"/>
+  <polygon class="d-arr-h" points="397.0,156.0 380.0,165.0 380.0,147.0"/>
+  <line class="d-arr" x1="313.0" y1="156.0" x2="278.5" y2="156.0" style="stroke-width:5.0"/>
+  <polygon class="d-arr-h" points="263.0,156.0 280.0,147.0 280.0,165.0"/>
+  <line class="d-arr" x1="330.0" y1="139.0" x2="330.0" y2="103.2" style="stroke-width:4.2"/>
+  <polygon class="d-arr-h" points="330.0,89.0 338.3,104.7 321.7,104.7"/>
+  <line class="d-arr" x1="330.0" y1="173.0" x2="330.0" y2="208.8" style="stroke-width:4.2"/>
+  <polygon class="d-arr-h" points="330.0,223.0 321.7,207.3 338.3,207.3"/>
+  <line class="d-arr d-arr-f" x1="314.0" y1="161.7" x2="184.2" y2="207.8" style="stroke-width:3.0"/>
+  <polygon class="d-arr-h d-arr-fh" points="172.6,212.0 183.2,200.6 188.0,214.1"/>
+  <circle class="d-nb" cx="410" cy="156" r="8"/>
+  <circle class="d-nb" cx="250" cy="156" r="8"/>
+  <circle class="d-nb" cx="330" cy="76" r="8"/>
+  <circle class="d-nb" cx="330" cy="236" r="8"/>
+  <circle class="d-i" cx="330" cy="156" r="13"/>
+  <text class="d-i-t" x="330" y="162" text-anchor="middle">i</text>
+  <circle class="d-node" cx="150" cy="220" r="19"/>
+  <text class="d-node-t d-node-sm" x="150" y="226" text-anchor="middle">F</text>
+  <rect class="d-panel" x="16" y="292" width="528" height="252" rx="20"/>
+  <rect x="16" y="292" width="528" height="252" rx="20" fill="url(#rwd-tilt)"/>
+  <rect x="16" y="292" width="528" height="252" rx="20" fill="url(#rwd-dots)" class="d-dots"/>
+  <line class="d-arr" x1="347.0" y1="432.0" x2="371.9" y2="432.0" style="stroke-width:11.0"/>
+  <polygon class="d-arr-h" points="397.0,432.0 370.4,446.4 370.4,417.6"/>
+  <line class="d-arr" x1="313.0" y1="432.0" x2="273.4" y2="432.0" style="stroke-width:1.8"/>
+  <polygon class="d-arr-h" points="263.0,432.0 274.9,425.9 274.9,438.1"/>
+  <line class="d-arr" x1="330.0" y1="415.0" x2="330.0" y2="379.9" style="stroke-width:4.6"/>
+  <polygon class="d-arr-h" points="330.0,365.0 338.6,381.4 321.4,381.4"/>
+  <line class="d-arr" x1="330.0" y1="449.0" x2="330.0" y2="484.1" style="stroke-width:4.6"/>
+  <polygon class="d-arr-h" points="330.0,499.0 321.4,482.6 338.6,482.6"/>
+  <line class="d-arr-off" x1="314.0" y1="437.7" x2="172.6" y2="488.0"/>
+  <path class="d-x" d="M233.3 452.8L253.3 472.8M233.3 472.8L253.3 452.8"/>
+  <circle class="d-nb" cx="410" cy="432" r="8"/>
+  <circle class="d-nb" cx="250" cy="432" r="8"/>
+  <circle class="d-nb" cx="330" cy="352" r="8"/>
+  <circle class="d-nb" cx="330" cy="512" r="8"/>
+  <circle class="d-i" cx="330" cy="432" r="13"/>
+  <text class="d-i-t" x="330" y="438" text-anchor="middle">i</text>
+  <circle class="d-node" cx="150" cy="496" r="19"/>
+  <text class="d-node-t d-node-sm" x="150" y="502" text-anchor="middle">F</text>
+</svg>
+                  <p class="rw-lab top" aria-hidden="true">Unbiased<span class="rw-m">\(\tilde K(i \to j)\)</span></p>
+                  <p class="rw-lab bot" aria-hidden="true">Reweighted<span class="rw-m">\(\tilde K'(i \to j)\)</span></p>
+                  <p class="rw-cue" aria-hidden="true">larger \(I\) <i class="fa-solid fa-arrow-right-long"></i></p>
+                </div>
+                <figcaption>Schematic: reweighting strengthens jumps toward larger \(I\), weakens jumps toward smaller \(I\) and removes the jump into F.</figcaption>
+              </figure>
+            </div>
+
+            <div class="story reveal d1">
+              <div class="beat">
+                <h3 class="beat-label">Reweighting</h3>
+                <p>On leaving \(i\), the walker jumps to \(j\) with probability \(\tilde K(i \to j) = \tilde r(i \to j)/\tilde r_{\rm tot}(i)\), where \(\tilde r_{\rm tot}(i)\) is the total rate out of \(i\) and \(j\) ranges over \(\mathcal{A}(i)\): the neighbors of \(i\), F and S. As in earlier importance sampling of rare transitions (Cai et al., 2002; de Koning et al., 2005), an importance function \(I &gt; 0\) with \(I({\rm S}) = 1\) reweights these jumps:</p>
+                <div class="eq-card">
+                  <p class="eq-head"><span>Reweighted jumps</span><span class="tag def">Definition</span></p>
+                  <div class="eq-body">\[
+                    \begin{aligned}
+                    \tilde K'(i \to j) &= \frac{\tilde K(i \to j)\, I(j)}{\tilde n'(i)\, I(i)}, \qquad j \neq {\rm F}, \\
+                    \tilde n'(i) &= \sum_{j \in \mathcal{A}(i) \setminus \{\rm F\}} \tilde K(i \to j)\, \frac{I(j)}{I(i)}.
+                    \end{aligned}
+                  \]</div>
+                </div>
+                <p>Jumps into F are removed and \(\tilde n'(i)\) restores normalization; the jump out of F stays unbiased, so \(I({\rm F})\) is never needed.</p>
+              </div>
+              <div class="beat">
+                <h3 class="beat-label">The optimum</h3>
+                <p>The optimal importance function needs no renormalization, \(\tilde n'(i) = 1\), at every \(i \in \Omega\):</p>
+                <div class="eq-card">
+                  <p class="eq-head"><span>Optimality</span><span class="tag exact">Exact</span></p>
+                  <div class="eq-body">\[
+                    \sum_{j \in \mathcal{A}(i) \setminus \{\rm F\}} \tilde K(i \to j)\, I^{\rm opt}(j) = I^{\rm opt}(i).
+                  \]</div>
+                </div>
+                <p>It is the right eigenvector, with eigenvalue 1, of the jump matrix without jumps into F, and equals the discrete committor \(p_{\rm S}(i)\), the probability of reaching S before F. Every success path from a given first state then gains the same known factor, which preserves the mechanism. Finding it exactly is at least as hard as the original problem, so rare-event sampling becomes an optimization problem.</p>
+              </div>
+              <div class="beat">
+                <h3 class="beat-label">A bias potential</h3>
+                <p>Because each rate carries the factor \(e^{-[E(j)-E(i)]/2k_{\rm B}T}\), reweighting by \(I(j)/I(i)\) is exactly the kinetics on \(E + E_{\rm b}\) for jumps among grid states and into S, with</p>
+                <div class="eq-card">
+                  <p class="eq-head"><span>Equivalent bias</span><span class="tag exact">Exact</span></p>
+                  <div class="eq-body">\[
+                    E_{\rm b}(i) = -2\, k_{\rm B}T \ln I(i),
+                  \]</div>
+                </div>
+                <p>so finding the optimal importance function is finding the optimal bias potential.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================== 04 ESTIMATOR AND RATE ====================== -->
+      <section class="system tint" id="estimator" aria-labelledby="estimator-title" data-spy-group="rates" style="--acc: var(--rates); --acc-deep: var(--rates-deep);">
+        <div class="blob" aria-hidden="true" style="right: -220px; top: 120px;"></div>
+        <div class="wrap">
+          <div class="sys-head reveal">
+            <span class="sys-num" aria-hidden="true">04</span>
+            <div>
+              <p class="eyebrow">Estimator</p>
+              <h2 class="sys-title" id="estimator-title">Unbiased weights, an honest clock</h2>
+              <ul class="specs">
+                <li class="key">Unbiased for any positive importance function</li>
+                <li>Clock from unbiased runs</li>
+                <li>Rare-event limit</li>
+              </ul>
+            </div>
+          </div>
+
+          <figure class="stage wide reveal">
+            <div class="stage-box auto">
+              <img class="stage-media" src="../figs/accel_mcmc/transition_rate_estimation.png" width="852" height="326" loading="lazy" decoding="async"
+                   alt="Timeline between two dotted levels labeled F (bottom) and S (top): many pink jagged excursions leave the F level and fall back to it, an ellipsis, and then one blue excursion climbs to the S level; failure durations are labeled t_F with superscripts 1 to N_F and the success duration t_S">
+              <span class="stage-tag"><span class="stage-dot" aria-hidden="true"></span>Schematic &middot; from the paper</span>
+              <div class="stage-ctrls">
+                <a class="stage-btn stage-expand" href="../figs/accel_mcmc/transition_rate_estimation.png" data-gallery="figures"
+                   data-caption="Schematic from the paper: leaving F, the walker fails N_F times (pink, durations t_F⁽¹⁾ to t_F⁽ᴺᶠ⁾) before one success reaches S (blue, duration t_S⁽¹⁾). For rare events N_F is very large."
+                   aria-label="Enlarge: the failures-then-success schematic"><i class="fa-solid fa-expand" aria-hidden="true"></i></a>
+              </div>
+            </div>
+            <figcaption>Schematic from the paper: from F, \(N_{\rm F}\) failures (pink, durations \(t_{\rm F}^{(k)}\), mean \(\langle t_{\rm FF} \rangle\)) precede one success (blue, duration \(t_{\rm S}^{(1)}\), mean \(\langle t_{\rm FS} \rangle\)); for rare events, \(N_{\rm F}\) is very large.</figcaption>
+          </figure>
+
+          <div class="sys-grid duo">
+            <div class="story reveal">
+              <div class="beat">
+                <h3 class="beat-label">Path weights</h3>
+                <p>For a success path \(\Gamma = \{{\rm F}, i_1, \dots, i_n, {\rm S}\}\), the ratios of \(I\) telescope and the normalization factors multiply into a path weight \(W\), linking the probability \(P'\) under \(\tilde K'\) to the original \(P\):</p>
+                <div class="eq-card">
+                  <p class="eq-head"><span>Path identity</span><span class="tag exact">Exact</span></p>
+                  <div class="eq-body">\[
+                    \begin{aligned}
+                    P(\Gamma) &= W(\Gamma)\, I(i_1)\, P'(\Gamma), \\
+                    W(\Gamma) &= \prod_{k=1}^{n} \tilde n'(i_k).
+                    \end{aligned}
+                  \]</div>
+                </div>
+                <p>With a reward \(R(\Gamma)\), 1 for a success and 0 otherwise, the probability \(p_{\rm S}({\rm F})\) that a path leaving F reaches S before F becomes an average over biased paths:</p>
+                <div class="eq-card">
+                  <p class="eq-head"><span>Success probability</span><span class="tag exact">Exact, any positive \(I\)</span></p>
+                  <div class="eq-body">\[
+                    p_{\rm S}({\rm F}) = \big\langle R(\Gamma)\, W(\Gamma)\, I(i_1) \big\rangle'.
+                  \]</div>
+                </div>
+                <p>This holds for any positive \(I\), so the estimate is unbiased in expectation: a poor \(I\) costs variance, not bias. For the exact committor, \(p_{\rm S}({\rm F}) = \sum_j \tilde K({\rm F} \to j)\, I^{\rm opt}(j)\) without sampling any transition paths.</p>
+              </div>
+            </div>
+
+            <div class="story reveal d1">
+              <div class="beat">
+                <h3 class="beat-label">A rate without a biased clock</h3>
+                <p>A first passage from F to S is \(N_{\rm F}\) failures and one success, so, with time spent in F excluded,</p>
+                <div class="eq-card">
+                  <p class="eq-head"><span>Rate</span><span class="tag approx">Approximate</span></p>
+                  <div class="eq-body">\[
+                    \begin{aligned}
+                    \langle T_{\rm FS} \rangle &= \langle N_{\rm F} \rangle \langle t_{\rm FF} \rangle + \langle t_{\rm FS} \rangle \\
+                    &\approx \frac{\langle t_{\rm FF} \rangle}{p_{\rm S}({\rm F})}, \\
+                    r_{\rm FS} = \frac{1}{\langle T_{\rm FS} \rangle} &\approx \frac{p_{\rm S}({\rm F})}{\langle t_{\rm FF} \rangle},
+                    \end{aligned}
+                  \]</div>
+                </div>
+                <p>where \(\langle t_{\rm FF} \rangle\) and \(\langle t_{\rm FS} \rangle\) are mean failure and success durations. The first line is exact; the approximations need \(\langle N_{\rm F} \rangle \gg 1\), failures vastly outnumbering successes. Unbiased runs give \(\langle t_{\rm FF} \rangle\); biased runs supply only the dimensionless \(p_{\rm S}({\rm F})\), so time is never measured under bias. Equating \(r_{\rm FS}\) with the rate between the basins assumes that F and S barely perturb the kinetics, which the paper argues holds on fine grids.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="strip reveal">
+            <div class="strip-head">
+              <h3 class="strip-title">In high dimensions: the first jump</h3>
+              <p class="strip-note">Every path starts with an unbiased jump out of F, whose targets cannot be enumerated in high dimensions.</p>
+            </div>
+            <div class="sys-grid duo">
+              <div class="beat">
+                <p>Redefining \(f(i)\) with the factor \(e^{-[E(i)-E({\rm F})]/2k_{\rm B}T}\) and the Boltzmann factor of a convex confinement potential \(E_{\rm C}\) with its minimum at A, for example \(E_{\rm C}(i) = \lVert \mathbf{x}(i)-\mathbf{x}({\rm A})\rVert^2/2\eta^2\), turns that jump into an equilibrium distribution, which standard Monte Carlo can sample even in high dimensions:</p>
+              </div>
+              <div class="beat">
+                <div class="eq-card">
+                  <p class="eq-head"><span>Jump out of F</span><span class="tag choice">Design choice</span></p>
+                  <div class="eq-body">\[
+                    \tilde r({\rm F} \to i) \propto \exp\!\left[-\frac{E(i) + E_{\rm C}(i) - E({\rm F})}{k_{\rm B}T}\right]
+                  \]</div>
+                </div>
+                <p>for \(\lVert \mathbf{x}(i)-\mathbf{x}({\rm A})\rVert &lt; r_{\rm c}\). Detailed balance fixes the reverse rate, and the total rate out of F is never needed, since time in F is excluded.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== 05 BRANCHING RANDOM WALK ===================== -->
+      <section class="system flip" id="branching" aria-labelledby="branching-title" data-spy-group="rates" style="--acc: var(--weights); --acc-deep: var(--weights-deep);">
+        <div class="blob" aria-hidden="true" style="left: -220px; top: 160px;"></div>
+        <div class="wrap">
+          <div class="sys-head reveal">
+            <span class="sys-num" aria-hidden="true">05</span>
+            <div>
+              <p class="eyebrow">Variance control</p>
+              <h2 class="sys-title" id="branching-title">Keep the weights in a window</h2>
+              <ul class="specs">
+                <li class="key">Branching random walk</li>
+                <li>Russian roulette and splitting</li>
+                <li>Stochastic rounding</li>
+                <li>Unbiased in expectation</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="sys-grid">
+            <div class="media reveal">
+              <figure class="stage">
+                <div class="stage-box auto">
+                  <span class="stage-tag"><span class="stage-dot" aria-hidden="true"></span>Schematic</span>
+                  <div class="win">
+                    <p class="win-cap" aria-hidden="true"><span>Path weight \(W\)</span><span>larger <i class="fa-solid fa-arrow-right-long"></i></span></p>
+                    <div class="win-axis" aria-hidden="true">
+                      <span class="wz lo"></span><span class="wz mid"></span><span class="wz hi"></span>
+                      <span class="win-tick" style="left: 30.3%;"><span>\(W_{\min}\)</span></span>
+                      <span class="win-tick" style="left: 69.7%;"><span>\(W_{\max}\)</span></span>
+                    </div>
+                    <ol class="win-zones">
+                      <li class="wzone lo"><b><i class="fa-solid fa-dice" aria-hidden="true"></i>Roulette</b>Removed with probability \(1 - W\), else restarts at weight 1.</li>
+                      <li class="wzone mid"><b><i class="fa-solid fa-shoe-prints" aria-hidden="true"></i>Keep walking</b>Each step multiplies \(W\) by \(\tilde n'\) of the current state.</li>
+                      <li class="wzone hi"><b><i class="fa-solid fa-code-branch" aria-hidden="true"></i>Split</b>Becomes \(\mathcal{R}(W)\) walkers, each at weight 1.</li>
+                    </ol>
+                  </div>
+                </div>
+                <figcaption>Schematic of the weight window. Both outer rules use stochastic rounding \(\mathcal{R}(W)\), whose average is \(W\).</figcaption>
+              </figure>
+            </div>
+
+            <div class="story reveal d1">
+              <div class="beat">
+                <h3 class="beat-label">Why branch</h3>
+                <p>The estimate is unbiased for any positive \(I\), but the number of paths it needs depends strongly on the quality of \(I\), and far from the committor it becomes excessive.</p>
+              </div>
+              <div class="beat">
+                <h3 class="beat-label">The walk</h3>
+                <p>A branching random walk starts one walker at F with \(W = 1\), moves every walker with \(\tilde K'\) and multiplies its weight by \(\tilde n'\) at each step. A walker whose weight leaves \([W_{\min}, W_{\max}]\) becomes \(\mathcal{R}(W)\) walkers of weight 1, where \(\mathcal{R}(W) = \lfloor W \rfloor + 1\) with probability \(W - \lfloor W \rfloor\) and \(\lfloor W \rfloor\) otherwise: Russian roulette below the window, splitting above it. A removed walker scores zero.</p>
+              </div>
+              <div class="beat">
+                <h3 class="beat-label">Why it stays unbiased</h3>
+                <p>This stochastic rounding, widely used in Monte Carlo rendering and particle transport (Arvo and Kirk, 1990; Vorba and K&rcaron;iv&aacute;nek, 2016; Rath et al., 2022), averages to \(W\). A walker that reaches S scores its current \(W\) times \(I(i_1)\), so the total estimates \(\langle R\, W\, I(i_1) \rangle'\) without bias while every weight stays in the window.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== 06 LEARNING THE BIAS ===================== -->
+      <section class="system tint" id="learning" aria-labelledby="learning-title" data-spy-group="learning" style="--acc: var(--learning); --acc-deep: var(--learning-deep);">
+        <div class="blob" aria-hidden="true" style="right: -220px; top: 140px;"></div>
+        <div class="wrap">
+          <div class="sys-head reveal">
+            <span class="sys-num" aria-hidden="true">06</span>
+            <div>
+              <p class="eyebrow">Machine learning</p>
+              <h2 class="sys-title" id="learning-title">A neural network in log space</h2>
+              <ul class="specs">
+                <li class="key">Neural-network bias potential</li>
+                <li>Normalization loss</li>
+                <li>Adaptive sampling</li>
+                <li>Simulated annealing</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="sys-grid">
+            <div class="media pin reveal">
+              <figure class="stage">
+                <div class="stage-box auto">
+                  <span class="stage-tag"><span class="stage-dot" aria-hidden="true"></span>Schematic</span>
+                  <ol class="loop">
+                    <li class="lnode n1"><b><i class="fa-solid fa-shoe-prints" aria-hidden="true"></i>Sample</b>Biased walks from F, \(\theta\) fixed</li>
+                    <li class="lnode n2"><b><i class="fa-solid fa-layer-group" aria-hidden="true"></i>Collect</b>The states they visit</li>
+                    <li class="lnode n3"><b><i class="fa-solid fa-brain" aria-hidden="true"></i>Train</b>Minimize the loss on them</li>
+                    <li class="lnode n4"><b><i class="fa-solid fa-rotate" aria-hidden="true"></i>Update</b>A new bias, a new \(\tilde K'\)</li>
+                  </ol>
+                  <p class="loop-foot"><i class="fa-solid fa-temperature-low" aria-hidden="true"></i><span><b>Simulated annealing.</b> The temperature steps down to the target.</span></p>
+                </div>
+                <figcaption>Schematic of the adaptive training loop, repeated until the bias converges.</figcaption>
+              </figure>
+            </div>
+
+            <div class="story reveal d1">
+              <div class="beat">
+                <h3 class="beat-label">Why a network, and why log space</h3>
+                <p>Refining the grid multiplies the states, drastically so in high dimensions, where \(I\) cannot be optimized state by state. Building on machine-learning work on committors and rates (Li et al., 2022; Yuan et al., 2024; Mitchell and Rotskoff, 2024), a neural network with parameters \(\theta\) represents the bias potential \(E_{\rm b}(i;\theta)\): near F the optimal \(I\) is extremely small and risks underflow, while \(E_{\rm b}\) stays in a manageable range.</p>
+              </div>
+              <div class="beat">
+                <h3 class="beat-label">The loss</h3>
+                <p>Training drives every normalization factor toward one:</p>
+                <div class="eq-card">
+                  <p class="eq-head"><span>Training loss</span><span class="tag choice">Design choice</span></p>
+                  <div class="eq-body">\[
+                    \begin{aligned}
+                    \mathcal{L}(\theta) &= \sum_{i} \big[\ln \tilde n'(i;\theta)\big]^2, \\
+                    I(i;\theta) &= e^{-E_{\rm b}(i;\theta)/2k_{\rm B}T}.
+                    \end{aligned}
+                  \]</div>
+                </div>
+                <p>Each term vanishes exactly when the optimality condition holds at \(i\); the loss is analogous to one by Mitchell and Rotskoff (2024). Since the condition matters only along transition paths, the sum runs over states that the current biased walks visit.</p>
+              </div>
+              <div class="beat">
+                <h3 class="beat-label">Annealing and representation</h3>
+                <p>Annealing the training temperature down to the target, the authors found, helps avoid numerical instabilities and aids convergence. In its high-dimensional test, the paper writes the bias as a trainable Gaussian, \(A\,e^{-\sum_k a_k (x_k - c_k)^2}\), plus a multilayer perceptron: the Gaussian speeds early exploration, and the perceptron captures non-Gaussian features.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================== TAKEAWAY ============================== -->
+      <section class="band" id="takeaway" aria-labelledby="takeaway-title" data-spy-group="">
+        <div class="wrap">
+          <div class="reveal">
+            <p class="eyebrow">Takeaway</p>
+            <h2 class="h2" id="takeaway-title">Rare events become an optimization problem</h2>
+            <p class="lead">Importance sampling turns rare-event kinetic Monte Carlo into learning a bias potential. The optimal importance function is the committor, so the optimal bias is \(-2k_{\rm B}T\) times its logarithm; a learned bias only approximates it, yet path reweighting keeps the success-probability estimate unbiased, and branching keeps the variance in check.</p>
+          </div>
+          <ul class="verdicts">
+            <li class="verdict exact reveal"><b>Exact</b><span>The bias-potential equivalence, the committor as optimum, and an estimator unbiased for any positive importance function.</span></li>
+            <li class="verdict approx reveal d1"><b>Approximate</b><span>The rate as success probability over mean failure time, valid when failures vastly outnumber successes.</span></li>
+            <li class="verdict choice reveal d2"><b>Design choices</b><span>The coupling to F and S, the grid scaling of rates, log-space training with annealing, and the weight window.</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ============================== OUTLOOK ============================== -->
+      <section class="outlook" id="outlook" aria-labelledby="outlook-title" data-spy-group="">
+        <div class="wrap intro-grid">
+          <div class="reveal">
+            <p class="eyebrow">Outlook</p>
+            <h2 class="h2" id="outlook-title">Next: atomistic systems</h2>
+            <p class="lead">The paper names atomistic systems as the next step for this framework, to simulate long-term processes such as defect evolution in crystals and protein dynamics in solution.</p>
+            <ul class="specs" style="--acc: var(--learning); --acc-deep: var(--learning-deep);">
+              <li class="key">Atomistic systems</li>
+              <li>Defects in crystals</li>
+              <li>Proteins in solution</li>
+            </ul>
+          </div>
+          <div class="reveal d1">
+            <p class="eyebrow">The paper</p>
+            <!-- ============ PAPER CARD ============ -->
+            <div class="paper-card" id="paper">
+              <span class="paper-icon" aria-hidden="true"><i class="fa-solid fa-file-lines"></i></span>
+              <div class="paper-body">
+                <div class="authors"><b>Accelerated Markov Chain Monte Carlo Simulation via Neural Network-Driven Importance Sampling</b></div>
+                <div>Michael Kim, Wei Cai</div>
+                <div class="venue">arXiv preprint arXiv:2602.12294 (2026)</div>
+                <div class="links">
+                  <a href="../docs/importance_sampling_mcmc.pdf" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-file-pdf"></i>Paper (PDF)</a>
+                  <a href="https://arxiv.org/abs/2602.12294" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-book"></i>arXiv</a>
+                  <a href="#"><i class="fa-brands fa-github"></i>Code</a>
+                  <a href="#" onclick="toggleBibtex(event, 'bibtex-mcmc')"><i class="fa-solid fa-quote-right"></i>BibTeX</a>
+                </div>
+                <pre id="bibtex-mcmc" style="display:none; margin-top:12px; background:#f3f0ec; padding:12px; border-radius:4px; font-size:0.85rem; overflow-x:auto;">@article{kim2026acceleratedmcmc,
   title={Accelerated Markov Chain Monte Carlo Simulation via Neural Network-Driven Importance Sampling},
   author={Kim, Michael and Cai, Wei},
   journal={arXiv preprint arXiv:2602.12294},
   year={2026}
 }</pre>
-      </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <!-- ============ OVERVIEW ============ -->
-      <h2>Overview</h2>
-      <p>
-        Atomistic simulations stay trapped in metastable states, yet rare transitions between them
-        control long-term evolution. This work speeds up lattice kinetic Monte Carlo with a learned bias
-        potential and reweights each sampled path to undo it. On a 14&#8209;dimensional model
-        landscape at 500&nbsp;K, the reweighted rate,
-        (6.7459&nbsp;&plusmn;&nbsp;0.1429)&nbsp;&times;&nbsp;10<sup>&minus;12</sup>&nbsp;fs<sup>&minus;1</sup>
-        in model units, is close to the exact 6.9191&nbsp;&times;&nbsp;10<sup>&minus;12</sup>&nbsp;fs<sup>&minus;1</sup>
-        of the underlying two-dimensional (2&#8209;D) system; without reweighting, it is a factor of three
-        too low.
-      </p>
-      <p>
-        The ideal bias follows from the committor, the probability of reaching the product before
-        returning to the start. But finding it exactly is at least as hard as the original rare-event
-        problem, it can underflow near the starting basin at low temperature, and even small errors in it
-        inflate the estimator's variance drastically.
-      </p>
+      <!-- ============================== CLOSING ============================== -->
+      <section class="closing" id="explore" aria-labelledby="closing-title" data-spy-group="">
+        <div class="wrap">
+          <div class="reveal">
+            <p class="eyebrow">Keep exploring</p>
+            <h2 class="h2" id="closing-title">More from this line of research</h2>
+          </div>
+          <ul class="links">
+            <li class="reveal">
+              <a class="link-card" href="accel_langevin.html">
+                <span class="link-icon" aria-hidden="true"><i class="fa-solid fa-route"></i></span>
+                <h3>Accelerated Langevin Dynamics</h3>
+                <p>The continuous-space counterpart: a learned importance function tilts each overdamped Langevin step, and path weights keep the success-probability estimate unbiased.</p>
+                <span class="link-go">Read the theory <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+              </a>
+            </li>
+            <li class="reveal d1">
+              <a class="link-card" href="accel_atomistic.html">
+                <span class="link-icon" aria-hidden="true"><i class="fa-solid fa-atom"></i></span>
+                <h3>Accelerated Atomistic Simulations</h3>
+                <p>Neural-network importance sampling of Langevin dynamics reproduces reference rates and resolves competing channels, including an unanticipated long jump, for the LJ7 cluster and, in a revised manuscript in preparation, a Pt adatom on Pt(001) and a vacancy in bcc iron.</p>
+                <span class="link-go">See the applications <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+              </a>
+            </li>
+            <li class="reveal d2">
+              <a class="link-card" href="claude_hackathon.html">
+                <span class="link-icon" aria-hidden="true"><i class="fa-solid fa-robot"></i></span>
+                <h3>Agent-Guided Variance Reduction for Protein Kinetics</h3>
+                <p>An agentic search driven by Claude Code selects the weight-control scheme that tames path-weight degeneracy for alanine dipeptide.</p>
+                <span class="link-go">See the project <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+              </a>
+            </li>
+          </ul>
 
-      <ul class="contributions">
-        <li>
-          <b>Failure and success states.</b> Auxiliary states F and S, fed from small regions around the
-          start and product, make the formulation robust to grid refinement.
-        </li>
-        <li>
-          <b>Unbiased reweighting.</b> Path weights keep the success-probability estimate unbiased for any
-          bias potential; an imperfect network costs variance, not bias.
-        </li>
-        <li>
-          <b>Rates without a biased clock.</b> When successes are rare, the rate is about the success
-          probability over the mean failure duration, which unbiased runs measure.
-        </li>
-        <li>
-          <b>Learned bias, bounded weights.</b> A neural network learns the bias potential, which stays
-          manageable where the committor is tiny; branching keeps path weights bounded.
-        </li>
-      </ul>
+          <div class="status-box reveal">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            <p><b>Where the numbers are.</b> This page covers the theory; the paper&rsquo;s numerical tests on model energy landscapes are in the <a href="../docs/importance_sampling_mcmc.pdf" target="_blank" rel="noopener noreferrer">PDF</a> and on <a href="https://arxiv.org/abs/2602.12294" target="_blank" rel="noopener noreferrer">arXiv</a>.</p>
+          </div>
+        </div>
+      </section>
 
-      <!-- ============ PROBLEM SETUP ============ -->
-      <h2>Problem Setup</h2>
-      <p>
-        The system lives on a regular grid ${\Omega}$ of microstates ${i}$, each with an energy ${E(i)}$.
-        It jumps only between nearest neighbors, from ${i}$ to ${j}$ at rate
-      </p>
-      <div class="eq-block">$$ r(i \to j) = \nu_0 \exp\!\left[-\frac{E(j)-E(i)}{2\,k_{\rm B}T}\right], $$</div>
-      <p>
-        where ${k_{\rm B}T}$ is the thermal energy and the frequency prefactor is
-        ${\nu_0 = \mu k_{\rm B}T/(\Delta x)^2}$ in 2&#8209;D, for mobility ${\mu}$ and grid spacing
-        ${\Delta x}$. The benchmark landscape has two deep basins, around minima A and B, joined through
-        saddle points S<sub>1</sub> and S<sub>2</sub> with energies 1.02 and 0.98&nbsp;eV (Figure&nbsp;1).
-        At low temperature, a walker near A lingers long before a rare transition to B.
-      </p>
+    </main>
 
-      <figure class="fig-narrow">
-        <img src="../figs/accel_mcmc/pel_discrete_omega.png" width="505" height="506" alt="Coarse square grid of microstates over a two-dimensional energy landscape, dark red in two basins labeled A and B and blue toward the high-energy edges, with markers S1 at the top and S2 at the bottom and a white nearest-neighbor path from A to B through states i and j in the upper half">
-        <figcaption>
-          <b>Figure 1.</b> Schematic of the 2&#8209;D benchmark: the landscape ${E(i)}$ (dark red low,
-          blue high) on a grid of microstates such as ${i}$ and ${j}$, coarser than in the results,
-          with minima A and B, saddle points S<sub>1</sub> and S<sub>2</sub>, and one A&rarr;B path
-          (white).
-        </figcaption>
+    <!-- ============================== LIGHTBOX ============================== -->
+    <div class="lb" id="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer" hidden>
+      <div class="lb-backdrop" data-lb-close></div>
+      <figure class="lb-figure">
+        <img class="lb-img" alt="">
+        <figcaption class="lb-cap"><span class="lb-count"></span><span class="lb-text"></span></figcaption>
       </figure>
-
-      <!-- ============ METHOD ============ -->
-      <h2>Method</h2>
-
-      <h3>Biasing the Jumps with an Importance&nbsp;Function</h3>
-      <p>
-        Defining failure and success by the single grid points A and B causes trouble under grid
-        refinement: the committor develops ever sharper gradients around them, like a boundary condition
-        imposed at a single point of a partial differential equation. Instead, states in small regions
-        around A and B, fixed in size under refinement, may jump into auxiliary failure and success states
-        F and S; each path runs from F back to F or on to S.
-      </p>
-      <p>
-        As in earlier rare-event importance sampling (Cai et al., 2002; de Koning et al., 2005), an
-        importance function ${I(i) &gt; 0}$ reweights ${\tilde K(i \to j)}$, the probability that this
-        extended chain's next jump from ${i}$ goes to ${j}$:
-      </p>
-      <div class="eq-block">$$ \begin{aligned} \tilde K'(i \to j) &= \frac{\tilde K(i \to j)\, I(j)}{\tilde n'(i)\, I(i)}, \\ \tilde n'(i) &= \sum_{j \neq {\rm F}} \tilde K(i \to j)\, \frac{I(j)}{I(i)}. \end{aligned} $$</div>
-      <p>
-        The first line holds for ${j \neq {\rm F}}$: jumps into F are forbidden, the jump out of F is left
-        unbiased, and ${\tilde n'(i)}$ keeps the probabilities normalized. All ${\tilde n'(i)}$ equal 1
-        exactly when ${I}$ is the committor ${p_{\rm S}(i)}$, the probability of reaching S before F (with
-        ${I({\rm S}) = 1}$). Every success path from a given first state is then enhanced by the same known
-        factor, so the mechanism is preserved. This reweighting is equivalent to adding a bias potential
-        to the energy:
-      </p>
-      <div class="eq-block">$$ E_{\rm b}(i) = -2\, k_{\rm B} T \ln I(i). $$</div>
-
-      <h3>Path Weights, Rates and Branching</h3>
-      <p>
-        In practice ${I}$ only approximates the committor, so each success path ${\Gamma}$, from F through
-        ${i_1, \dots, i_n}$ to S, carries a weight ${W}$, and ${p_{\rm S}({\rm F})}$, the probability that
-        a path leaving F reaches S before returning to F, becomes an average over biased paths:
-      </p>
-      <div class="eq-block">$$ \begin{aligned} W(\Gamma) &= \prod_{k=1}^{n} \tilde n'(i_k), \\ p_{\rm S}({\rm F}) &= \big\langle R(\Gamma)\, W(\Gamma)\, I(i_1) \big\rangle'. \end{aligned} $$</div>
-      <p>
-        Here ${R(\Gamma)}$ is 1 for a success and 0 otherwise, ${i_1}$ is the first state after F, and
-        ${\langle \cdot \rangle'}$ averages over paths sampled with ${\tilde K'}$. This holds for any
-        positive ${I}$, so the estimate is unbiased in expectation: a poor ${I}$ costs variance, not bias.
-      </p>
-      <p>
-        A first passage from F to S is many failures followed by one success, so on average it lasts
-        about ${\langle t_{\rm FF} \rangle / p_{\rm S}({\rm F})}$, with ${\langle t_{\rm FF} \rangle}$ the
-        mean duration of a failure (time in F excluded). The F-to-S rate, which closely tracks the rate
-        between the basins, is then
-      </p>
-      <div class="eq-block">$$ r_{\rm FS} \approx \frac{p_{\rm S}({\rm F})}{\langle t_{\rm FF} \rangle}, $$</div>
-      <p>
-        an approximation valid when failures vastly outnumber successes. Unbiased runs give
-        ${\langle t_{\rm FF} \rangle}$; biased runs supply only the dimensionless ${p_{\rm S}({\rm F})}$,
-        so time is never measured under bias.
-      </p>
-      <p>
-        When weights spread widely, a branching random walk keeps them inside ${[W_{\min}, W_{\max}]}$.
-        Each step multiplies a walker's weight by ${\tilde n'}$. Below ${W_{\min}}$ the walker is removed with
-        probability ${1 - W}$, or else restarts at weight 1; above ${W_{\max}}$ it splits into unit-weight
-        copies whose number, rounded up or down at random, averages ${W}$ (stochastic rounding, as in
-        Monte Carlo rendering and particle transport). Walkers reaching S score ${W\, I(i_1)}$, keeping
-        the estimate unbiased.
-      </p>
-
-      <h3>Learning the Bias Potential</h3>
-      <p>
-        Building on earlier machine-learning work on committors and rates, a neural network with
-        parameters ${\theta}$ represents the bias potential ${E_{\rm b}(i;\theta)}$ rather than ${I}$,
-        keeping its values manageable even where ${I}$ risks underflow.
-      </p>
-      <p>
-        Training minimizes the sum of ${[\ln \tilde n'(i)]^2}$ over states the current biased walks
-        visit, driving every ${\tilde n'}$ toward 1 (a loss analogous to one by Mitchell and Rotskoff,
-        2024), and alternates sampling with training. Simulated annealing, which the authors found helps
-        avoid numerical instabilities and aids convergence, lowers the training temperature stepwise to the
-        target.
-      </p>
-
-      <!-- ============ RESULTS ============ -->
-      <h2>Results</h2>
-
-      <h3>Reweighted Paths Recover the Exact Success Probability</h3>
-      <p>
-        On the 2&#8209;D landscape (500&nbsp;K, 0.1&nbsp;nm grid), all states can be enumerated, so the
-        exact committor and bias are known. A network with two hidden layers of 30 tanh units, annealed
-        from 5800&nbsp;K to 500&nbsp;K in 8 stages, matches the exact bias substantially better after
-        100 epochs per temperature than after 30 (Figure&nbsp;2).
-      </p>
-      <p>
-        Mean path weights differ from 1, so neither network is optimal. Yet the reweighted success
-        probabilities for 30 and 100 epochs, (2.1921&nbsp;&plusmn;&nbsp;0.0082)&nbsp;&times;&nbsp;10<sup>&minus;13</sup>
-        and (2.1937&nbsp;&plusmn;&nbsp;0.0065)&nbsp;&times;&nbsp;10<sup>&minus;13</sup>, sit close to the exact
-        2.1899&nbsp;&times;&nbsp;10<sup>&minus;13</sup>.
-      </p>
-
-      <figure class="fig-triple">
-        <img src="../figs/accel_mcmc/eb_nn_100e_2d.png" width="1200" height="1200" alt="3-D surface of the learned bias potential over x1 and x2, highest on the A side (negative x1) and falling to zero on the B side">
-        <img src="../figs/accel_mcmc/parity_eb_nn_100e_2d.png" width="1600" height="1600" alt="Parity plot of the learned bias potential against the exact optimal bias potential, with points close to the diagonal and some scatter below it between 0.4 and 1 eV">
-        <img src="../figs/accel_mcmc/error_eb_nn_100e_2d.png" width="1600" height="1600" alt="Map of the difference between learned and exact bias potentials over x and y, near zero over most of the domain with the largest deviations at the left corners">
-        <figcaption>
-          <b>Figure 2.</b> Learned versus exact bias (100 epochs per annealing temperature):
-          <em>(a)</em> the network bias potential ${E_{\rm b}(i;\theta)}$, <em>(b)</em> its parity plot
-          against the exact optimal bias, and <em>(c)</em> their difference, largest far from the
-          dominant pathways.
-        </figcaption>
-      </figure>
-
-      <h3>Branching Cuts the Cost About 8&#8209;Fold at Similar Variance</h3>
-      <p>
-        To test robustness, a network trained on the coarse 0.1&nbsp;nm grid biases, without retraining, a
-        grid refined to 0.025&nbsp;nm, where the exact success probability is
-        1.4120&nbsp;&times;&nbsp;10<sup>&minus;14</sup>. Without branching, most successful paths carry
-        near-zero weights and contribute almost nothing (Figure&nbsp;3a); the estimate from 7,967,789 Monte
-        Carlo steps is (1.5198&nbsp;&plusmn;&nbsp;0.0627)&nbsp;&times;&nbsp;10<sup>&minus;14</sup>. Branching holds the
-        weights in [0.5,&nbsp;1.2] (Figure&nbsp;3b), and 958,928 steps, approximately 8&#8209;fold fewer,
-        give (1.5210&nbsp;&plusmn;&nbsp;0.0690)&nbsp;&times;&nbsp;10<sup>&minus;14</sup> at similar
-        variance. Both lie above the exact value.
-      </p>
-
-      <figure class="fig-pair">
-        <img src="../figs/accel_mcmc/w_nn_30e_121n_2d.png" width="1600" height="800" alt="Histogram of path weights without branching, with nearly all weights in the first bin near zero and a dashed line at the mean weight close to zero">
-        <img src="../figs/accel_mcmc/w_nn_30e_121n_2d_brw_0.5_1.2.png" width="1600" height="800" alt="Histogram of path weights with the branching random walk, with all weights between 0.5 and 1.2 and a dashed line at the mean weight">
-        <figcaption>
-          <b>Figure 3.</b> Path weights on the 0.025&nbsp;nm grid <em>(a)</em> without branching, mostly
-          near zero, and <em>(b)</em> with branching, within [0.5,&nbsp;1.2]. Dashed lines mark the mean.
-        </figcaption>
-      </figure>
-
-      <h3>Rates Match Kramers Theory, Channel Split Included</h3>
-      <p>
-        With branching and a coarse-grid network, rates at 500&nbsp;K converge under grid refinement toward
-        0.025&nbsp;nm, in good agreement with the exact rate. On that grid, rates from 500 to 1000&nbsp;K
-        follow Kramers' rate theory for overdamped dynamics (Figure&nbsp;4a).
-      </p>
-      <p>
-        The paths also resolve the mechanism: the fraction of transitions through S<sub>1</sub> is 0.2910
-        at 500&nbsp;K and 0.3967 at 1000&nbsp;K, against Kramers predictions of 0.2938 and 0.3951. The
-        saddle energies alone, with equal prefactors, underpredict it at every temperature
-        (Figure&nbsp;4b), which the paper traces to prefactors set by local curvature at the saddles.
-      </p>
-
-      <figure class="fig-pair">
-        <img src="../figs/accel_mcmc/arrhenius_plot_50e_2d_121n_100t_100f_100s_1.000_1000.000w.png" width="1600" height="1600" alt="Arrhenius plot of the transition rate on a log scale against inverse temperature, with six Monte Carlo stars lying on the dashed Kramers line">
-        <img src="../figs/accel_mcmc/rate_nn_frac_annh.png" width="1600" height="1600" alt="Fraction of transitions through saddle S1 against temperature from 500 to 1000 K, rising from about 0.29 to 0.40, with Monte Carlo stars on the dashed Kramers curve and a dotted energy-only curve below both">
-        <figcaption>
-          <b>Figure 4.</b> <em>(a)</em> Arrhenius plot on the 0.025&nbsp;nm grid: Monte Carlo (stars)
-          versus Kramers theory with prefactors from local partition functions (dashed). <em>(b)</em>
-          Fraction of transitions through S<sub>1</sub> from Monte Carlo (stars), Kramers (dashed) and
-          saddle energies alone (dotted, labeled Analytical). Panel (a) updates the plot in the linked
-          v1 PDF.
-        </figcaption>
-      </figure>
-
-      <h3>In 14&#8209;D, Reweighting Recovers the Rate; Skipping It Does Not</h3>
-      <p>
-        The 14&#8209;D landscape adds independent harmonic terms in 12 extra coordinates to the 2&#8209;D
-        potential, with transitions defined through the first two, so the exact 2&#8209;D rate is the
-        reference; its 0.1&nbsp;nm grid is far too large to enumerate. The bias, a trainable Gaussian plus
-        a multilayer perceptron, was trained directly at 500&nbsp;K for 10,000 epochs. With branching, the
-        reweighted rate agrees closely with the exact value; using the learned committor without
-        reweighting gives a rate three times too low (Table&nbsp;1).
-      </p>
-
-      <div class="table-wrap">
-        <table class="data-table" aria-describedby="table1-note">
-          <thead>
-            <tr>
-              <th>Method</th>
-              <th><i>r</i><sub>FS</sub> (10<sup>&minus;12</sup>&nbsp;fs<sup>&minus;1</sup>)</th>
-              <th><i>p</i><sub>S</sub>(F) (10<sup>&minus;11</sup>)</th>
-              <th>&lang;<i>t</i><sub>FF</sub>&rang; (fs)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="row-best">
-              <td>Reweighted (14&#8209;D)</td>
-              <td>6.7459 &plusmn;&nbsp;0.1429</td>
-              <td>3.3598 &plusmn;&nbsp;0.0322</td>
-              <td>4.9805 &plusmn;&nbsp;0.0564</td>
-            </tr>
-            <tr>
-              <td>No reweighting (14&#8209;D)</td>
-              <td>2.0156</td>
-              <td>&mdash;</td>
-              <td>&mdash;</td>
-            </tr>
-          </tbody>
-          <tbody>
-            <tr class="row-ref">
-              <td>Exact (2&#8209;D&nbsp;system)</td>
-              <td>6.9191</td>
-              <td>&mdash;</td>
-              <td>&mdash;</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="table-note" id="table1-note">
-        <span class="caption-lead">Table 1.</span> The 14&#8209;D landscape at 500&nbsp;K.
-        &ldquo;No reweighting&rdquo; treats the learned committor as exact,
-        ${p_{\rm S}({\rm F}) = \sum_j \tilde K({\rm F} \to j)\, I(j)}$. Rates are in model units (nm,
-        fs); the linked arXiv v1 PDF omits the units.
-      </p>
-
-      <!-- ============ TAKEAWAY ============ -->
-      <h2>Takeaway</h2>
-      <div class="takeaway">
-        <b>Takeaway.</b> Importance sampling turns rare-event kinetic Monte Carlo into learning a bias
-        potential; path reweighting keeps the success-probability estimate unbiased when that bias is
-        imperfect. Reweighted estimates sit close to exact values on the 0.1&nbsp;nm 2&#8209;D grid and in
-        14&#8209;D, branching needs approximately 8&#8209;fold fewer steps at similar variance, and
-        2&#8209;D rates and channel fractions agree with Kramers theory. Skipping reweighting
-        underestimates the 14&#8209;D rate threefold.
-      </div>
-
-      <!-- ============ OUTLOOK ============ -->
-      <h2>Outlook</h2>
-      <p>
-        All tests use analytic model landscapes; the paper names atomistic systems as the next step,
-        for long-term processes such as defect evolution in crystals and protein dynamics in solution. The
-        companion paper, <a href="accel_langevin.html">Accelerated Langevin Dynamics</a>, carries the ideas
-        to continuous-space dynamics and atomistic systems (see
-        <a href="accel_atomistic.html">Accelerated Atomistic Simulations</a>); the
-        <a href="claude_hackathon.html">Claude hackathon project</a> on agent-guided protein kinetics
-        builds on both.
-      </p>
-
+      <button class="lb-btn lb-close" type="button" aria-label="Close (Esc)"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      <button class="lb-btn lb-prev" type="button" aria-label="Previous image"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+      <button class="lb-btn lb-next" type="button" aria-label="Next image"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
     </div>
-  </main>
+
+  </div>
 
   <script>
     function toggleBibtex(e, id) {
@@ -721,6 +2343,579 @@
       const el = document.getElementById(id);
       el.style.display = el.style.display === 'none' ? 'block' : 'none';
     }
+  </script>
+  <script>
+  (function () {
+    'use strict';
+
+    var doc = document;
+    var root = doc.documentElement;
+    var motionMQ = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+    var hasIO = 'IntersectionObserver' in window;
+    function reduced() { return !!(motionMQ && motionMQ.matches); }
+    function each(list, fn) { Array.prototype.forEach.call(list, fn); }
+
+    /* ---------------------------- 1. Reveal ---------------------------- */
+    var reveals = doc.querySelectorAll('.reveal');
+    if (!hasIO || reduced()) {
+      each(reveals, function (el) { el.classList.add('in'); });
+    } else {
+      var firstBatch = true;
+      var revealIO = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) {
+            // Already on screen when the page opens: show at once, no fade.
+            if (firstBatch) e.target.classList.add('now');
+            e.target.classList.add('in');
+            revealIO.unobserve(e.target);
+          }
+        });
+        firstBatch = false;
+      }, { rootMargin: '0px 0px -6% 0px', threshold: 0.08 });
+      each(reveals, function (el) { revealIO.observe(el); });
+    }
+
+    /* --------------------- 2. Switcher and scroll-spy --------------------- */
+    var switcher = doc.querySelector('.switcher');
+    var sentinel = doc.querySelector('.switcher-sentinel');
+    var pills = doc.querySelectorAll('.pill[data-spy]');
+    function setActive(id) {
+      each(pills, function (p) {
+        var on = p.getAttribute('data-spy') === id;
+        p.classList.toggle('is-active', on);
+        if (on) p.setAttribute('aria-current', 'true'); else p.removeAttribute('aria-current');
+      });
+    }
+    if (hasIO && switcher && sentinel) {
+      // The root reaches far below the viewport, so the sentinel counts as intersecting
+      // whenever it is below the top edge and a jump straight past it still flips the state.
+      // The top check keeps the bar unstuck where rootMargin is ignored (cross-origin frames).
+      new IntersectionObserver(function (entries) {
+        var e = entries[0];
+        switcher.classList.toggle('stuck', !e.isIntersecting && e.boundingClientRect.top < 1);
+      }, { rootMargin: '0px 0px 100000px 0px' }).observe(sentinel);
+
+      // Each section names the pill it belongs to (several sections share one pill;
+      // an empty group clears the highlight).
+      var spyIO = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) setActive(e.target.getAttribute('data-spy-group') || '');
+        });
+      }, { rootMargin: '-42% 0px -52% 0px' });
+      each(doc.querySelectorAll('[data-spy-group]'), function (s) { spyIO.observe(s); });
+    }
+
+    /* ---------------------------- 3. Lightbox ---------------------------- */
+    var lb = doc.getElementById('lightbox');
+    var lbImg = lb.querySelector('.lb-img');
+    var lbText = lb.querySelector('.lb-text');
+    var lbCount = lb.querySelector('.lb-count');
+    var lbClose = lb.querySelector('.lb-close');
+    var lbPrev = lb.querySelector('.lb-prev');
+    var lbNext = lb.querySelector('.lb-next');
+    var group = [], index = 0, opener = null;
+
+    function itemAlt(a) {
+      var img = a.querySelector('img');
+      return a.getAttribute('data-alt') || (img ? img.getAttribute('alt') : '') || '';
+    }
+    function show() {
+      var a = group[index];
+      lbImg.src = a.getAttribute('href');
+      lbImg.alt = itemAlt(a);
+      lbText.textContent = a.getAttribute('data-caption') || itemAlt(a);
+      lbCount.textContent = group.length > 1 ? (index + 1) + ' / ' + group.length : '';
+      lbPrev.hidden = lbNext.hidden = group.length < 2;
+      [index - 1, index + 1].forEach(function (k) {
+        var n = group[(k + group.length) % group.length];
+        if (n) { var im = new Image(); im.src = n.getAttribute('href'); }
+      });
+    }
+    function open(a) {
+      var name = a.getAttribute('data-gallery');
+      group = Array.prototype.slice.call(doc.querySelectorAll('a[data-gallery="' + name + '"]'));
+      index = Math.max(0, group.indexOf(a));
+      opener = a;
+      show();
+      lb.hidden = false;
+      root.classList.add('lb-open');
+      lbClose.focus();
+    }
+    function close() {
+      if (lb.hidden) return;
+      lb.hidden = true;
+      root.classList.remove('lb-open');
+      lbImg.removeAttribute('src');
+      if (opener && opener.focus) opener.focus();
+    }
+    function go(step) {
+      if (group.length < 2) return;
+      index = (index + step + group.length) % group.length;
+      show();
+    }
+    doc.addEventListener('click', function (e) {
+      var a = e.target.closest ? e.target.closest('a[data-gallery]') : null;
+      if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      open(a);
+    });
+    lbClose.addEventListener('click', close);
+    lbPrev.addEventListener('click', function () { go(-1); });
+    lbNext.addEventListener('click', function () { go(1); });
+    lb.querySelector('[data-lb-close]').addEventListener('click', close);
+    lb.addEventListener('click', function (e) { if (e.target === lb) close(); });
+    doc.addEventListener('keydown', function (e) {
+      if (lb.hidden) return;
+      if (e.key === 'Escape' || e.key === 'Esc') { e.preventDefault(); close(); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); go(1); }
+      else if (e.key === 'Tab') {
+        var f = [lbClose, lbPrev, lbNext].filter(function (b) { return !b.hidden; });
+        var i = f.indexOf(doc.activeElement);
+        e.preventDefault();
+        var n = e.shiftKey ? (i <= 0 ? f.length - 1 : i - 1) : (i === f.length - 1 ? 0 : i + 1);
+        f[n].focus();
+      }
+    });
+    var touchX = null;
+    lb.addEventListener('touchstart', function (e) { touchX = e.touches[0].clientX; }, { passive: true });
+    lb.addEventListener('touchend', function (e) {
+      if (touchX === null) return;
+      var dx = e.changedTouches[0].clientX - touchX;
+      touchX = null;
+      if (Math.abs(dx) > 45) go(dx < 0 ? 1 : -1);
+    });
+
+    /* ---------------- 4. Hero illustration: walkers on a lattice ---------------- */
+    // Decorative (aria-hidden): a two-basin landscape drawn as a lattice of microstates.
+    // Walkers leave F into the basin around A, hop between nearest neighbours with
+    // probabilities exp(-dE / 2kT), and fall back into F. Every so often one excursion
+    // is tilted toward B, as the reweighted chain would be; when it reaches S its whole
+    // path lights up. Nothing here is data.
+    (function heroWalkers() {
+      var hero = doc.querySelector('.hero');
+      var canvas = hero && hero.querySelector('.hero-canvas');
+      if (!canvas || !canvas.getContext) return;
+      var ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      var toggle = hero.querySelector('.hero-toggle');
+      var shade = hero.querySelector('.hero-shade');
+
+      var W = 0, H = 0, dpr = 1, a = 28, cols = 0, rows = 0, gx = 0, gy = 0;
+      var cx = 0, cy = 0, sc = 1;
+      var E = [], M = [], X = [], Y = [], bg = null;
+      var kA = -1, kB = -1, nodeF = null, nodeS = null, regF = {}, regS = {}, listF = [];
+      var walkers = [], flashes = [], lit = null, nextWin = 0;
+      var sprGlow = null, sprHot = null, rG = 0, rHot = 0;
+      var running = false, userPaused = false, allowMotion = !reduced(), onScreen = true, raf = 0, last = 0, clock = 0;
+      var avoid = [];
+      var KT = 0.13, HOP = 0.17, RC = 1.75;
+
+      function smooth(e0, e1, x) { var t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); }
+      function rnd(lo, hi) { return lo + Math.random() * (hi - lo); }
+      function ease(u) { return u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2; }
+
+      function sprite(r, stops) {
+        var c = doc.createElement('canvas');
+        var s = Math.max(2, Math.ceil(2 * r * dpr));
+        c.width = c.height = s;
+        var g = c.getContext('2d');
+        var grd = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+        stops.forEach(function (st) { grd.addColorStop(st[0], st[1]); });
+        g.fillStyle = grd;
+        g.fillRect(0, 0, s, s);
+        return c;
+      }
+
+      // The zones to keep dim: the line boxes of the hero text (a block element spans the
+      // full width, so measure its contents), the paper pills and the concept tiles.
+      function textRects() {
+        var hr = hero.getBoundingClientRect();
+        var out = [];
+        each(hero.querySelectorAll('.hero-kicker, .hero-title span, .hero-sub, .hero-authors, .hero-link, .stat'), function (el) {
+          var r = null;
+          if (!el.classList.contains('stat') && !el.classList.contains('hero-link') && doc.createRange) {
+            var rg = doc.createRange();
+            rg.selectNodeContents(el);
+            r = rg.getBoundingClientRect();
+          }
+          if (!r || !r.width) r = el.getBoundingClientRect();
+          out.push([r.left - hr.left, r.top - hr.top, r.right - hr.left, r.bottom - hr.top]);
+        });
+        return out;
+      }
+      function mask(x, y) {
+        var edge = smooth(0, H * 0.1, y) * smooth(H, H * 0.84, y) * smooth(0, W * 0.04, x) * smooth(W, W * 0.96, x);
+        var m = W < 700 ? 0.7 : 0.2 + 0.8 * smooth(W * 0.3, W * 0.62, x);
+        for (var k = 0; k < avoid.length; k++) {
+          var r = avoid[k];
+          var dx = Math.max(r[0] - x, 0, x - r[2]);
+          var dy = Math.max(r[1] - y, 0, y - r[3]);
+          var d = Math.sqrt(dx * dx + dy * dy);
+          m *= W < 700 ? 0.55 + 0.45 * smooth(0, 40, d) : 0.3 + 0.7 * smooth(0, 70, d);
+        }
+        return Math.max(0, Math.min(1, m * (0.3 + 0.7 * edge)));
+      }
+
+      // Illustrative landscape in units of the scale sc: a circular valley through two
+      // channels, deepened into basins at A (left) and B (right).
+      function energy(x, y) {
+        var u = (x - cx) / sc, v = (y - cy) / sc;
+        var r = Math.sqrt(u * u + v * v);
+        var ring = 6 * (r - 0.62) * (r - 0.62);
+        var wA = Math.exp(-((u + 0.62) * (u + 0.62) + v * v) / 0.05);
+        var wB = Math.exp(-((u - 0.62) * (u - 0.62) + v * v) / 0.05);
+        return ring - 0.62 * wA - 0.62 * wB + 0.05 * v;
+      }
+      // A smooth stand-in for the committor, used only to tilt the rare successful excursion.
+      function tilt(k) { return 1 / (1 + Math.exp(-((X[k] - cx) / sc) / 0.085)); }
+
+      function nearest(x, y) {
+        var i = Math.round((x - gx) / a), j = Math.round((y - gy) / a);
+        i = Math.max(0, Math.min(cols - 1, i)); j = Math.max(0, Math.min(rows - 1, j));
+        return j * cols + i;
+      }
+
+      function build() {
+        W = Math.max(1, Math.round(hero.clientWidth));
+        H = Math.max(1, Math.round(hero.clientHeight));
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(W * dpr);
+        canvas.height = Math.round(H * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        if (W >= 900) { sc = Math.min(W * 0.2, H * 0.4); cx = W * 0.78; cy = H * 0.45; }
+        else if (W >= 700) { sc = Math.min(W * 0.24, H * 0.32); cx = W * 0.72; cy = H * 0.36; }
+        else { sc = Math.min(W * 0.34, 150); cx = W * 0.54; cy = Math.max(sc * 1.08, H * 0.13); }
+        a = Math.max(20, Math.min(34, sc / 7.5));
+        rG = a * 0.62; rHot = a * 1.15;
+        sprGlow = sprite(rG, [[0, 'rgba(255,245,242,1)'], [0.18, 'rgba(255,200,192,0.8)'], [0.5, 'rgba(255,120,110,0.18)'], [1, 'rgba(255,110,100,0)']]);
+        sprHot = sprite(rHot, [[0, 'rgba(255,255,255,1)'], [0.12, 'rgba(255,214,200,0.9)'], [0.35, 'rgba(255,95,85,0.42)'], [1, 'rgba(177,4,14,0)']]);
+        avoid = textRects();
+
+        cols = Math.ceil(W / a) + 2; rows = Math.ceil(H / a) + 2;
+        gx = (W - (cols - 1) * a) / 2; gy = (H - (rows - 1) * a) / 2;
+        E = []; M = []; X = []; Y = [];
+        for (var j = 0; j < rows; j++) {
+          for (var i = 0; i < cols; i++) {
+            var x = gx + i * a, y = gy + j * a;
+            X.push(x); Y.push(y); E.push(energy(x, y)); M.push(mask(x, y));
+          }
+        }
+        kA = nearest(cx - 0.62 * sc, cy);
+        kB = nearest(cx + 0.62 * sc, cy);
+        regF = {}; regS = {}; listF = [];
+        for (var k = 0; k < E.length; k++) {
+          if (Math.hypot(X[k] - X[kA], Y[k] - Y[kA]) < RC * a) { regF[k] = true; listF.push(k); }
+          if (Math.hypot(X[k] - X[kB], Y[k] - Y[kB]) < RC * a) regS[k] = true;
+        }
+        nodeF = [X[kA] - 2.1 * a, Y[kA] + 2.4 * a];
+        nodeS = [X[kB] + 2.1 * a, Y[kB] + 2.4 * a];
+        walkers = []; flashes = []; lit = null; clock = 0; nextWin = rnd(2.5, 4.5);
+        var n = W < 700 ? 3 : 5;
+        for (var w = 0; w < n; w++) walkers.push({ mode: 'wait', wait: rnd(0, 1.8), path: [], win: false, fade: 0, hops: 0, t: 0, dur: 1, from: null, to: -1, node: null });
+        paintStatic();
+      }
+
+      function nodeAlpha(p) { return Math.max(0.55, mask(p[0], p[1])); }
+
+      function paintStatic() {
+        bg = doc.createElement('canvas');
+        bg.width = canvas.width; bg.height = canvas.height;
+        var g = bg.getContext('2d');
+        g.setTransform(dpr, 0, 0, dpr, 0, 0);
+        // basin glows
+        [kA, kB].forEach(function (k) {
+          var R = sc * 0.55, m = Math.max(0.6, M[k]);
+          var rg = g.createRadialGradient(X[k], Y[k], 0, X[k], Y[k], R);
+          rg.addColorStop(0, 'rgba(210,24,30,' + (0.5 * m).toFixed(3) + ')');
+          rg.addColorStop(0.45, 'rgba(177,4,14,' + (0.2 * m).toFixed(3) + ')');
+          rg.addColorStop(1, 'rgba(177,4,14,0)');
+          g.fillStyle = rg;
+          g.fillRect(X[k] - R, Y[k] - R, 2 * R, 2 * R);
+        });
+        var lows = [];
+        for (var k0 = 0; k0 < E.length; k0++) lows.push(smooth(0.75, -0.5, E[k0]));
+        // faint bonds between neighbouring low-energy sites trace the valley and its two channels
+        g.lineWidth = 1;
+        for (var kb = 0; kb < E.length; kb++) {
+          var ib = kb % cols;
+          [ib < cols - 1 ? kb + 1 : -1, kb + cols < E.length ? kb + cols : -1].forEach(function (nb) {
+            if (nb < 0) return;
+            var lw = Math.min(lows[kb], lows[nb]);
+            var ab = 0.2 * lw * lw * Math.min(M[kb], M[nb]);
+            if (ab < 0.012) return;
+            g.strokeStyle = 'rgba(255,150,140,' + ab.toFixed(3) + ')';
+            g.beginPath(); g.moveTo(X[kb], Y[kb]); g.lineTo(X[nb], Y[nb]); g.stroke();
+          });
+        }
+        // lattice sites, brighter and warmer where the energy is low
+        for (var k = 0; k < E.length; k++) {
+          var lo = lows[k];
+          var al = M[k] * (0.12 + 0.8 * lo * lo);
+          if (al < 0.01) continue;
+          var rr = Math.round(150 + 105 * lo), gg = Math.round(132 + 50 * lo), bb = Math.round(168 + 2 * lo);
+          g.fillStyle = 'rgba(' + rr + ',' + gg + ',' + bb + ',' + al.toFixed(3) + ')';
+          g.beginPath(); g.arc(X[k], Y[k], 0.9 + 1.6 * lo, 0, 6.2832); g.fill();
+        }
+        // couplings of F and S to the sites around A and B
+        g.lineCap = 'round';
+        g.setLineDash([1, 4]);
+        g.lineWidth = 1.1;
+        [[nodeF, regF, kA], [nodeS, regS, kB]].forEach(function (q) {
+          var p = q[0], reg = q[1], c = q[2];
+          Object.keys(reg).forEach(function (s) {
+            s = +s;
+            var d = Math.hypot(X[s] - X[c], Y[s] - Y[c]) / a;
+            var al2 = nodeAlpha(p) * (0.2 + 0.4 * Math.exp(-d * d / 2));
+            g.strokeStyle = 'rgba(255,170,160,' + al2.toFixed(3) + ')';
+            g.beginPath(); g.moveTo(p[0], p[1]); g.lineTo(X[s], Y[s]); g.stroke();
+          });
+        });
+        g.setLineDash([]);
+        // the auxiliary states
+        [[nodeF, 'F'], [nodeS, 'S']].forEach(function (q) {
+          var p = q[0], al3 = nodeAlpha(p), s = a * 0.46;
+          g.globalAlpha = al3;
+          g.fillStyle = 'rgba(12,10,14,0.85)';
+          g.strokeStyle = 'rgba(255,157,151,0.9)';
+          g.lineWidth = 1.4;
+          g.beginPath();
+          if (g.roundRect) g.roundRect(p[0] - s, p[1] - s, 2 * s, 2 * s, s * 0.42); else g.rect(p[0] - s, p[1] - s, 2 * s, 2 * s);
+          g.fill(); g.stroke();
+          g.fillStyle = '#ffe1dc';
+          g.font = '700 ' + Math.round(a * 0.5) + 'px "Source Sans 3", "Helvetica Neue", Arial, sans-serif';
+          g.textAlign = 'center'; g.textBaseline = 'middle';
+          g.fillText(q[1], p[0], p[1] + 1);
+          g.globalAlpha = 1;
+        });
+      }
+
+      function launch(w) {
+        var k = listF[Math.floor(Math.random() * listF.length)];
+        w.mode = 'walk'; w.hops = 0; w.fade = 1;
+        w.win = !lit && clock >= nextWin && !walkers.some(function (o) { return o.win && o.mode !== 'wait'; });
+        if (w.win) nextWin = clock + rnd(8, 12);
+        w.path = [k]; w.from = nodeF; w.to = k; w.t = 0; w.dur = HOP * 1.6;
+      }
+      function hop(w) {
+        var k = w.to, i = k % cols, j = (k - i) / cols;
+        var opts = [], tot = 0;
+        [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) {
+          var ii = i + d[0], jj = j + d[1];
+          if (ii < 0 || jj < 0 || ii >= cols || jj >= rows) return;
+          var n = jj * cols + ii;
+          var p = Math.exp(-(E[n] - E[k]) / (2 * KT));
+          if (w.win) p *= tilt(n) / tilt(k);
+          opts.push([n, p]); tot += p;
+        });
+        var r = Math.random() * tot, pick = opts[opts.length - 1][0];
+        for (var q = 0; q < opts.length; q++) { r -= opts[q][1]; if (r <= 0) { pick = opts[q][0]; break; } }
+        w.from = [X[k], Y[k]]; w.to = pick; w.t = 0; w.dur = w.win ? HOP * 0.45 : HOP;
+        w.path.push(pick);
+        if (w.path.length > (w.win ? 900 : 420)) w.path.shift();
+      }
+      function enter(w, which) {
+        w.mode = 'enter'; w.node = which; w.from = [X[w.to], Y[w.to]]; w.t = 0; w.dur = HOP * 1.8;
+      }
+      function update(dt) {
+        clock += dt;
+        for (var q = 0; q < walkers.length; q++) {
+          var w = walkers[q];
+          if (w.mode === 'wait') {
+            w.wait -= dt;
+            if (w.wait <= 0) launch(w);
+          } else if (w.mode === 'walk') {
+            w.t += dt;
+            if (w.t < w.dur) continue;
+            w.hops++;
+            var k = w.to;
+            if (w.win && regS[k]) { enter(w, 'S'); continue; }
+            if (!w.win && regF[k] && w.hops > 4 && Math.random() < (w.hops > 90 ? 1 : 0.3)) { enter(w, 'F'); continue; }
+            if (w.win && w.hops > 700) { w.win = false; }
+            hop(w);
+          } else if (w.mode === 'enter') {
+            w.t += dt;
+            if (w.t < w.dur) continue;
+            var p = w.node === 'S' ? nodeS : nodeF;
+            flashes.push({ x: p[0], y: p[1], t: 0, big: w.node === 'S' });
+            if (w.node === 'S') lit = { path: w.path.slice(), t: 0 };
+            w.mode = 'fade'; w.fade = 1; w.win = false;
+          } else if (w.mode === 'fade') {
+            w.fade -= dt / 0.9;
+            if (w.fade <= 0) { w.mode = 'wait'; w.wait = rnd(0.2, 1.3); w.path = []; }
+          }
+        }
+        if (lit) { lit.t += dt; if (lit.t > 4.6) lit = null; }
+        for (var f = flashes.length - 1; f >= 0; f--) {
+          flashes[f].t += dt;
+          if (flashes[f].t > 1.2) flashes.splice(f, 1);
+        }
+      }
+
+      function pos(w) {
+        var u = ease(Math.min(1, w.t / w.dur));
+        if (w.mode === 'enter') {
+          var p = w.node === 'S' ? nodeS : nodeF;
+          return [w.from[0] + (p[0] - w.from[0]) * u, w.from[1] + (p[1] - w.from[1]) * u];
+        }
+        return [w.from[0] + (X[w.to] - w.from[0]) * u, w.from[1] + (Y[w.to] - w.from[1]) * u];
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+        if (bg) ctx.drawImage(bg, 0, 0, W, H);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        var k, q, w, s, n, p;
+
+        // the lit success path: a glow, a bright core and a spark running from F to S
+        if (lit) {
+          var la = lit.t < 3 ? Math.min(1, lit.t / 0.25) : Math.max(0, 1 - (lit.t - 3) / 1.6);
+          var pts = [nodeF].concat(lit.path.map(function (k2) { return [X[k2], Y[k2]]; })).concat([nodeS]);
+          [[9, 'rgba(255,95,85,' + (0.22 * la).toFixed(3) + ')'], [2.2, 'rgba(255,232,226,' + (0.95 * la).toFixed(3) + ')']].forEach(function (st) {
+            ctx.strokeStyle = st[1]; ctx.lineWidth = st[0];
+            ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+            for (var z = 1; z < pts.length; z++) ctx.lineTo(pts[z][0], pts[z][1]);
+            ctx.stroke();
+          });
+          var run = Math.min(1, lit.t / 1.4) * (pts.length - 1);
+          var z0 = Math.floor(run), fr = run - z0, z1 = Math.min(pts.length - 1, z0 + 1);
+          var spx = pts[z0][0] + (pts[z1][0] - pts[z0][0]) * fr, spy = pts[z0][1] + (pts[z1][1] - pts[z0][1]) * fr;
+          if (lit.t < 1.7) { ctx.globalAlpha = la; ctx.drawImage(sprHot, spx - rHot, spy - rHot, 2 * rHot, 2 * rHot); ctx.globalAlpha = 1; }
+        }
+
+        // walkers and their recent trails
+        for (q = 0; q < walkers.length; q++) {
+          w = walkers[q];
+          if (w.mode === 'wait' || !w.path.length) continue;
+          var fa = w.mode === 'fade' ? Math.max(0, w.fade) : 1;
+          n = w.path.length;
+          var s0 = Math.max(1, n - 28);
+          for (s = s0; s < n; s++) {
+            var k0 = w.path[s - 1], k1 = w.path[s];
+            var age = (s - s0 + 1) / (n - s0 + 1);
+            var mm = Math.max(0.35, (M[k0] + M[k1]) / 2);
+            ctx.strokeStyle = 'rgba(255,150,140,' + (0.8 * age * mm * fa).toFixed(3) + ')';
+            ctx.lineWidth = 1.8;
+            ctx.beginPath(); ctx.moveTo(X[k0], Y[k0]); ctx.lineTo(X[k1], Y[k1]); ctx.stroke();
+          }
+          if (w.mode === 'fade') continue;
+          p = pos(w);
+          var wm = Math.max(0.45, mask(p[0], p[1]));
+          ctx.globalAlpha = wm;
+          ctx.drawImage(sprGlow, p[0] - rG, p[1] - rG, 2 * rG, 2 * rG);
+          ctx.globalAlpha = 1;
+        }
+
+        // flashes where walkers enter F or S
+        for (k = 0; k < flashes.length; k++) {
+          var fl = flashes[k], u = fl.t / 1.2;
+          ctx.strokeStyle = 'rgba(255,170,160,' + ((fl.big ? 0.8 : 0.45) * (1 - u)).toFixed(3) + ')';
+          ctx.lineWidth = fl.big ? 2 : 1.3;
+          ctx.beginPath(); ctx.arc(fl.x, fl.y, a * (0.5 + (fl.big ? 2.2 : 0.9) * u), 0, 6.2832); ctx.stroke();
+        }
+      }
+
+      function frame(ts) {
+        raf = 0;
+        if (!running) return;
+        // Narrow screens: about 30 frames per second is plenty for this slow ambient motion.
+        if (W < 700 && ts - last < 30) { raf = requestAnimationFrame(frame); return; }
+        var dt = Math.min(0.05, Math.max(0, (ts - last) / 1000));
+        last = ts;
+        update(dt);
+        draw();
+        raf = requestAnimationFrame(frame);
+      }
+      function start() {
+        if (running || userPaused || !allowMotion || !onScreen || doc.hidden) return;
+        running = true;
+        last = performance.now();
+        raf = requestAnimationFrame(frame);
+      }
+      function stop() {
+        running = false;
+        if (raf) cancelAnimationFrame(raf);
+        raf = 0;
+      }
+      function warm() {
+        // Open mid-story: let the walkers wander for a moment so their trails already show.
+        for (var n = 0; n < 60; n++) update(0.05);
+        flashes = [];
+      }
+      function still() {
+        // A static frame for reduced motion: run until one excursion succeeds, then show
+        // its lit path among the trails of excursions that fell back.
+        nextWin = 0;
+        for (var n = 0; n < 6000 && !lit; n++) update(0.05);
+        if (lit) lit.t = 1.8;
+        each(walkers, function (w) { if (w.mode === 'enter' || w.mode === 'fade') { w.mode = 'wait'; w.path = []; } });
+        flashes = [];
+        draw();
+      }
+      function syncToggle() {
+        if (!toggle) return;
+        var playing = allowMotion && !userPaused;
+        toggle.innerHTML = '<i class="fa-solid ' + (playing ? 'fa-pause' : 'fa-play') + '" aria-hidden="true"></i><span>' + (playing ? 'Pause' : 'Play') + '</span>';
+        toggle.setAttribute('aria-label', playing ? 'Pause background animation' : 'Play background animation');
+      }
+
+      build();
+      if (allowMotion) { warm(); draw(); start(); } else { still(); }
+      // Web fonts can shift the text block after the initial build: re-measure the dimmed zone
+      // and repaint the static layer (it also draws the F and S labels in the page font).
+      if (doc.fonts && doc.fonts.ready) {
+        doc.fonts.ready.then(function () {
+          avoid = textRects();
+          for (var k = 0; k < E.length; k++) M[k] = mask(X[k], Y[k]);
+          paintStatic();
+          if (!running) draw();
+        });
+      }
+      if (toggle) {
+        toggle.hidden = false;
+        syncToggle();
+        toggle.addEventListener('click', function () {
+          if (!allowMotion) { allowMotion = true; userPaused = false; }
+          else userPaused = !userPaused;
+          syncToggle();
+          if (userPaused) stop(); else start();
+        });
+      }
+      if (hasIO) {
+        new IntersectionObserver(function (entries) {
+          onScreen = entries[0].isIntersecting;
+          if (onScreen) start(); else stop();
+        }).observe(hero);
+      }
+      doc.addEventListener('visibilitychange', function () {
+        if (doc.hidden) stop(); else start();
+      });
+      var rt = 0;
+      window.addEventListener('resize', function () {
+        clearTimeout(rt);
+        rt = setTimeout(function () {
+          if (Math.abs(hero.clientWidth - W) < 2 && Math.abs(hero.clientHeight - H) < 60) return;
+          build();
+          if (allowMotion) { warm(); draw(); } else still();
+        }, 180);
+      });
+      if (shade && window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
+        var pend = false, px = 0, py = 0;
+        hero.addEventListener('pointermove', function (e) {
+          var r = hero.getBoundingClientRect();
+          px = e.clientX - r.left; py = e.clientY - r.top;
+          if (pend) return;
+          pend = true;
+          requestAnimationFrame(function () {
+            pend = false;
+            shade.style.setProperty('--mx', px + 'px');
+            shade.style.setProperty('--my', py + 'px');
+          });
+        });
+      }
+    })();
+  })();
   </script>
 </body>
 </html>
